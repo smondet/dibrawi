@@ -1,5 +1,6 @@
 
 include Print
 
-module L = List with Labels, LExceptionless
+module Ls = List with Labels, LExceptionless
+module En = Enum with Labels, LExceptionless
 
