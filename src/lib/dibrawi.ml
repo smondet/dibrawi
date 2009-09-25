@@ -102,6 +102,16 @@ module HTML_menu = struct
     ?(filter="\\.brtx$") ?(exclude_dir=".*\\.svn.*")
     ?(chop_filter=true) ?(replace=".html") tree = (
         let brtx = brtx_menu ~filter ~exclude_dir ~replace ~chop_filter tree in
-        brtx
+        let buf, err = Buffer.create 42, Buffer.create 42 in
+        let writer, input_char = Bracetax.Transform.string_io brtx buf err in
+        Bracetax.Transform.brtx_to_html
+            ~writer ~filename:"BRTX MENU" ~class_hook:"dibrawi_menu" ~input_char
+            ~deny_bypass:true ();
+        if Buffer.contents err <> "" then (
+            eprintf p"Errors in the bracetax: \n%s\n------------%s\n"
+                brtx (Buffer.contents err);
+            failwith "brtx ended with errors";
+        );
+        (Buffer.contents buf)
     )
 end
