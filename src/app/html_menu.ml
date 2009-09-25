@@ -11,7 +11,9 @@ let test_data_src data_root = (
 let () = (
     match Sys.argv.(1) with
     | "-version" ->
-        printf p"html_menu v. 0 (%s)\n" Dibrawi.Info.version_string
+        printf p"html_menu v. 0 (%s)\n" Dibrawi.Info.version_string;
+        printf p"Batteries: %s, PCRE: %s, Bracetax: %s\n"
+            Batteries_config.version Pcre.version Bracetax.Info.version;
     | s -> test_data_src s
     (* | s -> failwith (sprintf p"Unknown command: %s" s) *)
 )
