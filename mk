@@ -11,8 +11,8 @@ build ()
                    -lflags -I -lflags ../$BRACETAX_LIB_PATH"
     local FLAGS="-cflags -dtypes -lib ocamlbracetax"
     local ALL_FLAGS="$I_OPT $TAGOPT $BRTXOPT $FLAGS"
-    ocamlfind batteries/ocamlbuild $ALL_FLAGS src/app/html_menu$1.byte libdibrawi.cma
-    rm -f html_menu && ln -s html_menu$1.byte html_menu
+    ocamlfind batteries/ocamlbuild $ALL_FLAGS src/app/test_dbw$1.byte libdibrawi.cma
+    rm -f test_dbw && ln -s test_dbw$1.byte test_dbw
 }
 
 echo_help ()
