@@ -72,6 +72,31 @@ module File_tree = struct
             (Some prefix) tree;
         Ls.rev !paths
     )
+
+    let str_and_path_list 
+    ?(filter="\\.brtx$") ?(exclude=".*\\.svn.*") ?(prefix=("", []))
+    tree = (
+        let filt = Pcre.regexp filter in
+        let excl = Pcre.regexp exclude in
+        let paths = ref [] in
+        (* let current = ref prefix in *)
+        fold_tree
+            ~dir:(fun p n c ->
+                Opt.bind (fun cc -> 
+                    if not (pcre_matches excl n)
+                    then Some (n :: cc) else None) c) 
+            ~file:(fun p n c ->
+                Opt.may c ~f:(fun c ->
+                    if (pcre_matches filt n)
+                    then (
+                        let to_add = 
+                            ((fst prefix) ^ p ^ "/" ^ n, n :: c) in
+                        paths := to_add :: !paths;
+                    );
+                ))
+            (Some (snd prefix)) tree;
+        Ls.rev !paths
+    )
 end
 
 module Data_source = struct
@@ -103,6 +128,9 @@ module Data_source = struct
         )
     )
 
+    let get_page path = (
+        (IO.read_all (open_in path))
+    )
 
 
 end
@@ -214,16 +242,8 @@ module Special_paths = struct
     let compute_path from url extension =
         typify (relativize from url) extension
 
-    (* html_cite: string -> string *)
-    let default_html_cite id =
-        (* TODO manage id,id,id *)
-        sprintf p"page:/bibliography.html#%s" id
-
     let rec rewrite_url
-    ?todo_list
-    ?(output=`html) ?(html_cite=default_html_cite) ~from url = (
-        (* let beg str = String.sub str 0 in *)
-        (* let after str n = String.sub str n (String.length str - n) in *)
+    ?todo_list ?(output=`html)  ~from url = (
         match url with
         | s when Str.length s < 4 -> s
         | s when Str.head s 4 = "pdf:" ->
