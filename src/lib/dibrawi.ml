@@ -170,6 +170,26 @@ module HTML_menu = struct
     )
 end
 
+module Todo_list = struct
+
+    type todo = [
+        | `pdf of string
+        | `tex of string
+        | `bibtex
+    ]
+    type t = todo list ref
+
+    let empty () = ref []
+
+    let to_string ?(sep="; ") tl =
+        String.concat sep (Ls.map !tl ~f:(function
+            | `pdf path -> sprintf p"Build PDF: %s" path
+            | `tex path -> sprintf p"Build TeX: %s" path
+            | `bibtex -> "Build the BibTeX"
+        ))
+
+end
+
 module Special_paths = struct
 
     let relativize from path = (
@@ -214,22 +234,53 @@ module Special_paths = struct
             pdfpath 
         | s when Str.head s 5 = "page:" ->
             (compute_path from (Str.tail s 5) ".html")
-        | s when Str.head s 5 = "cite:" ->
-            if output = `html then
-                (rewrite_url ~from ?todo_list ~output ~html_cite
-                    (html_cite (Str.tail s 5)))
-            else
-                "local:citations:" ^ (Str.tail s 5)
-        | s when Str.head s 7 = "pdfinc:" ->
-            if output = `html then
-                (rewrite_url ~from ?todo_list ~output ~html_cite
-                    ("page:" ^ (Str.tail s 7)))
-            else
-                "local:texinclude:" ^ (compute_path from (Str.tail s 7) ".tex")
         | s when Str.head s 4 = "img:" ->
             compute_path from (Str.tail s 4)
                 (match output with `html -> ".png" | `pdf -> ".pdf")
         | s -> s
     )
 
+end
+
+module Preprocessor = struct
+
+    let prepro_regexp =
+        Pcre.regexp "(\\{cite [^\\}]*\\})|(\\{pdfinc [^\\}]*\\})"
+
+    let brtx2brtx
+    ?todo_list
+    ?(html_biblio_page="page:/bibliography.html") ?(output=`html) ~from brtx = (
+
+        Pcre.substitute ~rex:prepro_regexp brtx ~subst:(fun s ->
+            eprintf p"Got: %s\n" s;
+            Shell.catch_break true;
+            match s with
+            | cite when Str.head cite 6 = "{cite " ->
+                if output = `html then (
+                    let cites =
+                        (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",") in
+                    "[" ^ (Str.concat ","
+                        (Ls.map cites ~f:(fun cite ->
+                            sprintf p"{link %s#%s|%s}"
+                                html_biblio_page cite cite))) ^ "]"
+                ) else (
+                    Opt.may todo_list ~f:(fun tl -> tl := `bibtex :: !tl);
+                    sprintf p"{bypass}\\cite{%s}{end}"
+                        (Str.sub s 6 (String.length s - 7))
+                )
+            | pdfinc when Str.head pdfinc 8 = "{pdfinc " ->
+                let page_path = Str.sub s 8 (String.length s - 9) in
+                let path = 
+                    Special_paths.compute_path from page_path in
+                if output = `html then (
+                    sprintf p"{t|{link %s}}" (path ".html")
+                ) else (
+                    Opt.may todo_list
+                        ~f:(fun tl -> tl := (`tex (path ".tex")) :: !tl);
+                    sprintf p"{bypass}\\input{%s}{end}" (path ".tex")
+                )
+
+            | s -> s;
+        )
+    )
 end

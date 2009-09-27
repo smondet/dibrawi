@@ -50,15 +50,22 @@ let test_data_src data_root = (
         test ~output:`pdf  "img:../../relative/page";
         test ~output:`html "img:/absolute/page";
         test ~output:`pdf  "img:/absolute/page";
-        test ~output:`html "cite:id09title";
-        test ~output:`pdf  "cite:id09title";
-        test ~output:`html "cite:id09title,if08more";
-        test ~output:`pdf  "cite:id09title,if08more";
-        test ~output:`html "pdfinc:relative/page";
-        test ~output:`pdf  "pdfinc:../../relative/page";
-        test ~output:`html "pdfinc:/absolute/page";
-        test ~output:`pdf  "pdfinc:/absolute/page";
     in
+    let from = [ "current"; "page's" ; "path" ] in
+    let todo_list = Todo_list.empty () in
+    let preprocessed = 
+        Preprocessor.brtx2brtx ~from ~todo_list
+            "lkdjsf kdk {cite} {cite id,id2}
+            {pidfinc {pdfinc ifjjd} {pdfinc /abs/path}
+            {cite {pdfinc} " in
+    printf p"<pre>\n%s</pre>\n\n" preprocessed;
+    let preprocessed = 
+        Preprocessor.brtx2brtx ~output:`pdf ~from ~todo_list
+            "lkdjsf kdk {cite} {cite id,id2}
+            {pidfinc {pdfinc ifjjd} {pdfinc /abs/path}
+            {cite {pdfinc} " in
+    printf p"<pre>\n%s</pre>\n\n" preprocessed;
+    printf p"Todo list: { %s }<br/>\n" (Todo_list.to_string todo_list);
     let url_prefix =
         Shell.getcwd () ^ "/" ^ data_root in
     get_file_tree ~data_root () |> html_menu ~url_prefix |> print_string;
@@ -67,7 +74,8 @@ let () = (
     match Sys.argv.(1) with
     | "-version" ->
         printf p"html_menu v. 0 (%s)\n" Dibrawi.Info.version_string;
-        printf p"Batteries: %s, PCRE: %s, Bracetax: %s\n"
+        printf p"OCaml: %s, Batteries: %s, PCRE: %s, Bracetax: %s\n"
+            Shell.ocaml_version
             Batteries_config.version Pcre.version Bracetax.Info.version;
     | s -> test_data_src s
     (* | s -> failwith (sprintf p"Unknown command: %s" s) *)
