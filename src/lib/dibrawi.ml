@@ -31,10 +31,10 @@ module File_tree = struct
     let print_tree =
         fold_tree
             ~dir:(fun path name indent -> 
-                printf p"%s%s\n" (String.make indent ' ') name;
+                printf p"%s%s\n" (Str.make indent ' ') name;
                 indent + 2)
             ~file:(fun path name indent ->
-                printf p"%s%s\n" (String.make indent ' ') name;)
+                printf p"%s%s\n" (Str.make indent ' ') name;)
             0
 
 
@@ -86,7 +86,7 @@ module Data_source = struct
     let get_file_tree ?(data_root="./data/") () = (
         open Shell, File_tree in
         let ls dir =
-            let sort a = Array.fast_sort String.compare a; a in
+            let sort a = Array.fast_sort Str.compare a; a in
             Shell.readdir dir |> sort |> Array.to_list in 
         if is_directory data_root then (
             let rec explore path name =
@@ -170,3 +170,66 @@ module HTML_menu = struct
     )
 end
 
+module Special_paths = struct
+
+    let relativize from path = (
+        try match path.[0] with
+            | '/' ->
+                let depth = Ls.length from - 1 in
+                (Str.concat "/" (Ls.init depth ~f:(fun _ -> ".."))) ^ path
+            | '#' ->
+                (Ls.hd from) ^ path
+            | _ -> path
+        with _ -> (Ls.hd from) (* the string is empty*)
+    )
+    let typify url extension = (
+        match Str.rev_idx url '#', Str.rev_idx url '/' with
+        | Some h , None ->
+            (Str.head url h) ^ extension ^ (Str.tail url h)
+        | Some h, Some l when h > l ->
+            (Str.head url h) ^ extension ^ (Str.tail url h)
+        | _, _ ->
+            url ^ extension
+    )
+    let compute_path from url extension =
+        typify (relativize from url) extension
+
+    (* html_cite: string -> string *)
+    let default_html_cite id =
+        (* TODO manage id,id,id *)
+        sprintf p"page:/bibliography.html#%s" id
+
+    let rec rewrite_url
+    ?todo_list
+    ?(output=`html) ?(html_cite=default_html_cite) ~from url = (
+        (* let beg str = String.sub str 0 in *)
+        (* let after str n = String.sub str n (String.length str - n) in *)
+        match url with
+        | s when Str.length s < 4 -> s
+        | s when Str.head s 4 = "pdf:" ->
+            let pdfpath = 
+                compute_path from (Str.tail s 4) ".pdf" in
+            Opt.may todo_list
+                ~f:(fun rl -> rl := (`compile_pdf pdfpath) :: !rl;);
+            pdfpath 
+        | s when Str.head s 5 = "page:" ->
+            (compute_path from (Str.tail s 5) ".html")
+        | s when Str.head s 5 = "cite:" ->
+            if output = `html then
+                (rewrite_url ~from ?todo_list ~output ~html_cite
+                    (html_cite (Str.tail s 5)))
+            else
+                "local:citations:" ^ (Str.tail s 5)
+        | s when Str.head s 7 = "pdfinc:" ->
+            if output = `html then
+                (rewrite_url ~from ?todo_list ~output ~html_cite
+                    ("page:" ^ (Str.tail s 7)))
+            else
+                "local:texinclude:" ^ (compute_path from (Str.tail s 7) ".tex")
+        | s when Str.head s 4 = "img:" ->
+            compute_path from (Str.tail s 4)
+                (match output with `html -> ".png" | `pdf -> ".pdf")
+        | s -> s
+    )
+
+end
