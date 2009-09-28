@@ -47,9 +47,10 @@ let () = (
         match Sys.argv.(1) with
         | "-version" ->
             printf p"dbw v. 0 (%s)\n" Dibrawi.Info.version_string;
-            printf p"OCaml: %s, Batteries: %s, PCRE: %s, Bracetax: %s\n"
+            printf
+                p"OCaml: %s, Batteries: %s, PCRE: %s, Bracetax: %s, SeBib: %s\n"
                 Shell.ocaml_version Batteries_config.version Pcre.version
-                Bracetax.Info.version;
+                Bracetax.Info.version Sebib.Info.version;
         | "-help" ->
             printf p"dwb -help, or dwb -version, or dwb <datadir> <targetdir>\n";
 
