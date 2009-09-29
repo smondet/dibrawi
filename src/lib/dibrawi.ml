@@ -133,6 +133,9 @@ module Data_source = struct
     let get_page path = (
         (IO.read_all (open_in path))
     )
+    let get_file path = (
+        (IO.read_all (open_in path))
+    )
 
 
 end
@@ -212,7 +215,7 @@ module Preprocessor = struct
     ?(html_biblio_page="page:/bibliography") ?(output=`html) ~from brtx = (
 
         Pcre.substitute ~rex:prepro_regexp brtx ~subst:(fun s ->
-            Shell.catch_break true;
+            (* Shell.catch_break true; *)
             match s with
             | cite when Str.head cite 6 = "{cite " ->
                 if output = `html then (

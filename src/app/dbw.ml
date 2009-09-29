@@ -2,14 +2,16 @@
 
 open Dibrawi_std
 
-let output_buffers ?title ?toc ?menu html_name html_buffer err_buffer = (
+
+let output_buffers
+~(templ_fun:Dibrawi.Templating.html_template)
+?title ?toc ?menu html_name html_buffer err_buffer = (
     ignore (Unix.system ("mkdir -p " ^ (Filename.dirname html_name)));
-    File.with_file_out html_name (fun o ->
-        let html_content = 
-            Dibrawi.Templating.html_default
-                ?toc ?menu
-                ?title (Buffer.contents html_buffer) in
-        output_string o html_content
+    File.with_file_out ~mode:[`create] html_name (fun o ->
+        let html_content =
+            templ_fun ?toc ?menu ?title (Buffer.contents html_buffer) in
+        fprintf o p"%s" html_content;
+        fprintf o p"%!";
     );
     let s = Buffer.contents err_buffer in
     if s <> "" then (eprintf p"Errors for %s:\n%s\n" html_name s;);
@@ -19,6 +21,15 @@ let transform data_root build = (
     open Dibrawi in
     let the_source_tree = 
         Data_source.get_file_tree ~data_root () in
+
+    let templ_fun = 
+        try 
+            Templating.load
+                (Data_source.get_file
+                    (data_root ^ "../template/dbw_template.html"))
+        with 
+        e -> Templating.html_default
+    in
 
     let list_sebibs =
         File_tree.str_and_path_list ~filter:"\\.sebib$" the_source_tree in
@@ -34,7 +45,7 @@ let transform data_root build = (
         let html_buffer, err_buffer = 
             Brtx_transform.to_html 
                 ~from:["bibliography.html"] brtx in
-        output_buffers ~menu ~toc ~title:"Bibliography"
+        output_buffers ~templ_fun ~menu ~toc ~title:"Bibliography"
             html html_buffer err_buffer;
     in
 
@@ -55,7 +66,7 @@ let transform data_root build = (
         let toc = Brtx_transform.html_toc ~filename:str page in
         let html_buffer, err_buffer = 
             Brtx_transform.to_html ~filename:str ~from page in
-        output_buffers ~menu ~toc ~title html html_buffer err_buffer;
+        output_buffers ~templ_fun ~menu ~toc ~title html html_buffer err_buffer;
 
 
     );
