@@ -2,13 +2,13 @@
 
 open Dibrawi_std
 
-let output_buffers ?toc ?menu html_name html_buffer err_buffer = (
+let output_buffers ?title ?toc ?menu html_name html_buffer err_buffer = (
     ignore (Unix.system ("mkdir -p " ^ (Filename.dirname html_name)));
     File.with_file_out html_name (fun o ->
         let html_content = 
             Dibrawi.Templating.html_default
                 ?toc ?menu
-                ~title:html_name (Buffer.contents html_buffer) in
+                ?title (Buffer.contents html_buffer) in
         output_string o html_content
     );
     let s = Buffer.contents err_buffer in
@@ -34,7 +34,8 @@ let transform data_root build = (
         let html_buffer, err_buffer = 
             Brtx_transform.to_html 
                 ~from:["bibliography.html"] brtx in
-        output_buffers ~menu ~toc html html_buffer err_buffer;
+        output_buffers ~menu ~toc ~title:"Bibliography"
+            html html_buffer err_buffer;
     in
 
 
@@ -44,6 +45,7 @@ let transform data_root build = (
 
     Ls.iter list_brtxes ~f:(fun (str, path) ->
         let brtx = data_root ^ str in
+        let title = Filename.chop_extension str in
         let html = build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
         (* printf p"%s -> %s\n" brtx html; *)
         (* printf p"%{string list}\n" path; *)
@@ -53,7 +55,7 @@ let transform data_root build = (
         let toc = Brtx_transform.html_toc ~filename:str page in
         let html_buffer, err_buffer = 
             Brtx_transform.to_html ~filename:str ~from page in
-        output_buffers ~menu ~toc html html_buffer err_buffer;
+        output_buffers ~menu ~toc ~title html html_buffer err_buffer;
 
 
     );
