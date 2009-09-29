@@ -5,7 +5,12 @@ open Dibrawi_std
 let output_buffers html_name html_buffer err_buffer = (
     ignore (Unix.system ("mkdir -p " ^ (Filename.dirname html_name)));
     File.with_file_out html_name (fun o ->
-        Buffer.output_buffer o html_buffer
+        let html_content = 
+            Dibrawi.Templating.html_default
+                ~toc:"TOC TOC TOC"
+                ~menu:"MENU MENU MENU"
+                ~title:html_name (Buffer.contents html_buffer) in
+        output_string o html_content
     );
     let s = Buffer.contents err_buffer in
     if s <> "" then (eprintf p"Errors for %s:\n%s\n" html_name s;);

@@ -1,6 +1,8 @@
 
 open Dibrawi_std
 
+module Templating = Dibrawi_templating
+
 module Info = struct
     let version = 0
     let version_string = sprintf p"The Dibrawi library, v %d" version
@@ -332,6 +334,7 @@ module Bibliography = struct
     let bibtex = Sebib.BibTeX.str
 end
 
+
 module Brtx_transform = struct
 
     (* TODO handle errors better *)
@@ -345,8 +348,7 @@ module Brtx_transform = struct
         let url_hook =
             Special_paths.rewrite_url ~from in
         Bracetax.Transform.brtx_to_html
-            ~writer ~doc:true ?title
-            ?filename ~img_hook:url_hook ~url_hook ~input_char ();
+            ~writer ?filename ~img_hook:url_hook ~url_hook ~input_char ();
         (html_buffer, err_buffer)
     )
 
