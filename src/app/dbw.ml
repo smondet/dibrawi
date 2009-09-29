@@ -17,18 +17,16 @@ let output_buffers
     if s <> "" then (eprintf p"Errors for %s:\n%s\n" html_name s;);
 )
 
-let transform data_root build = (
+let transform ?(html_template="") data_root build = (
     open Dibrawi in
     let the_source_tree = 
         Data_source.get_file_tree ~data_root () in
 
     let templ_fun = 
-        try 
-            Templating.load
-                (Data_source.get_file
-                    (data_root ^ "../template/dbw_template.html"))
-        with 
-        e -> Templating.html_default
+        if html_template <> "" then 
+            Templating.load (Data_source.get_file html_template)
+        else
+            Templating.html_default
     in
 
     let list_sebibs =
@@ -74,28 +72,36 @@ let transform data_root build = (
 )
 
 let () = (
-    let usage = "rtfm: dbw -help" in
+    let print_version = ref false in
+    let html_tmpl = ref "" in
 
-    if Array.length Sys.argv = 1 then (
-        printf p"%s\n" usage;
+    let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
+    let anon =
+        Arg.handle ~usage [
+            Arg.command
+                ~doc:"\n\tPrint version informations and exit"
+                "-version"
+                (Arg.Set print_version);
+            Arg.command
+                ~doc:"\n\tSet an HTML template file"
+                "-html-template"
+                (Arg.Set_string html_tmpl)
+        ] in 
+
+    if !print_version then (
+        printf p"dbw v. 0 (%s)\n" Dibrawi.Info.version_string;
+        printf
+            p"OCaml: %s, Batteries: %s, PCRE: %s, Bracetax: %s, SeBib: %s\n"
+            Shell.ocaml_version Batteries_config.version Pcre.version
+            Bracetax.Info.version Sebib.Info.version;
     ) else (
-        match Sys.argv.(1) with
-        | "-version" ->
-            printf p"dbw v. 0 (%s)\n" Dibrawi.Info.version_string;
-            printf
-                p"OCaml: %s, Batteries: %s, PCRE: %s, Bracetax: %s, SeBib: %s\n"
-                Shell.ocaml_version Batteries_config.version Pcre.version
-                Bracetax.Info.version Sebib.Info.version;
-        | "-help" ->
-            printf p"dwb -help, or dwb -version, or dwb <datadir> <targetdir>\n";
+        begin match anon with
+        | [i; o] -> transform ~html_template:!html_tmpl i o
+        | _ -> 
+            printf p"Wrong number of arguments: %d\n" (Ls.length anon);
+        end;
+    );
 
-        | s ->
-            if Array.length Sys.argv = 3 then (
-                transform Sys.argv.(1) Sys.argv.(2)
-            ) else (
-                printf p"%s\n" usage;
-            )
-    )
 )
 
 
