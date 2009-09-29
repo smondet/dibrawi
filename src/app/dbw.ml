@@ -29,11 +29,12 @@ let transform data_root build = (
         in
         let menu = HTML_menu.html_menu ~from:["bibliography"] the_source_tree in
         let brtx = Bibliography.to_brtx bib in
+        let toc = Brtx_transform.html_toc ~filename:"Bibliography" brtx in
         let html = build ^ "/bibliography.html" in
         let html_buffer, err_buffer = 
             Brtx_transform.to_html 
                 ~from:["bibliography.html"] brtx in
-        output_buffers ~menu html html_buffer err_buffer;
+        output_buffers ~menu ~toc html html_buffer err_buffer;
     in
 
 
@@ -48,10 +49,11 @@ let transform data_root build = (
         (* printf p"%{string list}\n" path; *)
         let from = path in
         let menu = HTML_menu.html_menu ~from the_source_tree in
+        let page = Data_source.get_page brtx in
+        let toc = Brtx_transform.html_toc ~filename:str page in
         let html_buffer, err_buffer = 
-            Brtx_transform.to_html ~filename:str 
-                ~from (Data_source.get_page brtx) in
-        output_buffers ~menu html html_buffer err_buffer;
+            Brtx_transform.to_html ~filename:str ~from page in
+        output_buffers ~menu ~toc html html_buffer err_buffer;
 
 
     );

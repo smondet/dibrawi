@@ -209,7 +209,7 @@ module Preprocessor = struct
 
     let brtx2brtx
     ?todo_list
-    ?(html_biblio_page="page:/bibliography.html") ?(output=`html) ~from brtx = (
+    ?(html_biblio_page="page:/bibliography") ?(output=`html) ~from brtx = (
 
         Pcre.substitute ~rex:prepro_regexp brtx ~subst:(fun s ->
             eprintf p"Got: %s\n" s;
@@ -291,6 +291,17 @@ module Brtx_transform = struct
         (html_buffer, err_buffer)
     )
 
+    let html_toc ?filename brtx = (
+        let brtx_buffer = Buffer.create 1024 in
+        let err_buffer = Buffer.create 512 in
+        let writer, input_char =
+            Bracetax.Transform.string_io brtx brtx_buffer err_buffer in
+        Bracetax.Transform.get_TOC ~writer ~input_char ?filename ();
+        let h, e =
+            to_html ~class_hook:"dbwtoc" ~from:[""]
+                (Buffer.contents brtx_buffer) in
+        (Buffer.contents h)
+    )
 
 end
 
