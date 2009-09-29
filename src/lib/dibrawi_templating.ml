@@ -1,6 +1,6 @@
 open Dibrawi_std
 
-type html_template =
+type template =
     ?menu:string -> ?toc:string -> ?title:string -> ?footer:string -> string -> string
 
 
@@ -43,3 +43,48 @@ let tmpl_html_default =
 
 let html_default = load tmpl_html_default
 
+let tmpl_latex_default =
+"\
+    \\documentclass[a4paper,10pt]{article}\n\
+    \n\
+    \\clubpenalty=10000\n\
+    \\widowpenalty=10000\n\
+    \n\
+    \\usepackage[T1]{fontenc}\n\
+    \\usepackage[english]{babel}\n\
+    \\usepackage{multirow}\n\
+    \\usepackage{ucs}\n\
+    \\usepackage[utf8x,utf8]{inputenc}\n\
+    \\usepackage[                         \n\
+        bookmarks         = true,         \n\
+        bookmarksnumbered = true,         \n\
+        colorlinks        = true,         \n\
+    ]{hyperref}                           \n\
+    \\usepackage{color}\n\
+    \\definecolor{webred}{rgb}{0.3,0,0}\n\
+    \\definecolor{blurl}{rgb}{0,0,0.3}\n\
+    \\hypersetup{\n\
+    linkcolor         = webred, %%black\n\
+    citecolor         = webred, %%black\n\
+    urlcolor          = blurl , %%black\n\
+    linkbordercolor   = {1 1 1},\n\
+    citebordercolor   = {1 1 1},\n\
+    urlbordercolor    = {1 1 1},\n\
+    pdfauthor   = {},\n\
+    pdftitle    = {DIBRAWI_TEMPLATE_TITLE},\n\
+    pdfsubject  = {},\n\
+    pdfkeywords = {},\n\
+    pdfcreator  = {Dibrawi, Bracetax and PDFLaTeX},\n\
+    pdfproducer = {Dibrawi, Bracetax and PDFLaTeX}}\n\
+    \n\
+    \\usepackage[pdftex]{graphicx}\n\
+    \\frenchspacing\n\
+    \\DeclareGraphicsExtensions{.jpg,.mps,.pdf,.png}\n\
+    \n\
+    \\begin{document}\n\
+    \n\
+    DIBRAWI_TEMPLATE_CONTENT
+    \\end{document}
+    "
+
+let latex_default = load tmpl_latex_default

@@ -4,7 +4,7 @@ open Dibrawi_std
 
 
 let output_buffers
-~(templ_fun:Dibrawi.Templating.html_template)
+~(templ_fun:Dibrawi.Templating.template)
 ?title ?toc ?menu html_name html_buffer err_buffer = (
     ignore (Unix.system ("mkdir -p " ^ (Filename.dirname html_name)));
     File.with_file_out ~mode:[`create] html_name (fun o ->
