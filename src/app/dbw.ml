@@ -21,6 +21,7 @@ let transform ?(html_template="") data_root build = (
     open Dibrawi in
     let the_source_tree = 
         Data_source.get_file_tree ~data_root () in
+    let todo_list = Todo_list.empty () in
 
     let templ_fun = 
         if html_template <> "" then 
@@ -41,7 +42,7 @@ let transform ?(html_template="") data_root build = (
         let toc = Brtx_transform.html_toc ~filename:"Bibliography" brtx in
         let html = build ^ "/bibliography.html" in
         let html_buffer, err_buffer = 
-            Brtx_transform.to_html 
+            Brtx_transform.to_html ~todo_list 
                 ~from:["bibliography.html"] brtx in
         output_buffers ~templ_fun ~menu ~toc ~title:"Bibliography"
             html html_buffer err_buffer;
@@ -63,11 +64,11 @@ let transform ?(html_template="") data_root build = (
         let page = Data_source.get_page brtx in
         let toc = Brtx_transform.html_toc ~filename:str page in
         let html_buffer, err_buffer = 
-            Brtx_transform.to_html ~filename:str ~from page in
+            Brtx_transform.to_html ~todo_list ~filename:str ~from page in
         output_buffers ~templ_fun ~menu ~toc ~title html html_buffer err_buffer;
-
-
     );
+
+    printf p"Still TODO: %s\n" (Todo_list.to_string todo_list)
 
 )
 

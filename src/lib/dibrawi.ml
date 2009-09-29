@@ -160,6 +160,7 @@ module Todo_list = struct
             | `copy path -> sprintf p"Copy File: %s" path
             | `bibtex -> "Build the BibTeX"
         ))
+    let iter t ~f = Ls.iter !t ~f
 
 end
 
@@ -287,15 +288,15 @@ end
 module Brtx_transform = struct
 
     (* TODO handle errors better *)
-    let to_html ?class_hook ?filename ~from brtx = (
+    let to_html ?todo_list ?class_hook ?filename ~from brtx = (
         let brtx_page =
-            Preprocessor.brtx2brtx ~from brtx in
+            Preprocessor.brtx2brtx ?todo_list ~from brtx in
         let html_buffer = Buffer.create 1024 in
         let err_buffer = Buffer.create 512 in
         let writer, input_char =
             Bracetax.Transform.string_io brtx_page html_buffer err_buffer in
         let url_hook =
-            Special_paths.rewrite_url ~from in
+            Special_paths.rewrite_url ?todo_list ~from in
         Bracetax.Transform.brtx_to_html
             ~writer ?filename ?class_hook
             ~img_hook:url_hook ~url_hook ~input_char ();
