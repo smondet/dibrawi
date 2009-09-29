@@ -146,6 +146,7 @@ module Todo_list = struct
     type todo = [
         | `pdf of string
         | `tex of string
+        | `copy of string
         | `bibtex
     ]
     type t = todo list ref
@@ -156,6 +157,7 @@ module Todo_list = struct
         String.concat sep (Ls.map !tl ~f:(function
             | `pdf path -> sprintf p"Build PDF: %s" path
             | `tex path -> sprintf p"Build TeX: %s" path
+            | `copy path -> sprintf p"Copy File: %s" path
             | `bibtex -> "Build the BibTeX"
         ))
 
@@ -193,13 +195,16 @@ module Special_paths = struct
             let pdfpath = 
                 compute_path from (Str.tail s 4) ".pdf" in
             Opt.may todo_list
-                ~f:(fun rl -> rl := (`compile_pdf pdfpath) :: !rl;);
+                ~f:(fun rl -> rl := (`pdf pdfpath) :: !rl;);
             pdfpath 
         | s when Str.head s 5 = "page:" ->
             (compute_path from (Str.tail s 5) ".html")
         | s when Str.head s 4 = "img:" ->
-            compute_path from (Str.tail s 4)
-                (match output with `html -> ".png" | `pdf -> ".pdf")
+            let path =
+                compute_path from (Str.tail s 4)
+                    (match output with `html -> ".png" | `pdf -> ".pdf") in
+            Opt.may todo_list ~f:(fun rl -> rl := (`copy path) :: !rl;);
+            path
         | s -> s
     )
 
