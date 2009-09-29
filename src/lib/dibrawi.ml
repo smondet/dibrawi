@@ -199,10 +199,14 @@ module Special_paths = struct
             pdfpath 
         | s when Str.head s 5 = "page:" ->
             (compute_path from (Str.tail s 5) ".html")
-        | s when Str.head s 4 = "img:" ->
+        | s when Str.head s 4 = "fig:" ->
             let path =
                 compute_path from (Str.tail s 4)
                     (match output with `html -> ".png" | `pdf -> ".pdf") in
+            Opt.may todo_list ~f:(fun rl -> rl := (`copy path) :: !rl;);
+            path
+        | s when Str.head s 6 = "media:" ->
+            let path = compute_path from (Str.tail s 6) "" in
             Opt.may todo_list ~f:(fun rl -> rl := (`copy path) :: !rl;);
             path
         | s -> s
