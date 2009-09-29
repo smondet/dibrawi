@@ -2,13 +2,12 @@
 
 open Dibrawi_std
 
-let output_buffers html_name html_buffer err_buffer = (
+let output_buffers ?toc ?menu html_name html_buffer err_buffer = (
     ignore (Unix.system ("mkdir -p " ^ (Filename.dirname html_name)));
     File.with_file_out html_name (fun o ->
         let html_content = 
             Dibrawi.Templating.html_default
-                ~toc:"TOC TOC TOC"
-                ~menu:"MENU MENU MENU"
+                ?toc ?menu
                 ~title:html_name (Buffer.contents html_buffer) in
         output_string o html_content
     );
@@ -28,12 +27,13 @@ let transform data_root build = (
             Bibliography.load (Ls.map list_sebibs 
                 ~f:(fun (str, path) -> Data_source.get_page (data_root ^ str)))
         in
+        let menu = HTML_menu.html_menu ~from:["bibliography"] the_source_tree in
         let brtx = Bibliography.to_brtx bib in
         let html = build ^ "/bibliography.html" in
         let html_buffer, err_buffer = 
-            Brtx_transform.to_html
-                ~title:"Bibliography" ~from:["bibliography.html"] brtx in
-        output_buffers html html_buffer err_buffer;
+            Brtx_transform.to_html 
+                ~from:["bibliography.html"] brtx in
+        output_buffers ~menu html html_buffer err_buffer;
     in
 
 
@@ -44,13 +44,14 @@ let transform data_root build = (
     Ls.iter list_brtxes ~f:(fun (str, path) ->
         let brtx = data_root ^ str in
         let html = build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
-        printf p"%s -> %s\n" brtx html;
-        printf p"%{string list}\n" path;
+        (* printf p"%s -> %s\n" brtx html; *)
+        (* printf p"%{string list}\n" path; *)
         let from = path in
+        let menu = HTML_menu.html_menu ~from the_source_tree in
         let html_buffer, err_buffer = 
-            Brtx_transform.to_html ~title:(Ls.hd path) ~filename:str
+            Brtx_transform.to_html ~filename:str 
                 ~from (Data_source.get_page brtx) in
-        output_buffers html html_buffer err_buffer;
+        output_buffers ~menu html html_buffer err_buffer;
 
 
     );

@@ -68,7 +68,7 @@ let test_data_src data_root = (
     printf p"Todo list: { %s }<br/>\n" (Todo_list.to_string todo_list);
     let url_prefix =
         Shell.getcwd () ^ "/" ^ data_root in
-    get_file_tree ~data_root () |> html_menu ~url_prefix |> print_string;
+    get_file_tree ~data_root () |> html_menu ~url_prefix ~from:[] |> print_string;
 )
 let () = (
     match Sys.argv.(1) with

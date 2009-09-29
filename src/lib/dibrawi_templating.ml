@@ -67,7 +67,7 @@ div.content {
 
         tt {
             font-family: monospace;
-            font-size: 120%;
+            /*font-size: 120%;*/
             color: #003300;
         }
 
