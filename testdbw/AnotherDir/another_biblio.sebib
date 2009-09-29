@@ -1,0 +1,12 @@
+
+(   (id bouh)
+    (title "The Title")
+    (authors ((Foo Bar)))
+    (how "In the Test")
+)
+
+(   (id brout)
+    (title "Nice Title")
+    (authors ((Nice Author)))
+    (how "In the Test")
+)

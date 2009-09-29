@@ -1,0 +1,14 @@
+{header|
+{title|One page}
+}
+
+
+Links:
+{begin list}
+{*} Absolute: {link page:/AnotherDir/another_page}
+{*} Relative: {link page:..//AnotherDir/another_page}
+{*} Citation: {cite bouh}
+{*} Media: {link media:/AnotherDir/another_biblio.sebib}
+{*} PDF Include: {pdfinc ../AnotherDir/another_page}
+{*} Figure {link fig:/AnotherDir/image}
+{end}
