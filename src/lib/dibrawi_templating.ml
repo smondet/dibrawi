@@ -122,6 +122,51 @@ div.tablefigure {
     margin-right: 0em;
     padding: 0.5em;*/
 }
+/* FIGURES: */
+.figureid {
+  color: figid_color;
+  caption_style;
+  text-align: right;
+}
+
+img {
+    border: none;
+    padding-bottom: figortab_caption_margin;
+}
+div.figure:after { content: \" [\" attr(id) \"]\"; color:figid_color; }
+div.figure {
+    text-align: center;
+    /* text-indent: 10%; */
+    width: 50%;
+    /* float: center; */
+    border: thin #959595 solid;
+    float: right;
+    margin: 0.5em;
+    margin-right: 0em;
+    padding: 0.5em;
+    font-size: 80%;
+}
+/* FOOTNOTES */
+small.notebegin { counter-increment: footnote; }
+small.noteend:before {  content: counter(footnote) }
+small.note:before {  content: counter(footnote) \": \" }
+
+small.note {
+    /*margin-right: -170px;*/
+    /*position: absolute;*/
+    /*position: float;*/
+    clear: right;
+    /*right: 0;*/
+    width: 37%;
+    border: thin #959595 solid;
+    float: right;
+    margin: 0.5em;
+    margin-right: 0em;
+    padding: 0.5em;
+
+}
+
+
         "
     in
 
@@ -140,7 +185,6 @@ div.tablefigure {
     </head>\n\
     <body>\n\
     <div class=\"sidepane\">\n\
-        <b>%s</b><br/>\n\
         %s\n\
         <hr/>\n\
         %s\n\
@@ -152,7 +196,7 @@ div.tablefigure {
     </div>\n\
 </body></html>\n\
 "
-title css title menu toc footer content
+title css menu toc footer content
 )
 
 (* Generates a BIG closure !! *)

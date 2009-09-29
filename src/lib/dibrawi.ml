@@ -212,7 +212,6 @@ module Preprocessor = struct
     ?(html_biblio_page="page:/bibliography") ?(output=`html) ~from brtx = (
 
         Pcre.substitute ~rex:prepro_regexp brtx ~subst:(fun s ->
-            eprintf p"Got: %s\n" s;
             Shell.catch_break true;
             match s with
             | cite when Str.head cite 6 = "{cite " ->
