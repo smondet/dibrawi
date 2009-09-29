@@ -2,11 +2,37 @@
 
 open Dibrawi_std
 
+let output_buffers html_name html_buffer err_buffer = (
+    ignore (Unix.system ("mkdir -p " ^ (Filename.dirname html_name)));
+    File.with_file_out html_name (fun o ->
+        Buffer.output_buffer o html_buffer
+    );
+    let s = Buffer.contents err_buffer in
+    if s <> "" then (eprintf p"Errors for %s:\n%s\n" html_name s;);
+)
 
 let transform data_root build = (
     open Dibrawi in
     let the_source_tree = 
         Data_source.get_file_tree ~data_root () in
+
+    let list_sebibs =
+        File_tree.str_and_path_list ~filter:"\\.sebib$" the_source_tree in
+    let () = 
+        let bib =
+            Bibliography.load (Ls.map list_sebibs 
+                ~f:(fun (str, path) -> Data_source.get_page (data_root ^ str)))
+        in
+        let brtx = Bibliography.to_brtx bib in
+        let html = build ^ "/bibliography.html" in
+        let html_buffer, err_buffer = 
+            Brtx_transform.to_html
+                ~title:"Bibliography" ~from:["bibliography.html"] brtx in
+        output_buffers html html_buffer err_buffer;
+    in
+
+
+
 
     let list_brtxes = File_tree.str_and_path_list the_source_tree in
 
@@ -16,23 +42,11 @@ let transform data_root build = (
         printf p"%s -> %s\n" brtx html;
         printf p"%{string list}\n" path;
         let from = path in
-        let brtx_page =
-            Data_source.get_page brtx |> Preprocessor.brtx2brtx ~from in
-        let html_buffer = Buffer.create 1024 in
-        let err_buffer = Buffer.create 512 in
-        let writer, input_char =
-            Bracetax.Transform.string_io brtx_page html_buffer err_buffer in
-        let url_hook =
-            Special_paths.rewrite_url ~from in
-        Bracetax.Transform.brtx_to_html
-            ~writer ~doc:true ~title:(Ls.hd path)
-            ~filename:str ~img_hook:url_hook ~url_hook ~input_char ();
+        let html_buffer, err_buffer = 
+            Brtx_transform.to_html ~title:(Ls.hd path) ~filename:str
+                ~from (Data_source.get_page brtx) in
+        output_buffers html html_buffer err_buffer;
 
-        ignore (Unix.system ("mkdir -p " ^ (Filename.dirname html)));
-        File.with_file_out html (fun o ->
-            Buffer.output_buffer o html_buffer
-        );
-        eprintf p"Errors for %s:\n%s\n" brtx (Buffer.contents err_buffer);
 
     );
 

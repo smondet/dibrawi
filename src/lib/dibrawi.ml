@@ -304,3 +304,51 @@ module Preprocessor = struct
         )
     )
 end
+
+(******************************************************************************)
+module Bibliography = struct
+
+    (* str_list is a list S-Expressions (already loaded in memory) *)
+    let load str_list = (
+        Sebib.Biblio.set_of_string (Str.concat " " str_list)
+    )
+    let to_brtx biblio = (
+        let pattern = "
+            {section 1 @{id}|{t|[@{id}]}}\
+            {b|@{title}}{br} \
+            @{if (has authors)}@{authors-and}\
+                @{else}{i|-- no authors --}@{endif}{br}\
+            @{year} - {i|@{how}}{br} \
+            @{if (lo ((has url) (has pdfurl) (has doi)))} {b|Links:}\
+            @{if (has url)}{t|{link @{url}|URL}}@{endif} \
+            @{if (has pdfurl)}{t|{link @{pdfurl}|PDF}}@{endif} \
+            @{if (has doi)}{t|{link @{doi}|doi}}@{endif}{br}@{endif} \
+            {b|Tags:} {i|@{tags}} {br} \
+            @{if (has keywords)}{b|Keywords:} {i|@{keywords}} {br}@{endif} \
+            @{if (has abstract)}{b|Abstract:} {br} @{abstract} {br}@{endif} \
+            @{if (has comments)}{b|Comments:} {br} @{comments}@{endif}" in
+        "{header|{title|Bibliography}}" ^ (Sebib.Format.str ~pattern biblio)
+    )
+    let bibtex = Sebib.BibTeX.str
+end
+
+module Brtx_transform = struct
+
+    (* TODO handle errors better *)
+    let to_html ?title ?filename ~from brtx = (
+        let brtx_page =
+            Preprocessor.brtx2brtx ~from brtx in
+        let html_buffer = Buffer.create 1024 in
+        let err_buffer = Buffer.create 512 in
+        let writer, input_char =
+            Bracetax.Transform.string_io brtx_page html_buffer err_buffer in
+        let url_hook =
+            Special_paths.rewrite_url ~from in
+        Bracetax.Transform.brtx_to_html
+            ~writer ~doc:true ?title
+            ?filename ~img_hook:url_hook ~url_hook ~input_char ();
+        (html_buffer, err_buffer)
+    )
+
+
+end
