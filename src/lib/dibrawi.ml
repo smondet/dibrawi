@@ -165,6 +165,7 @@ module Todo_list = struct
     let do_things t ~(f:todo -> todo list) =
         t := Ls.concat (Ls.map !t ~f)
 
+    let simplify t = t := Ls.unique !t
 end
 
 module Special_paths = struct
@@ -316,6 +317,20 @@ module Brtx_transform = struct
             to_html ~class_hook:"dbwtoc" ~from:[""]
                 (Buffer.contents brtx_buffer) in
         (Buffer.contents h)
+    )
+
+    let to_latex ?todo_list ?filename ~from brtx = (
+        let output = `pdf in
+        let brtx_page =
+            Preprocessor.brtx2brtx ~output ?todo_list ~from brtx in
+        let latex_buffer = Buffer.create 1024 in
+        let err_buffer = Buffer.create 512 in
+        let writer, input_char =
+            Bracetax.Transform.string_io brtx_page latex_buffer err_buffer in
+        let url_hook = Special_paths.rewrite_url ~output ?todo_list ~from in
+        Bracetax.Transform.brtx_to_latex
+            ~writer ?filename ~img_hook:url_hook ~url_hook ~input_char ();
+        (latex_buffer, err_buffer)
     )
 
 end

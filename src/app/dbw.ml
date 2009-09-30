@@ -69,6 +69,7 @@ let transform ?(html_template="") data_root build = (
         output_buffers ~templ_fun ~menu ~toc ~title html html_buffer err_buffer;
     );
 
+    Todo_list.simplify todo_list;
     Todo_list.do_things todo_list ~f:(function 
         | `copy (path, from) ->
             let from_path = String.concat "/" (Ls.rev (Ls.tl from)) in
