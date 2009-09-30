@@ -118,7 +118,7 @@ module Data_source = struct
         if is_directory data_root then (
             let rec explore path name =
                 let next_path = path ^ "/" ^ name in
-                let real_path = data_root ^ next_path in
+                let real_path = data_root ^ "/" ^ next_path in
                 if is_directory real_path then
                     Dir (path, name, Ls.map (explore next_path)  (ls real_path))
                 else
@@ -146,7 +146,7 @@ module Todo_list = struct
     type todo = [
         | `pdf of string
         | `tex of string
-        | `copy of string
+        | `copy of (string * (string list))
         | `bibtex
     ]
     type t = todo list ref
@@ -157,10 +157,13 @@ module Todo_list = struct
         String.concat sep (Ls.map !tl ~f:(function
             | `pdf path -> sprintf p"Build PDF: %s" path
             | `tex path -> sprintf p"Build TeX: %s" path
-            | `copy path -> sprintf p"Copy File: %s" path
+            | `copy (path, from) ->
+                sprintf p"Copy File: %s from %{string list}" path from
             | `bibtex -> "Build the BibTeX"
         ))
     let iter t ~f = Ls.iter !t ~f
+    let do_things t ~(f:todo -> todo list) =
+        t := Ls.concat (Ls.map !t ~f)
 
 end
 
@@ -204,11 +207,11 @@ module Special_paths = struct
             let path =
                 compute_path from (Str.tail s 4)
                     (match output with `html -> ".png" | `pdf -> ".pdf") in
-            Opt.may todo_list ~f:(fun rl -> rl := (`copy path) :: !rl;);
+            Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
             path
         | s when Str.head s 6 = "media:" ->
             let path = compute_path from (Str.tail s 6) "" in
-            Opt.may todo_list ~f:(fun rl -> rl := (`copy path) :: !rl;);
+            Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
             path
         | s -> s
     )

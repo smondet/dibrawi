@@ -35,7 +35,8 @@ let transform ?(html_template="") data_root build = (
     let () = 
         let bib =
             Bibliography.load (Ls.map list_sebibs 
-                ~f:(fun (str, path) -> Data_source.get_page (data_root ^ str)))
+                ~f:(fun (str, path) ->
+                    Data_source.get_page (data_root ^ "/" ^ str)))
         in
         let menu = HTML_menu.html_menu ~from:["bibliography"] the_source_tree in
         let brtx = Bibliography.to_brtx bib in
@@ -54,7 +55,7 @@ let transform ?(html_template="") data_root build = (
     let list_brtxes = File_tree.str_and_path_list the_source_tree in
 
     Ls.iter list_brtxes ~f:(fun (str, path) ->
-        let brtx = data_root ^ str in
+        let brtx = data_root ^ "/" ^ str in
         let title = Filename.chop_extension str in
         let html = build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
         (* printf p"%s -> %s\n" brtx html; *)
@@ -68,6 +69,17 @@ let transform ?(html_template="") data_root build = (
         output_buffers ~templ_fun ~menu ~toc ~title html html_buffer err_buffer;
     );
 
+    Todo_list.do_things todo_list ~f:(function 
+        | `copy (path, from) ->
+            let from_path = String.concat "/" (Ls.rev (Ls.tl from)) in
+            let origin = data_root ^ "/" ^ from_path ^ "/" ^ path in
+            let dest = build ^ "/" ^ from_path ^ "/" ^ path in
+            ignore (Unix.system ("mkdir -p " ^ (Filename.dirname dest)));
+            ignore (Unix.system (sprintf p"cp %s %s" origin dest));
+            printf p"Should copy: %s -> %s\n" origin dest;
+            []
+        | s -> [s]
+    );
     printf p"Still TODO: %s\n" (Todo_list.to_string todo_list)
 
 )
