@@ -77,11 +77,13 @@ let transform ?(html_template="") data_root build = (
             let dest = build ^ "/" ^ from_path ^ "/" ^ path in
             ignore (Unix.system ("mkdir -p " ^ (Filename.dirname dest)));
             ignore (Unix.system (sprintf p"cp %s %s" origin dest));
-            printf p"Should copy: %s -> %s\n" origin dest;
+            (* printf p"Should copy: %s -> %s\n" origin dest; *)
             []
         | s -> [s]
     );
-    printf p"Still TODO: %s\n" (Todo_list.to_string todo_list)
+    if not (Todo_list.is_empty todo_list) then (
+        printf p"Still TODO: %s\n" (Todo_list.to_string todo_list)
+    );
 
 )
 

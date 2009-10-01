@@ -152,6 +152,7 @@ module Todo_list = struct
     type t = todo list ref
 
     let empty () = ref []
+    let is_empty t = !t = []
 
     let to_string ?(sep="; ") tl =
         String.concat sep (Ls.map !tl ~f:(function
