@@ -398,5 +398,29 @@ module HTML_menu = struct
     )
 end
 
+module Latex = struct
+
+    let build path = (
+        let pwd = Shell.getcwd () in
+        let cd = Filename.dirname path in
+        Shell.chdir cd;
+        let pdflatex = 
+            "pdflatex -interaction=nonstopmode" in
+        let target = Filename.chop_extension (Filename.basename path) in
+        let return =
+            Unix.system (sprintf p"%s %s > /dev/null" pdflatex target) in
+        if return = Unix.WEXITED 0 then (
+            let return =
+                Unix.system (sprintf p"%s %s > /dev/null" pdflatex target) in
+            Shell.chdir pwd;
+            return
+        ) else (
+            Shell.chdir pwd;
+            return
+        )
+    )
+
+
+end
 
 

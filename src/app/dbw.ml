@@ -5,29 +5,37 @@ open Dibrawi_std
 
 let output_buffers
 ~(templ_fun:Dibrawi.Templating.template)
-?title ?toc ?menu html_name html_buffer err_buffer = (
-    ignore (Unix.system ("mkdir -p " ^ (Filename.dirname html_name)));
-    File.with_file_out ~mode:[`create] html_name (fun o ->
-        let html_content =
-            templ_fun ?toc ?menu ?title (Buffer.contents html_buffer) in
-        fprintf o p"%s" html_content;
+?title ?toc ?menu file_name content_buffer err_buffer = (
+    ignore (Unix.system ("mkdir -p " ^ (Filename.dirname file_name)));
+    File.with_file_out ~mode:[`create] file_name (fun o ->
+        let content_content =
+            templ_fun ?toc ?menu ?title (Buffer.contents content_buffer) in
+        fprintf o p"%s" content_content;
         fprintf o p"%!";
     );
     let s = Buffer.contents err_buffer in
-    if s <> "" then (eprintf p"Errors for %s:\n%s\n" html_name s;);
+    if s <> "" then (eprintf p"Errors for %s:\n%s\n" file_name s;);
 )
 
-let transform ?(html_template="") data_root build = (
+let transform
+?(make_all_pdfs=false) ?(latex_template="") ?(html_template="")
+data_root build = (
     open Dibrawi in
     let the_source_tree = 
         Data_source.get_file_tree ~data_root () in
     let todo_list = Todo_list.empty () in
 
-    let templ_fun = 
+    let html_templ_fun = 
         if html_template <> "" then 
             Templating.load (Data_source.get_file html_template)
         else
             Templating.html_default
+    in
+    let latex_templ_fun = 
+        if latex_template <> "" then 
+            Templating.load (Data_source.get_file latex_template)
+        else
+            Templating.latex_default
     in
 
     let list_sebibs =
@@ -45,7 +53,8 @@ let transform ?(html_template="") data_root build = (
         let html_buffer, err_buffer = 
             Brtx_transform.to_html ~todo_list 
                 ~from:["bibliography.html"] brtx in
-        output_buffers ~templ_fun ~menu ~toc ~title:"Bibliography"
+        output_buffers ~templ_fun:html_templ_fun
+            ~menu ~toc ~title:"Bibliography"
             html html_buffer err_buffer;
     in
 
@@ -66,7 +75,25 @@ let transform ?(html_template="") data_root build = (
         let toc = Brtx_transform.html_toc ~filename:str page in
         let html_buffer, err_buffer = 
             Brtx_transform.to_html ~todo_list ~filename:str ~from page in
-        output_buffers ~templ_fun ~menu ~toc ~title html html_buffer err_buffer;
+        output_buffers ~templ_fun:html_templ_fun
+            ~menu ~toc ~title html html_buffer err_buffer; 
+        if make_all_pdfs then (
+            let title = Filename.chop_extension str in
+            let tex = build ^ "/" ^ (Filename.chop_extension str) ^ ".tex" in
+            let from = path in
+            let latex_buffer, err_buffer = 
+                Brtx_transform.to_latex ~todo_list ~filename:str ~from page in
+            output_buffers ~templ_fun:latex_templ_fun
+                ~menu ~toc ~title tex latex_buffer err_buffer; 
+            begin match (Latex.build tex) with
+            | Unix.WEXITED 0 -> ()
+            | Unix.WEXITED n ->
+                printf p"PDF: Compilation of %s failed with error code: %d\n" 
+                    tex n;
+            | _ ->
+                printf p"PDF: Compilation of %s got killed (?)\n" tex;
+            end;
+        );
     );
 
     Todo_list.simplify todo_list;
@@ -90,6 +117,8 @@ let transform ?(html_template="") data_root build = (
 let () = (
     let print_version = ref false in
     let html_tmpl = ref "" in
+    let latex_tmpl = ref "" in
+    let all_pdfs = ref false in
 
     let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
     let anon =
@@ -101,7 +130,15 @@ let () = (
             Arg.command
                 ~doc:"\n\tSet an HTML template file"
                 "-html-template"
-                (Arg.Set_string html_tmpl)
+                (Arg.Set_string html_tmpl);
+            Arg.command
+                ~doc:"\n\tSet a LaTeX template file"
+                "-latex-template"
+                (Arg.Set_string latex_tmpl);
+            Arg.command
+                ~doc:"\n\tBuild (or try to) all the PDFs"
+                "-all-pdfs"
+                (Arg.Set all_pdfs);
         ] in 
 
     if !print_version then (
@@ -112,9 +149,13 @@ let () = (
             Bracetax.Info.version Sebib.Info.version;
     ) else (
         begin match anon with
-        | [i; o] -> transform ~html_template:!html_tmpl i o
+        | [i; o] ->
+            transform
+                ~make_all_pdfs:!all_pdfs ~html_template:!html_tmpl
+                ~latex_template:!latex_tmpl i o
         | _ -> 
             printf p"Wrong number of arguments: %d\n" (Ls.length anon);
+            printf p"%s\n" usage;
         end;
     );
 
