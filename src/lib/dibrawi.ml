@@ -177,9 +177,9 @@ module Special_paths = struct
                 let depth = Ls.length from - 1 in
                 "./" ^ (Str.concat "/" (Ls.init depth ~f:(fun _ -> ".."))) ^ path
             | '#' ->
-                (Ls.hd from) ^ path
+                (Filename.chop_extension (Ls.hd from)) ^ path
             | _ -> path
-        with _ -> (Ls.hd from) (* the string is empty*)
+        with _ -> (Filename.chop_extension (Ls.hd from)) (* the string is empty*)
     )
     let typify url extension = (
         match Str.rev_idx url '#', Str.rev_idx url '/' with
