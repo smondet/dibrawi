@@ -223,7 +223,7 @@ end
 module Preprocessor = struct
 
     let prepro_regexp =
-        Pcre.regexp "(\\{cite [^\\}]*\\})|(\\{pdfinc [^\\}]*\\})"
+        Pcre.regexp "(\\{cite\\s+[^\\}]*\\})|(\\{pdfinc [^\\}]*\\})"
 
     let brtx2brtx
     ?todo_list
@@ -232,20 +232,23 @@ module Preprocessor = struct
         Pcre.substitute ~rex:prepro_regexp brtx ~subst:(fun s ->
             (* Shell.catch_break true; *)
             match s with
-            | cite when Str.head cite 6 = "{cite " ->
+            | cite when Str.head cite 5 = "{cite" ->
+                let cites =
+                    Ls.map
+                        (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",")
+                        ~f:Str.trim in
                 if output = `html then (
-                    let cites =
-                        (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",") in
-                    "[" ^ (Str.concat ","
+                    "[" ^ (Str.concat ", "
                         (Ls.map cites ~f:(fun cite ->
                             sprintf p"{link %s#%s|%s}"
                                 html_biblio_page cite cite))) ^ "]"
                 ) else (
                     Opt.may todo_list ~f:(fun tl -> tl := `bibtex :: !tl);
                     sprintf p"{bypass}\\cite{%s}{end}"
-                        (Str.sub s 6 (String.length s - 7))
+                        (Str.concat "," cites)
+                        (* (Str.sub s 6 (String.length s - 7)) *)
                 )
-            | pdfinc when Str.head pdfinc 8 = "{pdfinc " ->
+            | pdfinc when Str.head pdfinc 7 = "{pdfinc" ->
                 let page_path = Str.sub s 8 (String.length s - 9) in
                 let path = 
                     Special_paths.compute_path from page_path in

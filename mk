@@ -46,7 +46,7 @@ h: This help"
 }
 
 if [ $# -eq 0 ]; then
-    build
+    build "opt"
     exit $?
 fi
 
