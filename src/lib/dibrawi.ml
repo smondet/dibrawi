@@ -223,7 +223,7 @@ end
 module Preprocessor = struct
 
     let prepro_regexp =
-        Pcre.regexp "(\\{cite\\s+[^\\}]*\\})|(\\{pdfinc [^\\}]*\\})"
+        Pcre.regexp "\\{cite\\s+[^\\}]*\\}"
 
     let brtx2brtx
     ?todo_list
@@ -248,18 +248,6 @@ module Preprocessor = struct
                         (Str.concat "," cites)
                         (* (Str.sub s 6 (String.length s - 7)) *)
                 )
-            | pdfinc when Str.head pdfinc 7 = "{pdfinc" ->
-                let page_path = Str.sub s 8 (String.length s - 9) in
-                let path = 
-                    Special_paths.compute_path from page_path in
-                if output = `html then (
-                    sprintf p"{t|{link %s}}" (path ".html")
-                ) else (
-                    Opt.may todo_list
-                        ~f:(fun tl -> tl := (`tex (path ".tex")) :: !tl);
-                    sprintf p"{bypass}\\input{%s}{end}" (path ".tex")
-                )
-
             | s -> s;
         )
     )

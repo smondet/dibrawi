@@ -11,7 +11,6 @@ Links:
 {*} Relative: {link page:..//AnotherDir/another_page#sec:section}
 {*} Citation: {cite bouh}
 {*} Media: {link media:/AnotherDir/another_biblio.sebib}
-{*} PDF Include: {pdfinc ../AnotherDir/another_page}
 {*} Figure {link fig:/AnotherDir/image}
 {*} Absolute: {link pdf:/AnotherDir/another_page}
 {*} Relative: {link pdf:../AnotherDir/another_page}
