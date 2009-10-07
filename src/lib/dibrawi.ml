@@ -265,7 +265,7 @@ module Bibliography = struct
             @{if (has authors)}@{authors-and}\
                 @{else}{i|-- no authors --}@{endif}{br}\
             @{year} - {i|@{how}}{br} \
-            @{if (lo ((has url) (has pdfurl) (has doi)))} {b|Links:}\
+            @{if (lo ((has url) (has pdfurl) (has doi)))} {b|Links:} \
             @{if (has url)}{t|{link @{url}|URL}}@{endif} \
             @{if (has pdfurl)}{t|{link @{pdfurl}|PDF}}@{endif} \
             @{if (has doi)}{t|{link @{doi}|doi}}@{endif}{br}@{endif} \
