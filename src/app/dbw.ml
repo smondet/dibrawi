@@ -70,9 +70,9 @@ data_root build = (
         let brtx = Bibliography.to_brtx bib in
         let toc = Brtx_transform.html_toc ~filename:"Bibliography" brtx in
         let html = build ^ "/bibliography.html" in
+        let from =  ["bibliography.html"] in
         let html_buffer, err_buffer = 
-            Brtx_transform.to_html ~todo_list 
-                ~from:["bibliography.html"] brtx in
+            Brtx_transform.to_html ~todo_list ~from brtx in
         output_buffers
             ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Bibliography")
             html html_buffer err_buffer;
@@ -80,6 +80,17 @@ data_root build = (
         let dot_bib = (Shell.getcwd ()) ^ "/" ^ build ^ "/biblio.bib" in
         File.with_file_out ~mode:[`create] dot_bib (fun o ->
             fprintf o p"%s" bibtex);
+        if make_all_pdfs then (
+            let tex = build ^ "/bibliography.tex" in
+            let latex_buffer, err_buffer, (title, authors, subtitle) = 
+                Brtx_transform.to_latex ~todo_list ~from brtx in
+            output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
+            let title, authors, subtitle = "Bibliography", "", "" in
+            let latex_template = 
+                (latex_templ_fun ~title ~authors ~subtitle ~bibtex_path:dot_bib)
+            in
+            build_pdf ~latex_template tex;
+        );
         dot_bib
     in
 
