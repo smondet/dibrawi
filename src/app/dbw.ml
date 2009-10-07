@@ -39,8 +39,8 @@ let build_pdf ~latex_template texname = (
 
 
 let transform
-?(make_all_pdfs=false) ?(dependent_pdfs=false) ?(latex_template="")
-?(html_template="")
+?(make_all_pdfs=false) ?(dependent_pdfs=false) ?(biblio_pdf=false)
+?(latex_template="") ?(html_template="")
 data_root build = (
     open Dibrawi in
     let the_source_tree = 
@@ -81,7 +81,7 @@ data_root build = (
         let dot_bib = (Shell.getcwd ()) ^ "/" ^ build ^ "/biblio.bib" in
         File.with_file_out ~mode:[`create] dot_bib (fun o ->
             fprintf o p"%s" bibtex);
-        if make_all_pdfs then (
+        if make_all_pdfs || biblio_pdf then (
             let tex = build ^ "/bibliography.tex" in
             let latex_buffer, err_buffer, (title, authors, subtitle) = 
                 Brtx_transform.to_latex ~todo_list ~from brtx in
@@ -166,6 +166,7 @@ let () = (
     let html_tmpl = ref "" in
     let latex_tmpl = ref "" in
     let all_pdfs = ref false in
+    let bib_pdf = ref false in
     let dependent_pdfs = ref false in
 
     let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
@@ -191,6 +192,10 @@ let () = (
                 ~doc:"\n\tBuild the \"needed\" PDFs"
                 "-pdfs"
                 (Arg.Set dependent_pdfs);
+            Arg.command
+                ~doc:"\n\tBuild the PDF of the bibliography"
+                "-bib-pdf"
+                (Arg.Set bib_pdf);
         ] in 
 
     if !print_version then (
@@ -204,7 +209,7 @@ let () = (
         | [i; o] ->
             transform
                 ~make_all_pdfs:!all_pdfs ~html_template:!html_tmpl
-                ~dependent_pdfs:!dependent_pdfs
+                ~dependent_pdfs:!dependent_pdfs ~biblio_pdf:!bib_pdf
                 ~latex_template:!latex_tmpl i o
         | _ -> 
             printf p"Wrong number of arguments: %d\n" (Ls.length anon);
