@@ -145,7 +145,6 @@ module Todo_list = struct
 
     type todo = [
         | `pdf of string
-        | `tex of string
         | `copy of (string * (string list))
         | `bibtex
     ]
@@ -157,7 +156,6 @@ module Todo_list = struct
     let to_string ?(sep="; ") tl =
         String.concat sep (Ls.map !tl ~f:(function
             | `pdf path -> sprintf p"Build PDF: %s" path
-            | `tex path -> sprintf p"Build TeX: %s" path
             | `copy (path, from) ->
                 sprintf p"Copy File: %s from %{string list}" path from
             | `bibtex -> "Build the BibTeX"
