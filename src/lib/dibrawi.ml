@@ -144,7 +144,7 @@ end
 module Todo_list = struct
 
     type todo = [
-        | `pdf of string
+        | `pdf  of (string * (string list))
         | `copy of (string * (string list))
         | `bibtex
     ]
@@ -155,7 +155,8 @@ module Todo_list = struct
 
     let to_string ?(sep="; ") tl =
         String.concat sep (Ls.map !tl ~f:(function
-            | `pdf path -> sprintf p"Build PDF: %s" path
+            | `pdf (path, from) ->
+                sprintf p"Build PDF: %s from %{string list}" path from
             | `copy (path, from) ->
                 sprintf p"Copy File: %s from %{string list}" path from
             | `bibtex -> "Build the BibTeX"
@@ -198,8 +199,9 @@ module Special_paths = struct
         | s when Str.head s 4 = "pdf:" ->
             let pdfpath = 
                 compute_path from (Str.tail s 4) ".pdf" in
-            Opt.may todo_list
-                ~f:(fun rl -> rl := (`pdf pdfpath) :: !rl;);
+            Opt.may todo_list ~f:(fun rl ->
+                rl := (`pdf (pdfpath, from)) :: !rl;
+            );
             pdfpath 
         | s when Str.head s 5 = "page:" ->
             (compute_path from (Str.tail s 5) ".html")

@@ -39,7 +39,8 @@ let build_pdf ~latex_template texname = (
 
 
 let transform
-?(make_all_pdfs=false) ?(latex_template="") ?(html_template="")
+?(make_all_pdfs=false) ?(dependent_pdfs=false) ?(latex_template="")
+?(html_template="")
 data_root build = (
     open Dibrawi in
     let the_source_tree = 
@@ -136,6 +137,22 @@ data_root build = (
             ignore (Unix.system (sprintf p"cp %s %s" origin dest));
             (* printf p"Should copy: %s -> %s\n" origin dest; *)
             []
+        | `pdf (path, from) when dependent_pdfs ->
+            let from_path = String.concat "/" (Ls.rev (Ls.tl from)) in
+            let pdf = from_path ^ "/" ^ path in
+            let tex =
+                build ^ "/" ^ (Filename.chop_extension pdf) ^ ".tex" in
+            let brtx =
+                data_root ^ "/" ^ (Filename.chop_extension pdf) ^ ".brtx"
+            in
+            let page = Data_source.get_page brtx in
+            let latex_buffer, err_buffer, (title, authors, subtitle) = 
+                Brtx_transform.to_latex ~filename:tex ~from page in
+            output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
+            let latex_template = 
+                (latex_templ_fun ~title ~authors ~subtitle ~bibtex_path) in
+            build_pdf ~latex_template tex;
+            []
         | s -> [s]
     );
     if not (Todo_list.is_empty todo_list) then (
@@ -149,6 +166,7 @@ let () = (
     let html_tmpl = ref "" in
     let latex_tmpl = ref "" in
     let all_pdfs = ref false in
+    let dependent_pdfs = ref false in
 
     let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
     let anon =
@@ -169,6 +187,10 @@ let () = (
                 ~doc:"\n\tBuild (or try to) all the PDFs"
                 "-all-pdfs"
                 (Arg.Set all_pdfs);
+            Arg.command
+                ~doc:"\n\tBuild the \"needed\" PDFs"
+                "-pdfs"
+                (Arg.Set dependent_pdfs);
         ] in 
 
     if !print_version then (
@@ -182,6 +204,7 @@ let () = (
         | [i; o] ->
             transform
                 ~make_all_pdfs:!all_pdfs ~html_template:!html_tmpl
+                ~dependent_pdfs:!dependent_pdfs
                 ~latex_template:!latex_tmpl i o
         | _ -> 
             printf p"Wrong number of arguments: %d\n" (Ls.length anon);
