@@ -340,16 +340,21 @@ module HTML_menu = struct
         let buf = Buffer.create 1024 in
         let filt = Pcre.regexp filter in
         let excl = Pcre.regexp exclude_dir in
+        let presort l =
+            let dirs, files =
+                Ls.partition (function Dir _ -> false | _ -> true) l in
+            dirs @ files in
         let rec to_brtx  = function
             | Dir (path, name, l) ->
                 (* eprintf p"path: %s, name: %s\n" path name; *)
                 if not (pcre_matches excl name) then (
                     Buffer.add_string buf 
                         (sprintf p"{*} %s\n{begin list}\n" name);
-                    Ls.iter ~f:to_brtx l;
+                    Ls.iter ~f:to_brtx (presort l);
                     Buffer.add_string buf (sprintf p"{end} # %s\n" name);
                 ) else (
-                    Buffer.add_string buf (sprintf p"# ignore: %s %s\n" path name);
+                    Buffer.add_string buf
+                        (sprintf p"# ignore: %s %s\n" path name);
                 );
             | File (path, name) ->
                 if pcre_matches filt name then (
@@ -365,7 +370,7 @@ module HTML_menu = struct
                 );
         in
         Buffer.add_string buf (sprintf p"{begin list}\n");
-        Ls.iter to_brtx tree;
+        Ls.iter to_brtx (presort tree);
         Buffer.add_string buf (sprintf p"{end} # Root\n");
         Buffer.contents buf
     )
