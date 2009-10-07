@@ -403,7 +403,11 @@ module Latex = struct
         let return =
             Unix.system (sprintf p"%s %s > /dev/null" pdflatex target) in
         if return = Unix.WEXITED 0 then (
-            let return =
+            let _ =
+                Unix.system (sprintf p"bibtex %s > /dev/null"  target) in
+            let _ =
+                Unix.system (sprintf p"%s %s > /dev/null" pdflatex target) in
+            let _ =
                 Unix.system (sprintf p"%s %s > /dev/null" pdflatex target) in
             Shell.chdir pwd;
             return

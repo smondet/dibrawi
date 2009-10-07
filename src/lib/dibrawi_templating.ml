@@ -2,9 +2,10 @@ open Dibrawi_std
 
 type html_template =
     ?menu:string -> ?toc:string -> ?title:string -> ?footer:string -> string ->
-        string
+    string
 type latex_template =
-    ?title:string -> ?authors:string -> ?subtitle:string -> string -> string
+    ?title:string -> ?authors:string -> ?subtitle:string ->
+    ?bibtex_file:string -> string -> string
 
 
 (* Generates a BIG closure !! *)
@@ -23,12 +24,13 @@ let load_html str = (
 )
 
 let load_latex str = (
-    fun ?(title="") ?(authors="")  ?(subtitle="") filename ->
+    fun ?(title="") ?(authors="")  ?(subtitle="") ?(bibtex_path="") filename ->
         Pcre.substitute ~rex:tmpl_regexp ~subst:(function
             | "DIBRAWI_TEMPLATE_TITLE" -> title
             | "DIBRAWI_TEMPLATE_AUTHORS" -> authors
             | "DIBRAWI_TEMPLATE_SUBTITLE" -> subtitle
             | "DIBRAWI_TEMPLATE_FILENAME" -> filename
+            | "DIBRAWI_TEMPLATE_BIBTEXFILE" -> bibtex_path
             | s -> s) str
 )
 
@@ -101,7 +103,9 @@ let tmpl_latex_default =
     \\maketitle\n\
     \n\
     \\input{DIBRAWI_TEMPLATE_FILENAME}\n\
-    \\end{document}
+    \\bibliographystyle{alpha}\n\
+    \\bibliography{DIBRAWI_TEMPLATE_BIBTEXFILE}\n\
+    \\end{document}\n\
     "
 
 let latex_default = load_latex tmpl_latex_default

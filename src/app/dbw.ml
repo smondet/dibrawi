@@ -60,7 +60,7 @@ data_root build = (
     in
     let list_sebibs =
         File_tree.str_and_path_list ~filter:"\\.sebib$" the_source_tree in
-    let () = 
+    let bibtex_path = 
         let bib =
             Bibliography.load (Ls.map list_sebibs 
                 ~f:(fun (str, path) ->
@@ -76,6 +76,11 @@ data_root build = (
         output_buffers
             ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Bibliography")
             html html_buffer err_buffer;
+        let bibtex = Bibliography.bibtex bib in
+        let dot_bib = (Shell.getcwd ()) ^ "/" ^ build ^ "/biblio.bib" in
+        File.with_file_out ~mode:[`create] dot_bib (fun o ->
+            fprintf o p"%s" bibtex);
+        dot_bib
     in
 
 
@@ -104,8 +109,9 @@ data_root build = (
             let latex_buffer, err_buffer, (title, authors, subtitle) = 
                 Brtx_transform.to_latex ~todo_list ~filename:str ~from page in
             output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
-            build_pdf
-                ~latex_template:(latex_templ_fun ~title ~authors ~subtitle) tex;
+            let latex_template = 
+                (latex_templ_fun ~title ~authors ~subtitle ~bibtex_path) in
+            build_pdf ~latex_template tex;
         );
     );
 
