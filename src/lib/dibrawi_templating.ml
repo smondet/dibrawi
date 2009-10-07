@@ -1,14 +1,17 @@
 open Dibrawi_std
 
-type template =
-    ?menu:string -> ?toc:string -> ?title:string -> ?footer:string -> string -> string
+type html_template =
+    ?menu:string -> ?toc:string -> ?title:string -> ?footer:string -> string ->
+        string
+type latex_template =
+    ?title:string -> ?authors:string -> ?subtitle:string -> string -> string
 
 
 (* Generates a BIG closure !! *)
 let tmpl_regexp =
     Pcre.regexp "DIBRAWI_TEMPLATE_[A-Z]+"
 
-let load str = (
+let load_html str = (
     fun ?(menu="") ?(toc="")  ?(title="") ?(footer="") content ->
         Pcre.substitute ~rex:tmpl_regexp ~subst:(function
             | "DIBRAWI_TEMPLATE_TITLE" -> title
@@ -16,6 +19,16 @@ let load str = (
             | "DIBRAWI_TEMPLATE_TOC" -> toc
             | "DIBRAWI_TEMPLATE_CONTENT" -> content
             | "DIBRAWI_TEMPLATE_FOOTER" -> footer
+            | s -> s) str
+)
+
+let load_latex str = (
+    fun ?(title="") ?(authors="")  ?(subtitle="") filename ->
+        Pcre.substitute ~rex:tmpl_regexp ~subst:(function
+            | "DIBRAWI_TEMPLATE_TITLE" -> title
+            | "DIBRAWI_TEMPLATE_AUTHORS" -> authors
+            | "DIBRAWI_TEMPLATE_SUBTITLE" -> subtitle
+            | "DIBRAWI_TEMPLATE_FILENAME" -> filename
             | s -> s) str
 )
 
@@ -41,7 +54,7 @@ let tmpl_html_default =
 </body></html>\n\
 "
 
-let html_default = load tmpl_html_default
+let html_default = load_html tmpl_html_default
 
 let tmpl_latex_default =
 "\
@@ -70,9 +83,9 @@ let tmpl_latex_default =
     linkbordercolor   = {1 1 1},\n\
     citebordercolor   = {1 1 1},\n\
     urlbordercolor    = {1 1 1},\n\
-    pdfauthor   = {},\n\
+    pdfauthor   = {DIBRAWI_TEMPLATE_AUTHORS},\n\
     pdftitle    = {DIBRAWI_TEMPLATE_TITLE},\n\
-    pdfsubject  = {},\n\
+    pdfsubject  = {DIBRAWI_TEMPLATE_SUBTITLE},\n\
     pdfkeywords = {},\n\
     pdfcreator  = {Dibrawi, Bracetax and PDFLaTeX},\n\
     pdfproducer = {Dibrawi, Bracetax and PDFLaTeX}}\n\
@@ -81,10 +94,14 @@ let tmpl_latex_default =
     \\frenchspacing\n\
     \\DeclareGraphicsExtensions{.jpg,.mps,.pdf,.png}\n\
     \n\
+    \\title{DIBRAWI_TEMPLATE_TITLE}\n\
+    \\author{DIBRAWI_TEMPLATE_AUTHORS}\n\
+    \\date{DIBRAWI_TEMPLATE_SUBTITLE}\n\
     \\begin{document}\n\
+    \\maketitle\n\
     \n\
-    DIBRAWI_TEMPLATE_CONTENT
+    \\input{DIBRAWI_TEMPLATE_FILENAME}\n\
     \\end{document}
     "
 
-let latex_default = load tmpl_latex_default
+let latex_default = load_latex tmpl_latex_default
