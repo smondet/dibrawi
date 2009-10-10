@@ -25,15 +25,19 @@ let build_pdf ~latex_template texname = (
                 fprintf o p"%s" (latex_template (absolut ".tex"));
                 name
             ) in
+    let name = (Filename.chop_extension tmp) in
     begin match Dibrawi.Latex.build tmp with
     | Unix.WEXITED 0 ->
-        let n = (Filename.chop_extension tmp) in
-        ignore (Unix.system ("mv " ^ n ^ ".pdf " ^ (absolut ".pdf")));
-        ignore (Unix.system ("mv " ^ n ^ ".log " ^ (absolut ".log")));
+        ignore (Unix.system ("mv " ^ name ^ ".pdf " ^ (absolut ".pdf")));
+        ignore (Unix.system ("mv " ^ name ^ ".log " ^ (absolut ".log")));
     | Unix.WEXITED n ->
-        printf p"PDF: Compilation of %s failed with error code: %d\n" texname n;
+        printf p"PDF: Compilation of %s failed with error code: %d\n\
+            see %s\n" texname n (absolut ".log");
+        ignore (Unix.system ("mv " ^ name ^ ".log " ^ (absolut ".log")));
     | _ ->
-        printf p"PDF: Compilation of %s got killed (?)\n" texname;
+        printf p"PDF: Compilation of %s got killed (?)\n\
+            see %s\n" texname (absolut ".tex");
+        ignore (Unix.system ("mv " ^ name ^ ".log " ^ (absolut ".log")));
     end;
 )
 
