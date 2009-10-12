@@ -262,7 +262,8 @@ module Bibliography = struct
     )
     let to_brtx biblio = (
         let pattern = "
-            {section 1 @{id}|{t|[@{id}]}}\
+            {section 1 @{id}|{t|@{id}}}\
+            {cite @{id}}{br}\
             {b|@{title}}{br} \
             @{if (has authors)}@{authors-and}\
                 @{else}{i|-- no authors --}@{endif}{br}\
