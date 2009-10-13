@@ -1,3 +1,4 @@
+TYPE_CONV_PATH "ModuleDibrawi"
 
 open Dibrawi_std
 
@@ -427,3 +428,95 @@ module Latex = struct
 end
 
 
+module Address_book = struct
+    (* When grown up, this module is expected to become a 
+     * standalone library 
+     * *)
+
+    module Adbose = struct
+        (*
+        type tel =
+            [ `mobile | `home | `work | `other of string ] * string
+        type address =
+            [ `home | `work | `other of string ] * string
+        type field = [
+            | `name of string * string
+            | `tels of tel list
+            | `addresses of address list
+            | `emails of string list
+            | `links of (string * string) list
+        ]
+        *)
+        (*type phone_type = [
+            `mobile | `work | `home | `other of string
+        ] with sexp*)
+        (* type phone_type = string with sexp *)
+        (* type address_type = string with sexp *)
+        (*
+        type field = [
+            | `names of (string * string * string) list
+            | `phones of (string * string) list
+            | `addresses of (string * string) list
+            | `emails of (string * string) list
+            | `links of (string * string) list
+            | `dates of (string * string) list
+            | `roles of (string * string) list
+            (* | `roles of string  *)
+            (* | `birthday of string *)
+            | `affiliation of string
+            | `comments of string
+            | `tags of string list
+        ] with sexp*)
+        (* type field = field_type * ((string * string) list) *)
+        type field = string * string * string with sexp
+        type kind = [ `person | `group | `organisation ] with sexp
+        type entry =
+            kind * string * string * string * (field list)
+        with sexp
+
+        type address_book = entry list with sexp
+
+        let address_book_of_string str = 
+            Sexplib.Sexp.of_string ("(" ^ str ^ ")") |> address_book_of_sexp
+        let string_of_address_book ab  =
+            let s = sexp_of_address_book ab in 
+            (* Sexplib.Sexp.to_string *)
+            SExpr.to_string_hum ~indent:4 s
+    end
+
+    let test () = (
+        printf p"Test Adbose\n";
+
+        let smt = "
+            (person seb Sebastien Mondet (
+                ;(names (
+                (std-name Sebastien  Mondet)
+                (passport-name \"Sebastien Frédéric\" \"Mondet\")
+                (titled-name \"Dr Sebastien\" Mondet)
+                (spanish-name \"Sebastian\" \"Mondet Yañez\")
+                (phone mobile +4790231969)
+                (date birthday 1982-03-20)
+                (date added \"Tue, 13 Oct 2009 17:36:21 +0200\")
+                (email work smondet@ifi.uio.no)
+                (email official seb@mondet.org)
+            ))" in
+        let uio = "
+            (organisation uio university \"University of Oslo\" (
+                (name complete \"University of Oslo, Norway\")
+            ))" in
+        let a4x = "
+            (group a4x devteam \"Team of A4X potential developpers\" (
+                (link head seb)
+                (link member fred)
+                (link member ion)
+                (comment private \"This project is dead...\")
+            ))" in
+        let abs = (Str.concat "\n" [smt;uio;a4x]) in
+
+        printf p"%s\n" abs;
+        let ab = Adbose.address_book_of_string abs in
+        printf p"\n\n%s\n" (Adbose.string_of_address_book ab);
+    )
+    (* let () = test () *)
+
+end

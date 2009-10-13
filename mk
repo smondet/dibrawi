@@ -20,7 +20,7 @@ build ()
             ;;
     esac
 
-    local TAGOPT="-tags pkg_unix,pkg_xml-light"
+    local TAGOPT="-tags pkg_unix,pkg_xml-light,pkg_sexplib.syntax"
     local I_OPT="-I src/app -I src/lib"
     local LIBOPT="-cflags -I -cflags ../$BRACETAX_LIB_PATH \
                   -lflags -I -lflags ../$BRACETAX_LIB_PATH \
