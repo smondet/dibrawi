@@ -52,6 +52,10 @@ data_root build = (
         Data_source.get_file_tree ~data_root () in
     let todo_list = Todo_list.empty () in
 
+    let source_menu =
+        (   (File_tree.File ("", "bibliography.brtx"))
+            :: (File_tree.File ("", "address_book.brtx"))
+            :: the_source_tree) in
     let html_templ_fun = 
         if html_template <> "" then 
             Templating.load_html (Data_source.get_file html_template)
@@ -72,7 +76,7 @@ data_root build = (
                 ~f:(fun (str, path) ->
                     Data_source.get_page (data_root ^ "/" ^ str)))
         in
-        let menu = HTML_menu.html_menu ~from:["bibliography"] the_source_tree in
+        let menu = HTML_menu.html_menu ~from:["bibliography"] source_menu in
         let brtx = Bibliography.to_brtx bib in
         let toc = Brtx_transform.html_toc ~filename:"Bibliography" brtx in
         let html = build ^ "/bibliography.html" in
@@ -107,7 +111,7 @@ data_root build = (
             Address_book.load
                 (Ls.map list_abs ~f:(fun (str, path) ->
                     Data_source.get_page (data_root ^ "/" ^ str))) in
-        let menu = HTML_menu.html_menu ~from:["address_book"] the_source_tree in
+        let menu = HTML_menu.html_menu ~from:["address_book"] source_menu in
         let brtx = Address_book.to_brtx ab in
         let toc = Brtx_transform.html_toc ~filename:"address_book" brtx in
         let html = build ^ "/address_book.html" in
@@ -118,7 +122,7 @@ data_root build = (
             ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Address Book")
             html html_buffer err_buffer;
         if make_all_pdfs || abook_pdf then (
-            let tex = build ^ "/addressbook.tex" in
+            let tex = build ^ "/address_book.tex" in
             let latex_buffer, err_buffer, (title, authors, subtitle) = 
                 Brtx_transform.to_latex ~todo_list ~from brtx in
             output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
@@ -142,7 +146,7 @@ data_root build = (
         (* printf p"%s -> %s\n" brtx html; *)
         (* printf p"%{string list}\n" path; *)
         let from = path in
-        let menu = HTML_menu.html_menu ~from the_source_tree in
+        let menu = HTML_menu.html_menu ~from source_menu in
         let page = Data_source.get_page brtx in
         let toc = Brtx_transform.html_toc ~filename:str page in
         let html_buffer, err_buffer = 
