@@ -1,0 +1,28 @@
+(person oneguy (
+                (name "First M." Last)
+                (phone mobile +4578456885445)
+                (phone home +78624584555)
+                (birthday 1980-05-20)
+                (added-date "Tue, 13 Oct 2009 17:36:21 +0200")
+                (email work first.last@company.com)
+                (email official flast@off.net)
+                (link http://one.page.com)
+                (link http://first.last.name "Webpage")
+                (link local:grpofguys "Group of guys" "member")
+                (link local:orgofguys "His work" "employee")
+                (comments "It is a {i|guy}")
+                (tags real_person guy)
+                ))
+
+(organisation  orgofguys (
+                          (name "Organisation of Working Guys")
+                          (address "Somewhere on Earth" )))
+
+(group grpofguys (
+            (name "Team of ProjectOne developpers")
+            (head oneguy)
+            (member otherguy)
+            (comment "This project is not dead{~}{...}")
+            ))
+
+

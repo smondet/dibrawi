@@ -43,7 +43,8 @@ let build_pdf ~latex_template texname = (
 
 
 let transform
-?(make_all_pdfs=false) ?(dependent_pdfs=false) ?(biblio_pdf=false)
+?(make_all_pdfs=false) ?(dependent_pdfs=false)
+?(biblio_pdf=false) ?(abook_pdf=false)
 ?(latex_template="") ?(html_template="")
 data_root build = (
     open Dibrawi in
@@ -97,6 +98,36 @@ data_root build = (
             build_pdf ~latex_template tex;
         );
         dot_bib
+    in
+
+    let list_abs =
+        File_tree.str_and_path_list ~filter:"\\.abs$" the_source_tree in
+    let () =
+        let ab =
+            Address_book.load
+                (Ls.map list_abs ~f:(fun (str, path) ->
+                    Data_source.get_page (data_root ^ "/" ^ str))) in
+        let menu = HTML_menu.html_menu ~from:["address_book"] the_source_tree in
+        let brtx = Address_book.to_brtx ab in
+        let toc = Brtx_transform.html_toc ~filename:"address_book" brtx in
+        let html = build ^ "/address_book.html" in
+        let from =  ["address_book.html"] in
+        let html_buffer, err_buffer = 
+            Brtx_transform.to_html ~todo_list ~from brtx in
+        output_buffers
+            ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Address Book")
+            html html_buffer err_buffer;
+        if make_all_pdfs || abook_pdf then (
+            let tex = build ^ "/addressbook.tex" in
+            let latex_buffer, err_buffer, (title, authors, subtitle) = 
+                Brtx_transform.to_latex ~todo_list ~from brtx in
+            output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
+            let title, authors, subtitle = 
+                "Address Book", "Sebastien Mondet", "" in
+            let latex_template = 
+                (latex_templ_fun ~title ~authors ~subtitle ~bibtex_path) in
+            build_pdf ~latex_template tex;
+        );
     in
 
 
@@ -171,6 +202,7 @@ let () = (
     let latex_tmpl = ref "" in
     let all_pdfs = ref false in
     let bib_pdf = ref false in
+    let ab_pdf = ref false in
     let dependent_pdfs = ref false in
 
     let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
@@ -200,6 +232,10 @@ let () = (
                 ~doc:"\n\tBuild the PDF of the bibliography"
                 "-bib-pdf"
                 (Arg.Set bib_pdf);
+            Arg.command
+                ~doc:"\n\tBuild the PDF of the address_book"
+                "-ab-pdf"
+                (Arg.Set ab_pdf);
         ] in 
 
     if !print_version then (
@@ -213,7 +249,9 @@ let () = (
         | [i; o] ->
             transform
                 ~make_all_pdfs:!all_pdfs ~html_template:!html_tmpl
-                ~dependent_pdfs:!dependent_pdfs ~biblio_pdf:!bib_pdf
+                ~dependent_pdfs:!dependent_pdfs
+                ~biblio_pdf:!bib_pdf
+                ~abook_pdf:!ab_pdf
                 ~latex_template:!latex_tmpl i o
         | _ -> 
             printf p"Wrong number of arguments: %d\n" (Ls.length anon);

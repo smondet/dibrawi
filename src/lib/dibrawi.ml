@@ -429,94 +429,110 @@ end
 
 
 module Address_book = struct
-    (* When grown up, this module is expected to become a 
+    (* When grown up, this Adbose module is expected to become a 
      * standalone library 
      * *)
 
     module Adbose = struct
-        (*
-        type tel =
-            [ `mobile | `home | `work | `other of string ] * string
-        type address =
-            [ `home | `work | `other of string ] * string
-        type field = [
-            | `name of string * string
-            | `tels of tel list
-            | `addresses of address list
-            | `emails of string list
-            | `links of (string * string) list
-        ]
-        *)
-        (*type phone_type = [
-            `mobile | `work | `home | `other of string
-        ] with sexp*)
-        (* type phone_type = string with sexp *)
-        (* type address_type = string with sexp *)
-        (*
-        type field = [
-            | `names of (string * string * string) list
-            | `phones of (string * string) list
-            | `addresses of (string * string) list
-            | `emails of (string * string) list
-            | `links of (string * string) list
-            | `dates of (string * string) list
-            | `roles of (string * string) list
-            (* | `roles of string  *)
-            (* | `birthday of string *)
-            | `affiliation of string
-            | `comments of string
-            | `tags of string list
-        ] with sexp*)
-        (* type field = field_type * ((string * string) list) *)
-        type field = string * string * string with sexp
+        type field = string list with sexp
         type kind = [ `person | `group | `organisation ] with sexp
-        type entry =
-            kind * string * string * string * (field list)
-        with sexp
+        type entry = kind * string * (field list) with sexp
 
         type address_book = entry list with sexp
 
         let address_book_of_string str = 
             Sexplib.Sexp.of_string ("(" ^ str ^ ")") |> address_book_of_sexp
-        let string_of_address_book ab  =
+
+        let string_of_address_book ab  = (
             let s = sexp_of_address_book ab in 
             (* Sexplib.Sexp.to_string *)
-            SExpr.to_string_hum ~indent:4 s
+            (SExpr.to_string_hum ~indent:4 s)
+        )
+
+        let get_one field_name (k, i, f) =
+            Ls.find f ~f:(function
+                | f :: _ when f = field_name -> true
+                | _ -> false)
+        let get_all field_name (k, i, f) =
+            Ls.find_all f ~f:(function
+                | f :: _ when f = field_name -> true
+                | _ -> false)
+        
+        let sort_by_family ab = 
+            Ls.sort ab ~cmp:(fun e1 e2 ->
+                match (get_one "name" e1), (get_one "name" e2) with
+                | Some [_; _; l1], Some [_; _; l2] -> Str.compare l1 l2
+                | Some [_; l1], Some [_; l2] -> Str.compare l1 l2
+                | Some [_; _; l1], Some [_; l2] -> Str.compare l1 l2
+                | Some [_; l1], Some [_; _; l2] -> Str.compare l1 l2
+                | _, Some [_; _; l2] -> -1
+                | _, Some [_; l2] -> -1
+                | Some [_; _; l1], _ -> 1
+                | Some [_; l1], _ -> 1
+                | _, _ -> 0)
+
     end
-
-    let test () = (
-        printf p"Test Adbose\n";
-
-        let smt = "
-            (person seb Sebastien Mondet (
-                ;(names (
-                (std-name Sebastien  Mondet)
-                (passport-name \"Sebastien Frédéric\" \"Mondet\")
-                (titled-name \"Dr Sebastien\" Mondet)
-                (spanish-name \"Sebastian\" \"Mondet Yañez\")
-                (phone mobile +4790231969)
-                (date birthday 1982-03-20)
-                (date added \"Tue, 13 Oct 2009 17:36:21 +0200\")
-                (email work smondet@ifi.uio.no)
-                (email official seb@mondet.org)
-            ))" in
-        let uio = "
-            (organisation uio university \"University of Oslo\" (
-                (name complete \"University of Oslo, Norway\")
-            ))" in
-        let a4x = "
-            (group a4x devteam \"Team of A4X potential developpers\" (
-                (link head seb)
-                (link member fred)
-                (link member ion)
-                (comment private \"This project is dead...\")
-            ))" in
-        let abs = (Str.concat "\n" [smt;uio;a4x]) in
-
-        printf p"%s\n" abs;
-        let ab = Adbose.address_book_of_string abs in
-        printf p"\n\n%s\n" (Adbose.string_of_address_book ab);
+    let load str_list = (
+        Adbose.address_book_of_string (Str.concat " " str_list)
     )
-    (* let () = test () *)
+    let to_brtx abook = (
+        let get_needed ((kind, id, fields) as entry) = 
+            let kind_str = 
+                match kind with
+                | `person -> "Pers"
+                | `group -> "Grp"
+                | `organisation -> "Org" in
+            let name_str =
+                match Adbose.get_one "name" entry with
+                | Some (_ :: f :: l :: _) -> sprintf p"%s, %s" l f
+                | Some (_ :: f :: []) -> f
+                | _ -> "___NO__VALID_NAME___" in
+            (kind_str, id, name_str)
+        in
+        let header =
+            "{header|{title|Address Book}}\n\n" in
+        let sections =
+            let convert_std = function
+                | [_; n] -> (sprintf p"{i|%s}" n)
+                | [_; t; n] -> (sprintf p"{b|[%s]} {i|%s}" t n)
+                | _ -> "___NOT_A_VALID_STD_FIELD___" in
+            let convert_link = function
+                | [_; t] -> (sprintf p"{link %s}" t)
+                | [_; t; n] -> (sprintf p"{link %s|%s}" t n)
+                | [_; t; n; c] -> (sprintf p"{link %s|%s} ({i|%s})" t n c)
+                | _ -> "___NOT_A_VALID_LINK_FIELD___" in
+            let if_something m f = match m with [] -> "" | l -> f l in
+            let make_list field_name convert_entry entry_name entry =
+                if_something (Adbose.get_all field_name entry) (fun l -> 
+                    let f = convert_entry in
+                    (sprintf p"\n{b|%s:}{list|\n{*} %s\n}\n"
+                        entry_name
+                        (Str.concat "\n{*}" (Ls.map l ~f)))) in
+
+            Ls.map (Adbose.sort_by_family abook) ~f:(fun entry ->
+                let kstr, id, name = get_needed entry in
+                let phones =
+                    make_list "phone" convert_std "Phone numbers" entry in
+                let addresses =
+                    make_list "address" convert_std "Addresses" entry in
+                let emails =
+                    make_list "email" convert_std "E-Mails" entry in
+                let links =
+                    make_list "link" convert_link "Links" entry in
+                let tags =
+                    if_something (Adbose.get_all "tags" entry) (fun l ->
+                        (sprintf p"{b|Tags}: %s{br}\n"
+                            (Str.concat ", " (Ls.tl (Ls.hd l))))) in
+                let comments =
+                    if_something (Adbose.get_all "comments" entry) (fun l ->
+                        (sprintf p"{b|Comments}:{br}\n%s{br}\n"
+                            (Str.concat "{br}\n" (Ls.tl (Ls.hd l))))) in
+
+                (sprintf p"{section 1 %s|%s (%s)}%s%s%s%s%s%s"
+                    id name kstr phones addresses emails links
+                    tags comments)) in
+        (header ^ (Str.concat "\n\n" sections))
+    )
+
 
 end
