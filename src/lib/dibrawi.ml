@@ -479,9 +479,9 @@ module Address_book = struct
         let get_needed ((kind, id, fields) as entry) = 
             let kind_str = 
                 match kind with
-                | `person -> "Pers"
-                | `group -> "Grp"
-                | `organisation -> "Org" in
+                | `person -> "Person"
+                | `group -> "Group"
+                | `organisation -> "Organisation" in
             let name_str =
                 match Adbose.get_one "name" entry with
                 | Some (_ :: f :: l :: _) -> sprintf p"%s, %s" l f
