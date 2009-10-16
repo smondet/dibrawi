@@ -502,23 +502,33 @@ module Address_book = struct
                 | [_; t; n; c] -> (sprintf p"{link %s|%s} ({i|%s})" t n c)
                 | _ -> "___NOT_A_VALID_LINK_FIELD___" in
             let if_something m f = match m with [] -> "" | l -> f l in
-            let make_list field_name convert_entry entry_name entry =
-                if_something (Adbose.get_all field_name entry) (fun l -> 
-                    let f = convert_entry in
-                    (sprintf p"\n{b|%s:}{list|\n{*} %s\n}\n"
-                        entry_name
-                        (Str.concat "\n{*}" (Ls.map l ~f)))) in
+            let get_if_one_or_more fild etri ~one ~more =
+                match Adbose.get_all fild etri with
+                [] -> "" | [x] -> one x | l -> more l
+            in
+            let make_list ?(plural=fun x -> x ^ "s")
+            field_name convert_entry entry_name entry =
+                get_if_one_or_more field_name entry
+                    ~one:(fun x ->
+                        sprintf p"\n{b|%s:} %s{p}" entry_name (convert_entry x))
+                    ~more:(fun l -> 
+                        let f = convert_entry in
+                        (sprintf p"\n{b|%s:}{list|\n{*} %s\n}{p}\n"
+                            (plural entry_name)
+                            (Str.concat "\n{*}" (Ls.map l ~f))))
+            in
 
             Ls.map (Adbose.sort_by_family abook) ~f:(fun entry ->
                 let kstr, id, name = get_needed entry in
                 let phones =
-                    make_list "phone" convert_std "Phone numbers" entry in
+                    make_list "phone" convert_std "Phone number" entry in
                 let addresses =
-                    make_list "address" convert_std "Addresses" entry in
+                    let plural = fun x -> x ^ "es" in
+                    make_list ~plural "address" convert_std "Address" entry in
                 let emails =
-                    make_list "email" convert_std "E-Mails" entry in
+                    make_list "email" convert_std "E-Mail" entry in
                 let links =
-                    make_list "link" convert_link "Links" entry in
+                    make_list "link" convert_link "Link" entry in
                 let tags =
                     if_something (Adbose.get_all "tags" entry) (fun l ->
                         (sprintf p"{b|Tags}: %s{br}\n"
