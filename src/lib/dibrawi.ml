@@ -520,6 +520,10 @@ module Address_book = struct
 
             Ls.map (Adbose.sort_by_family abook) ~f:(fun entry ->
                 let kstr, id, name = get_needed entry in
+                let birthday =
+                    if_something (Adbose.get_all "birthday" entry) (fun l ->
+                        (sprintf p"{b|Birthday}: %s{br}\n"
+                            (Str.concat ", " (Ls.tl (Ls.hd l))))) in
                 let phones =
                     make_list "phone" convert_std "Phone number" entry in
                 let addresses =
@@ -538,8 +542,8 @@ module Address_book = struct
                         (sprintf p"{b|Comments}:{br}\n%s{br}\n"
                             (Str.concat "{br}\n" (Ls.tl (Ls.hd l))))) in
 
-                (sprintf p"{section 1 %s|%s (%s)}%s%s%s%s%s%s"
-                    id name kstr phones addresses emails links
+                (sprintf p"{section 1 %s|%s (%s)}%s%s%s%s%s%s%s"
+                    id name kstr birthday phones addresses emails links
                     tags comments)) in
         (header ^ (Str.concat "\n\n" sections))
     )
