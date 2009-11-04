@@ -52,10 +52,13 @@ data_root build = (
         Data_source.get_file_tree ~data_root () in
     let todo_list = Todo_list.empty () in
 
-    let source_menu =
-        (   (File_tree.File ("", "bibliography.brtx"))
+    let menu_factory =
+        let source_menu =
+            (   (File_tree.File ("", "bibliography.brtx"))
             :: (File_tree.File ("", "address_book.brtx"))
             :: the_source_tree) in
+        HTML_menu.make_menu_factory source_menu
+    in
     let html_templ_fun = 
         if html_template <> "" then 
             Templating.load_html (Data_source.get_file html_template)
@@ -76,7 +79,7 @@ data_root build = (
                 ~f:(fun (str, path) ->
                     Data_source.get_page (data_root ^ "/" ^ str)))
         in
-        let menu = HTML_menu.html_menu ~from:["bibliography"] source_menu in
+        let menu = HTML_menu.get_menu ~from:["bibliography"] menu_factory in
         let brtx = Bibliography.to_brtx bib in
         let toc = Brtx_transform.html_toc ~filename:"Bibliography" brtx in
         let html = build ^ "/bibliography.html" in
@@ -111,7 +114,7 @@ data_root build = (
             Address_book.load
                 (Ls.map list_abs ~f:(fun (str, path) ->
                     Data_source.get_page (data_root ^ "/" ^ str))) in
-        let menu = HTML_menu.html_menu ~from:["address_book"] source_menu in
+        let menu = HTML_menu.get_menu ~from:["address_book"] menu_factory in
         let brtx = Address_book.to_brtx ab in
         let toc = Brtx_transform.html_toc ~filename:"address_book" brtx in
         let html = build ^ "/address_book.html" in
@@ -146,7 +149,7 @@ data_root build = (
         (* printf p"%s -> %s\n" brtx html; *)
         (* printf p"%{string list}\n" path; *)
         let from = path in
-        let menu = HTML_menu.html_menu ~from source_menu in
+        let menu = HTML_menu.get_menu ~from menu_factory in
         let page = Data_source.get_page brtx in
         let toc = Brtx_transform.html_toc ~filename:str page in
         let html_buffer, err_buffer = 

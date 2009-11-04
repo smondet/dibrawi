@@ -396,6 +396,25 @@ module HTML_menu = struct
         );
         (Buffer.contents buf)
     )
+
+    type menu_factory = {
+        cache: (int, string) Ht.t;
+        source: File_tree.file_tree;
+    }
+    let make_menu_factory source_menu = (
+        {cache = Ht.create 5; source = source_menu; }
+    )
+    let get_menu factory ~from = (
+        let depth = Ls.length from - 1 in
+        match Ht.find factory.cache depth with
+        | Some s -> s
+        | None ->
+            let new_one = html_menu ~from factory.source in
+            Ht.add factory.cache depth new_one;
+            new_one
+    )
+
+
 end
 
 module Latex = struct
