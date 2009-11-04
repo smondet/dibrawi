@@ -46,6 +46,7 @@ let transform
 ?(make_all_pdfs=false) ?(dependent_pdfs=false)
 ?(biblio_pdf=false) ?(abook_pdf=false)
 ?(latex_template="") ?(html_template="")
+?things_to_build
 data_root build = (
     open Dibrawi in
     let the_source_tree = 
@@ -211,6 +212,7 @@ let () = (
     let bib_pdf = ref false in
     let ab_pdf = ref false in
     let dependent_pdfs = ref false in
+    let to_build = ref [] in
 
     let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
     let anon =
@@ -220,11 +222,11 @@ let () = (
                 "-version"
                 (Arg.Set print_version);
             Arg.command
-                ~doc:"\n\tSet an HTML template file"
+                ~doc:"<path>\n\tSet an HTML template file"
                 "-html-template"
                 (Arg.Set_string html_tmpl);
             Arg.command
-                ~doc:"\n\tSet a LaTeX template file"
+                ~doc:"<path>\n\tSet a LaTeX template file"
                 "-latex-template"
                 (Arg.Set_string latex_tmpl);
             Arg.command
@@ -240,6 +242,10 @@ let () = (
                 "-bib-pdf"
                 (Arg.Set bib_pdf);
             Arg.command
+                ~doc:"<dbw-path>\n\tBuild only <path>"
+                "-build"
+                (Arg.String (fun s -> to_build := s :: !to_build));
+            Arg.command
                 ~doc:"\n\tBuild the PDF of the address_book"
                 "-ab-pdf"
                 (Arg.Set ab_pdf);
@@ -252,9 +258,27 @@ let () = (
             Shell.ocaml_version Batteries_config.version Pcre.version
             Bracetax.Info.version Sebib.Info.version;
     ) else (
+        let things_to_build = 
+            match !to_build with
+            | [] -> None
+            | l -> 
+                let parse s =
+                    let todo_list = ref [] in
+                    let path =
+                        Dibrawi.Special_paths.rewrite_url
+                            ~todo_list ~from:["CmdLine"] s in
+                    match !todo_list with
+                    | (`pdf (p, f)) :: [] ->
+                        printf p"pdf: p: %s f: %{string list}, path: %s\n" p f path;
+                        (`pdf, path)
+                    | _ -> (`html, path)
+                in
+                Some (Ls.rev_map l ~f:parse)
+        in
         begin match anon with
         | [i; o] ->
             transform
+                ?things_to_build
                 ~make_all_pdfs:!all_pdfs ~html_template:!html_tmpl
                 ~dependent_pdfs:!dependent_pdfs
                 ~biblio_pdf:!bib_pdf
