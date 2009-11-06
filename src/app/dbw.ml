@@ -46,6 +46,7 @@ let transform
 ?(make_all_pdfs=false) ?(dependent_pdfs=false)
 ?(biblio_pdf=false) ?(abook_pdf=false)
 ?(latex_template="") ?(html_template="")
+?(href_is_footnote=false)
 ?things_to_build
 data_root build = (
     open Dibrawi in
@@ -97,7 +98,8 @@ data_root build = (
         if make_all_pdfs || biblio_pdf then (
             let tex = build ^ "/bibliography.tex" in
             let latex_buffer, err_buffer, (title, authors, subtitle) = 
-                Brtx_transform.to_latex ~todo_list ~from brtx in
+                Brtx_transform.to_latex
+                    ~href_is_footnote ~todo_list ~from brtx in
             output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
             let title, authors, subtitle = "Bibliography", "", "" in
             let latex_template = 
@@ -128,7 +130,8 @@ data_root build = (
         if make_all_pdfs || abook_pdf then (
             let tex = build ^ "/address_book.tex" in
             let latex_buffer, err_buffer, (title, authors, subtitle) = 
-                Brtx_transform.to_latex ~todo_list ~from brtx in
+                Brtx_transform.to_latex
+                    ~href_is_footnote ~todo_list ~from brtx in
             output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
             let title, authors, subtitle = 
                 "Address Book", "Sebastien Mondet", "" in
@@ -162,7 +165,8 @@ data_root build = (
             let tex = build ^ "/" ^ (Filename.chop_extension str) ^ ".tex" in
             let from = path in
             let latex_buffer, err_buffer, (title, authors, subtitle) = 
-                Brtx_transform.to_latex ~todo_list ~filename:str ~from page in
+                Brtx_transform.to_latex
+                    ~href_is_footnote ~todo_list ~filename:str ~from page in
             output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
             let latex_template = 
                 (latex_templ_fun ~title ~authors ~subtitle ~bibtex_path) in
@@ -190,7 +194,8 @@ data_root build = (
             in
             let page = Data_source.get_page brtx in
             let latex_buffer, err_buffer, (title, authors, subtitle) = 
-                Brtx_transform.to_latex ~filename:tex ~from page in
+                Brtx_transform.to_latex
+                    ~href_is_footnote ~filename:tex ~from page in
             output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
             let latex_template = 
                 (latex_templ_fun ~title ~authors ~subtitle ~bibtex_path) in
@@ -213,6 +218,7 @@ let () = (
     let ab_pdf = ref false in
     let dependent_pdfs = ref false in
     let to_build = ref [] in
+    let footnote_links = ref false in
 
     let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
     let anon =
@@ -241,6 +247,10 @@ let () = (
                 ~doc:"\n\tBuild the PDF of the bibliography"
                 "-bib-pdf"
                 (Arg.Set bib_pdf);
+            Arg.command
+                ~doc:"\n\tIn PDFs, put all links as footnotes"
+                "-footnote-links"
+                (Arg.Set footnote_links);
             Arg.command
                 ~doc:"<dbw-path>\n\tBuild only <path>"
                 "-build"
@@ -283,6 +293,7 @@ let () = (
                 ~dependent_pdfs:!dependent_pdfs
                 ~biblio_pdf:!bib_pdf
                 ~abook_pdf:!ab_pdf
+                ~href_is_footnote:!footnote_links
                 ~latex_template:!latex_tmpl i o
         | _ -> 
             printf p"Wrong number of arguments: %d\n" (Ls.length anon);

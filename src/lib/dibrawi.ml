@@ -313,7 +313,7 @@ module Brtx_transform = struct
         (Buffer.contents h)
     )
 
-    let to_latex ?todo_list ?filename ~from brtx = (
+    let to_latex ?href_is_footnote ?todo_list ?filename ~from brtx = (
         let output = `pdf in
         let brtx_page =
             Preprocessor.brtx2brtx ~output ?todo_list ~from brtx in
@@ -324,7 +324,7 @@ module Brtx_transform = struct
         let url_hook = Special_paths.rewrite_url ~output ?todo_list ~from in
         let separate_header = ref ("", "", "") in
         Bracetax.Transform.brtx_to_latex
-            ~separate_header
+            ~separate_header ?href_is_footnote
             ~writer ?filename ~img_hook:url_hook ~url_hook ~input_char ();
         (latex_buffer, err_buffer, !separate_header)
     )
