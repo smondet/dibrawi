@@ -2,11 +2,26 @@
 
 open Dibrawi_std
 
+module Dbw_unix = struct
+    (** create a directory but doesn't raise an exception if the directory
+      * already exist *)
+    let mkdir_safe dir perm =
+        try Unix.mkdir dir perm with Unix.Unix_error (Unix.EEXIST, _, _) -> ()
+    (** create a directory, and create parent if doesn't exist
+      i.e. mkdir -p *)
+    let mkdir_p ?(perm=0o700) dir =
+        let rec p_mkdir dir =
+            let p_name = Filename.dirname dir in
+            if p_name <> "/" && p_name <> "."
+            then p_mkdir p_name;
+            mkdir_safe dir perm in
+        p_mkdir dir 
+end
 
 let output_buffers
 ~(templ_fun:string -> string)
 file_name content_buffer err_buffer = (
-    ignore (Unix.system ("mkdir -p " ^ (Filename.dirname file_name)));
+    Dbw_unix.mkdir_p (Filename.dirname file_name);
     File.with_file_out ~mode:[`create] file_name (fun o ->
         let content_content = templ_fun (Buffer.contents content_buffer) in
         fprintf o p"%s" content_content;
@@ -180,7 +195,7 @@ data_root build = (
             let from_path = String.concat "/" (Ls.rev (Ls.tl from)) in
             let origin = data_root ^ "/" ^ from_path ^ "/" ^ path in
             let dest = build ^ "/" ^ from_path ^ "/" ^ path in
-            ignore (Unix.system ("mkdir -p " ^ (Filename.dirname dest)));
+            Dbw_unix.mkdir_p (Filename.dirname dest);
             ignore (Unix.system (sprintf p"cp %s %s" origin dest));
             (* printf p"Should copy: %s -> %s\n" origin dest; *)
             []
