@@ -226,9 +226,19 @@ module Preprocessor = struct
     let prepro_regexp =
         Pcre.regexp "\\{cite\\s+[^\\}]*\\}"
 
+    let default_html_biblio_page = "page:/bibliography.html"
+
+    let default_html_cite =
+        fun html_biblio_page cites ->
+            "[" ^ (Str.concat ", "
+                       (Ls.map cites ~f:(fun cite ->
+                           sprintf p"{link %s#%s|%s}"
+                               html_biblio_page cite cite))) ^ "]"
+
     let brtx2brtx
     ?todo_list
-    ?(html_biblio_page="page:/bibliography") ?(output=`html) ~from brtx = (
+    ?(html_cite=default_html_cite default_html_biblio_page)
+    ?(output=`html) ~from brtx = (
 
         Pcre.substitute ~rex:prepro_regexp brtx ~subst:(fun s ->
             (* Shell.catch_break true; *)
@@ -239,10 +249,7 @@ module Preprocessor = struct
                         (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",")
                         ~f:Str.trim in
                 if output = `html then (
-                    "[" ^ (Str.concat ", "
-                        (Ls.map cites ~f:(fun cite ->
-                            sprintf p"{link %s#%s|%s}"
-                                html_biblio_page cite cite))) ^ "]"
+                    html_cite cites
                 ) else (
                     Opt.may todo_list ~f:(fun tl -> tl := `bibtex :: !tl);
                     sprintf p"{bypass}\\cite{%s}{end}"

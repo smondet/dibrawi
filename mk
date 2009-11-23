@@ -28,10 +28,11 @@ build ()
                   -lflags -I -lflags ../$SEBIB_LIB_PATH"
     local FLAGS="-cflags -dtypes -lib ocamlbracetax -lib libsebib"
     local ALL_FLAGS="$I_OPT $TAGOPT $LIBOPT $FLAGS"
-    local TARGETS="src/app/dbw.$APPEXT" 
+    local TARGETS="src/app/dbw.$APPEXT src/app/dbwpp.$APPEXT" 
     ocamlfind batteries/ocamlbuild $ALL_FLAGS $TARGETS
     #rm -f test_dbw && ln -s test_dbw$1.byte test_dbw
     rm -f dbw && ln -s dbw.$APPEXT dbw
+    rm -f dbwpp && ln -s dbwpp.$APPEXT dbwpp
 }
 
 echo_help ()
