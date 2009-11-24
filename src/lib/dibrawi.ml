@@ -226,7 +226,7 @@ module Preprocessor = struct
     let prepro_regexp =
         Pcre.regexp "\\{cite\\s+[^\\}]*\\}"
 
-    let default_html_biblio_page = "page:/bibliography.html"
+    let default_html_biblio_page = "page:/bibliography"
 
     let default_html_cite =
         fun html_biblio_page cites ->
