@@ -21,7 +21,7 @@ module Dbw_unix = struct
         let o = open_out filename in
         try f o with e -> close_out o; raise e
     let with_new_tmp ?(suffix=".tmp") ?(prefix="dbw_") f =
-        let name, o = Filename.open_temp_file ~mode:[Open_creat] suffix prefix in
+        let name, o = Filename.open_temp_file prefix suffix in
         try f o name with e -> close_out o; raise e
 
 end
