@@ -14,8 +14,6 @@ echo_help ()
     echo "\
 $0 <cmd>
 b: Build all (default action)
-bg: Build all with debug symbols
-o: Build to native code
 c: Clean
 h: This help"
 }
@@ -28,9 +26,9 @@ fi
 for todo in $* ; do
     case "$todo" in
         "b" ) build ;;
-        "bg" ) build "debug" ;;
-        "o" ) build "opt" ;;
-        "c" ) ocamlbuild -clean ;;
+        #"bg" ) build "debug" ;;
+        #"o" ) build "opt" ;;
+        "c" ) omake clean ;;
         "h" ) echo_help ;;
         * ) echo "see \`mk h\`";;
     esac

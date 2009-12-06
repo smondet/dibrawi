@@ -37,10 +37,10 @@ let () = (
     ] (fun s -> to_preprocess := s :: !to_preprocess) usage;
 
     let output_citations_chan = 
-        if !citations_file = "" then None else Some (open_out !citations_file)
+        if !citations_file =$= "" then None else Some (open_out !citations_file)
     in
     let output_chan =
-        if !output_file = "" then stdout else (open_out !output_file) in
+        if !output_file =$= "" then stdout else (open_out !output_file) in
     let citations = ref [] in
     let html_cite =
         let prefix = 

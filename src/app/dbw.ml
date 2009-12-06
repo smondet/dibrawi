@@ -12,7 +12,7 @@ module Dbw_unix = struct
     let mkdir_p ?(perm=0o700) dir =
         let rec p_mkdir dir =
             let p_name = Filename.dirname dir in
-            if p_name <> "/" && p_name <> "."
+            if p_name <$> "/" && p_name <$> "."
             then p_mkdir p_name;
             mkdir_safe dir perm in
         p_mkdir dir 
@@ -36,7 +36,7 @@ file_name content_buffer err_buffer = (
         fprintf o "%!";
     );
     let s = Buffer.contents err_buffer in
-    if s <> "" then (eprintf "Errors for %s:\n%s\n" file_name s;);
+    if s <$> "" then (eprintf "Errors for %s:\n%s\n" file_name s;);
 )
 
 let build_pdf ~latex_template texname = (
@@ -85,13 +85,13 @@ data_root build = (
         HTML_menu.make_menu_factory source_menu
     in
     let html_templ_fun = 
-        if html_template <> "" then 
+        if html_template <$> "" then 
             Templating.load_html (Data_source.get_file html_template)
         else
             Templating.html_default
     in
     let latex_templ_fun = 
-        if latex_template <> "" then 
+        if latex_template <$> "" then 
             Templating.load_latex (Data_source.get_file latex_template)
         else
             Templating.latex_default

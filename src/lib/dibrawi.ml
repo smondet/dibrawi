@@ -152,7 +152,7 @@ module Todo_list = struct
     type t = todo list ref
 
     let empty () = ref []
-    let is_empty t = !t = []
+    let is_empty t = !t =@= []
 
     let to_string ?(sep="; ") tl =
         let strpath = Str.concat "/" in
@@ -198,22 +198,22 @@ module Special_paths = struct
     ?todo_list ?(output=`html)  ~from url = (
         match url with
         | s when Str.length s < 4 -> s
-        | s when Str.head s 4 = "pdf:" ->
+        | s when Str.head s 4 =$= "pdf:" ->
             let pdfpath = 
                 compute_path from (Str.tail s 4) ".pdf" in
             Opt.may todo_list ~f:(fun rl ->
                 rl := (`pdf (pdfpath, from)) :: !rl;
             );
             pdfpath 
-        | s when Str.head s 5 = "page:" ->
+        | s when Str.head s 5 =$= "page:" ->
             (compute_path from (Str.tail s 5) ".html")
-        | s when Str.head s 4 = "fig:" ->
+        | s when Str.head s 4 =$= "fig:" ->
             let path =
                 compute_path from (Str.tail s 4)
                     (match output with `html -> ".png" | `pdf -> ".pdf") in
             Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
             path
-        | s when Str.head s 6 = "media:" ->
+        | s when Str.head s 6 =$= "media:" ->
             let path = compute_path from (Str.tail s 6) "" in
             Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
             path
@@ -250,12 +250,12 @@ module Preprocessor = struct
                              | _ -> false) ls in
                 Str.implode filtered_ls in
             match s with
-            | cite when Str.head cite 5 = "{cite" ->
+            | cite when Str.head cite 5 =$= "{cite" ->
                   let cites =
                       Ls.map
                           (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",")
                           ~f:clean_cite in
-                  if output = `html then (
+                  if output =@= `html then (
                       html_cite cites
                   ) else (
                       Opt.may todo_list ~f:(fun tl -> tl := `bibtex :: !tl);
@@ -404,7 +404,7 @@ module HTML_menu = struct
         let buf, err =
             Brtx_transform.to_html
                 ~filename:"BRTX MENU" ~class_hook:"dibrawi_menu" ~from brtx in
-        if Buffer.contents err <> "" then (
+        if (Buffer.contents err <$> "") then (
             eprintf "Errors in the bracetax: \n%s\n------------%s\n"
                 brtx (Buffer.contents err);
             failwith "brtx ended with errors";
@@ -443,7 +443,7 @@ module Latex = struct
         let target = Filename.chop_extension (Filename.basename path) in
         let return =
             Unix.system (sprintf "%s %s > /dev/null" pdflatex target) in
-        if return = Unix.WEXITED 0 then (
+        if return =@= (Unix.WEXITED 0) then (
             let _ =
                 Unix.system (sprintf "bibtex %s > /dev/null"  target) in
             let _ =
@@ -485,11 +485,11 @@ module Address_book = struct
 
         let get_one field_name (k, i, ff) =
             Ls.find_opt ff ~f:(function
-                | fn :: _ when fn = field_name -> true
+                | fn :: _ when fn =$= field_name -> true
                 | _ -> false)
         let get_all field_name (k, i, f) =
             Ls.find_all f ~f:(function
-                | f :: _ when f = field_name -> true
+                | f :: _ when f =$= field_name -> true
                 | _ -> false)
         
         let sort_by_family ab = 
