@@ -1,0 +1,53 @@
+
+## Friend libraries: Bracetax and Sebib
+BRACETAX_PATH=$(getenv BRACETAX_LIB_PATH, /bracetax/path/to/lib)
+SEBIB_PATH=$(getenv SEBIB_LIB_PATH, /sebib/path/to/lib)
+
+OCAMLINCLUDES += $(BRACETAX_PATH) $(SEBIB_PATH)
+OCAML_LIBS +=  $(BRACETAX_PATH)/ocamlbracetax $(SEBIB_PATH)/sebib
+
+.PHONY: clean update_yaboons test_dbw
+
+USE_OCAMLFIND = true
+
+OCAMLPACKS[] =
+   xml-light
+   str # just Sebib uses the Str lib
+   unix
+   extlib
+   pcre
+   sexplib.syntax
+
+
+if $(not $(OCAMLFIND_EXISTS))
+   eprintln(This project requires ocamlfind, but is was not found.)
+   eprintln(You need to install ocamlfind and run "omake --configure".)
+   exit 1
+
+NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
+BYTE_ENABLED = $(not $(OCAMLOPT_EXISTS))
+
+OCAMLFLAGS    +=
+OCAMLCFLAGS   +=
+OCAMLOPTFLAGS +=
+OCAML_LINK_FLAGS +=
+OCAML_BYTE_LINK_FLAGS +=
+OCAML_NATIVE_LINK_FLAGS +=
+OCAMLFINDFLAGS += -syntax camlp4o
+
+
+clean:
+    rm -fr _build OMakefile.omc OMakeroot.omc .omakedb .omakedb.lock
+
+update_yaboons: # Go for the last version
+    svn export http\://yaboon.googlecode.com/svn/trunk/PolyComp/PolyComp.ml src/lib/Yaboon_PolyComp.ml
+
+
+if $(not $(file-exists _build/))
+    mkdir -p _build/lib _build/app
+
+vmount(-l, src/, _build/)
+
+
+.SUBDIRS: _build/lib _build/app
+

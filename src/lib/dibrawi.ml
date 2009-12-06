@@ -6,7 +6,7 @@ module Templating = Dibrawi_templating
 
 module Info = struct
     let version = 0
-    let version_string = sprintf p"The Dibrawi library, v %d" version
+    let version_string = sprintf "The Dibrawi library, v %d" version
 end
 
 module File_tree = struct
@@ -34,10 +34,10 @@ module File_tree = struct
     let print_tree =
         fold_tree
             ~dir:(fun path name indent -> 
-                printf p"%s%s\n" (Str.make indent ' ') name;
+                printf "%s%s\n" (Str.make indent ' ') name;
                 indent + 2)
             ~file:(fun path name indent ->
-                printf p"%s%s\n" (Str.make indent ' ') name;)
+                printf "%s%s\n" (Str.make indent ' ') name;)
             0
 
 
@@ -68,9 +68,9 @@ module File_tree = struct
                 Opt.bind (fun cc -> 
                     if not (pcre_matches excl n) then Some (n :: cc) else None) c) 
             ~file:(fun p n c ->
-                Opt.may c ~f:(fun c ->
+                Opt.may (fun c ->
                     if (pcre_matches filt n)
-                    then (paths := (n :: c) :: !paths);)
+                    then (paths := (n :: c) :: !paths);) c
             )
             (Some prefix) tree;
         Ls.rev !paths
@@ -89,14 +89,13 @@ module File_tree = struct
                     if not (pcre_matches excl n)
                     then Some (n :: cc) else None) c) 
             ~file:(fun p n c ->
-                Opt.may c ~f:(fun c ->
+                Opt.may (fun c ->
                     if (pcre_matches filt n)
                     then (
                         let to_add = 
                             ((fst prefix) ^ p ^ "/" ^ n, n :: c) in
                         paths := to_add :: !paths;
-                    );
-                ))
+                    );) c)
             (Some (snd prefix)) tree;
         Ls.rev !paths
     )
@@ -111,31 +110,32 @@ module Data_source = struct
 
 
 
+
     let get_file_tree ?(data_root="./data/") () = (
-        open Shell, File_tree in
+        let module FT = File_tree in
         let ls dir =
             let sort a = Array.fast_sort Str.compare a; a in
-            Shell.readdir dir |> sort |> Array.to_list in 
-        if is_directory data_root then (
+            Sys.readdir dir |> sort |> Array.to_list in 
+        if Sys.is_directory data_root then (
             let rec explore path name =
                 let next_path = path ^ "/" ^ name in
                 let real_path = data_root ^ "/" ^ next_path in
-                if is_directory real_path then
-                    Dir (path, name, Ls.map (explore next_path)  (ls real_path))
+                if Sys.is_directory real_path then
+                    FT.Dir (path, name, Ls.map (explore next_path)  (ls real_path))
                 else
-                    File (path, name) 
+                    FT.File (path, name) 
             in
             Ls.map (explore ".")  (ls data_root)
         ) else (
-            invalid_arg (sprintf p"%s is not a directory" data_root)
+            invalid_arg (sprintf "%s is not a directory" data_root)
         )
     )
 
     let get_page path = (
-        (IO.read_all (open_in path))
+        (Io.read_all (Io.open_in path))
     )
     let get_file path = (
-        (IO.read_all (open_in path))
+        (Io.read_all (Io.open_in path))
     )
 
 
@@ -155,11 +155,12 @@ module Todo_list = struct
     let is_empty t = !t = []
 
     let to_string ?(sep="; ") tl =
+        let strpath = Str.concat "/" in
         String.concat sep (Ls.map !tl ~f:(function
             | `pdf (path, from) ->
-                sprintf p"Build PDF: %s from %{string list}" path from
+                sprintf "Build PDF: %s from %s" path (strpath from)
             | `copy (path, from) ->
-                sprintf p"Copy File: %s from %{string list}" path from
+                sprintf "Copy File: %s from %s" path (strpath from)
             | `bibtex -> "Build the BibTeX"
         ))
     let iter t ~f = Ls.iter !t ~f
@@ -175,7 +176,7 @@ module Special_paths = struct
         try match path.[0] with
             | '/' ->
                 let depth = Ls.length from - 1 in
-                "./" ^ (Str.concat "/" (Ls.init depth ~f:(fun _ -> ".."))) ^ path
+                "./" ^ (Str.concat "/" (Ls.init depth (fun _ -> ".."))) ^ path
             | '#' ->
                 (Filename.chop_extension (Ls.hd from)) ^ path
             | _ -> path
@@ -232,32 +233,39 @@ module Preprocessor = struct
         fun html_biblio_page cites ->
             "[" ^ (Str.concat ", "
                        (Ls.map cites ~f:(fun cite ->
-                           sprintf p"{link %s#%s|%s}"
+                           sprintf "{link %s#%s|%s}"
                                html_biblio_page cite cite))) ^ "]"
 
     let brtx2brtx
     ?todo_list
     ?(html_cite=default_html_cite default_html_biblio_page)
     ?(output=`html) ~from brtx = (
-
-        Pcre.substitute ~rex:prepro_regexp brtx ~subst:(fun s ->
+        let subst s = 
             (* Shell.catch_break true; *)
+            let clean_cite s =
+                let ls = Str.explode s in
+                let filtered_ls =
+                    Ls.filter
+                        (function 'a' .. 'b' | 'A' .. 'B' | '0' .. '9' -> true 
+                             | _ -> false) ls in
+                Str.implode filtered_ls in
             match s with
             | cite when Str.head cite 5 = "{cite" ->
-                let cites =
-                    Ls.map
-                        (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",")
-                        ~f:Str.trim in
-                if output = `html then (
-                    html_cite cites
-                ) else (
-                    Opt.may todo_list ~f:(fun tl -> tl := `bibtex :: !tl);
-                    sprintf p"{bypass}\\cite{%s}{end}"
-                        (Str.concat "," cites)
-                        (* (Str.sub s 6 (String.length s - 7)) *)
-                )
-            | s -> s;
-        )
+                  let cites =
+                      Ls.map
+                          (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",")
+                          ~f:clean_cite in
+                  if output = `html then (
+                      html_cite cites
+                  ) else (
+                      Opt.may todo_list ~f:(fun tl -> tl := `bibtex :: !tl);
+                      sprintf "{bypass}\\cite{%s}{end}"
+                          (Str.concat "," cites)
+                          (* (Str.sub s 6 (String.length s - 7)) *)
+                  )
+            | s -> s
+        in
+        Pcre.substitute ~rex:prepro_regexp brtx ~subst
     )
 end
 
@@ -357,15 +365,15 @@ module HTML_menu = struct
             dirs @ files in
         let rec to_brtx  = function
             | Dir (path, name, l) ->
-                (* eprintf p"path: %s, name: %s\n" path name; *)
+                (* eprintf "path: %s, name: %s\n" path name; *)
                 if not (pcre_matches excl name) then (
                     Buffer.add_string buf 
-                        (sprintf p"{*} %s\n{begin list}\n" name);
+                        (sprintf "{*} %s\n{begin list}\n" name);
                     Ls.iter ~f:to_brtx (presort l);
-                    Buffer.add_string buf (sprintf p"{end} # %s\n" name);
+                    Buffer.add_string buf (sprintf "{end} # %s\n" name);
                 ) else (
                     Buffer.add_string buf
-                        (sprintf p"# ignore: %s %s\n" path name);
+                        (sprintf "# ignore: %s %s\n" path name);
                 );
             | File (path, name) ->
                 if pcre_matches filt name then (
@@ -377,12 +385,12 @@ module HTML_menu = struct
                         then Pcre.replace ~rex ~templ:"" name
                         else name in
                     Buffer.add_string buf
-                        (sprintf p"{*} {link %s%s|%s}\n" url_prefix link official_name);
+                        (sprintf "{*} {link %s%s|%s}\n" url_prefix link official_name);
                 );
         in
-        Buffer.add_string buf (sprintf p"{begin list}\n");
+        Buffer.add_string buf (sprintf "{begin list}\n");
         Ls.iter to_brtx (presort tree);
-        Buffer.add_string buf (sprintf p"{end} # Root\n");
+        Buffer.add_string buf (sprintf "{end} # Root\n");
         Buffer.contents buf
     )
 
@@ -397,7 +405,7 @@ module HTML_menu = struct
             Brtx_transform.to_html
                 ~filename:"BRTX MENU" ~class_hook:"dibrawi_menu" ~from brtx in
         if Buffer.contents err <> "" then (
-            eprintf p"Errors in the bracetax: \n%s\n------------%s\n"
+            eprintf "Errors in the bracetax: \n%s\n------------%s\n"
                 brtx (Buffer.contents err);
             failwith "brtx ended with errors";
         );
@@ -413,7 +421,7 @@ module HTML_menu = struct
     )
     let get_menu factory ~from = (
         let depth = Ls.length from - 1 in
-        match Ht.find factory.cache depth with
+        match Ht.find_opt factory.cache depth with
         | Some s -> s
         | None ->
             let new_one = html_menu ~from factory.source in
@@ -427,25 +435,25 @@ end
 module Latex = struct
 
     let build path = (
-        let pwd = Shell.getcwd () in
+        let pwd = Sys.getcwd () in
         let cd = Filename.dirname path in
-        Shell.chdir cd;
+        Sys.chdir cd;
         let pdflatex = 
             "pdflatex -interaction=nonstopmode" in
         let target = Filename.chop_extension (Filename.basename path) in
         let return =
-            Unix.system (sprintf p"%s %s > /dev/null" pdflatex target) in
+            Unix.system (sprintf "%s %s > /dev/null" pdflatex target) in
         if return = Unix.WEXITED 0 then (
             let _ =
-                Unix.system (sprintf p"bibtex %s > /dev/null"  target) in
+                Unix.system (sprintf "bibtex %s > /dev/null"  target) in
             let _ =
-                Unix.system (sprintf p"%s %s > /dev/null" pdflatex target) in
+                Unix.system (sprintf "%s %s > /dev/null" pdflatex target) in
             let _ =
-                Unix.system (sprintf p"%s %s > /dev/null" pdflatex target) in
-            Shell.chdir pwd;
+                Unix.system (sprintf "%s %s > /dev/null" pdflatex target) in
+            Sys.chdir pwd;
             return
         ) else (
-            Shell.chdir pwd;
+            Sys.chdir pwd;
             return
         )
     )
@@ -471,13 +479,13 @@ module Address_book = struct
 
         let string_of_address_book ab  = (
             let s = sexp_of_address_book ab in 
-            (* Sexplib.Sexp.to_string *)
-            (SExpr.to_string_hum ~indent:4 s)
+            Sexplib.Sexp.to_string s
+            (* (SExpr.to_string_hum ~indent:4 s) *)
         )
 
-        let get_one field_name (k, i, f) =
-            Ls.find f ~f:(function
-                | f :: _ when f = field_name -> true
+        let get_one field_name (k, i, ff) =
+            Ls.find_opt ff ~f:(function
+                | fn :: _ when fn = field_name -> true
                 | _ -> false)
         let get_all field_name (k, i, f) =
             Ls.find_all f ~f:(function
@@ -510,7 +518,7 @@ module Address_book = struct
                 | `organisation -> "Organisation" in
             let name_str =
                 match Adbose.get_one "name" entry with
-                | Some (_ :: f :: l :: _) -> sprintf p"%s, %s" l f
+                | Some (_ :: f :: l :: _) -> sprintf "%s, %s" l f
                 | Some (_ :: f :: []) -> f
                 | _ -> "___NO__VALID_NAME___" in
             (kind_str, id, name_str)
@@ -519,13 +527,13 @@ module Address_book = struct
             "{header|{title|Address Book}}\n\n" in
         let sections =
             let convert_std = function
-                | [_; n] -> (sprintf p"{i|%s}" n)
-                | [_; t; n] -> (sprintf p"{b|[%s]} {i|%s}" t n)
+                | [_; n] -> (sprintf "{i|%s}" n)
+                | [_; t; n] -> (sprintf "{b|[%s]} {i|%s}" t n)
                 | _ -> "___NOT_A_VALID_STD_FIELD___" in
             let convert_link = function
-                | [_; t] -> (sprintf p"{link %s}" t)
-                | [_; t; n] -> (sprintf p"{link %s|%s}" t n)
-                | [_; t; n; c] -> (sprintf p"{link %s|%s} ({i|%s})" t n c)
+                | [_; t] -> (sprintf "{link %s}" t)
+                | [_; t; n] -> (sprintf "{link %s|%s}" t n)
+                | [_; t; n; c] -> (sprintf "{link %s|%s} ({i|%s})" t n c)
                 | _ -> "___NOT_A_VALID_LINK_FIELD___" in
             let if_something m f = match m with [] -> "" | l -> f l in
             let get_if_one_or_more fild etri ~one ~more =
@@ -536,10 +544,10 @@ module Address_book = struct
             field_name convert_entry entry_name entry =
                 get_if_one_or_more field_name entry
                     ~one:(fun x ->
-                        sprintf p"\n{b|%s:} %s{p}" entry_name (convert_entry x))
+                        sprintf "\n{b|%s:} %s{p}" entry_name (convert_entry x))
                     ~more:(fun l -> 
                         let f = convert_entry in
-                        (sprintf p"\n{b|%s:}{list|\n{*} %s\n}{p}\n"
+                        (sprintf "\n{b|%s:}{list|\n{*} %s\n}{p}\n"
                             (plural entry_name)
                             (Str.concat "\n{*}" (Ls.map l ~f))))
             in
@@ -548,7 +556,7 @@ module Address_book = struct
                 let kstr, id, name = get_needed entry in
                 let birthday =
                     if_something (Adbose.get_all "birthday" entry) (fun l ->
-                        (sprintf p"{b|Birthday}: %s{br}\n"
+                        (sprintf "{b|Birthday}: %s{br}\n"
                             (Str.concat ", " (Ls.tl (Ls.hd l))))) in
                 let phones =
                     make_list "phone" convert_std "Phone number" entry in
@@ -561,14 +569,14 @@ module Address_book = struct
                     make_list "link" convert_link "Link" entry in
                 let tags =
                     if_something (Adbose.get_all "tags" entry) (fun l ->
-                        (sprintf p"{b|Tags}: %s{br}\n"
+                        (sprintf "{b|Tags}: %s{br}\n"
                             (Str.concat ", " (Ls.tl (Ls.hd l))))) in
                 let comments =
                     if_something (Adbose.get_all "comments" entry) (fun l ->
-                        (sprintf p"{b|Comments}:{br}\n%s{br}\n"
+                        (sprintf "{b|Comments}:{br}\n%s{br}\n"
                             (Str.concat "{br}\n" (Ls.tl (Ls.hd l))))) in
 
-                (sprintf p"{section 1 %s|%s (%s)}%s%s%s%s%s%s%s"
+                (sprintf "{section 1 %s|%s (%s)}%s%s%s%s%s%s%s"
                     id name kstr birthday phones addresses emails links
                     tags comments)) in
         (header ^ (Str.concat "\n\n" sections))

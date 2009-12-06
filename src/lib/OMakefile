@@ -1,0 +1,10 @@
+
+LIB_MODULES[] =
+    Yaboon_PolyComp
+    dibrawi_std
+    dibrawi_templating
+    dibrawi
+
+LIB_NAME = dibrawi
+
+.DEFAULT: $(OCamlLibrary $(LIB_NAME), $(LIB_MODULES))
