@@ -1,21 +1,31 @@
 
-include Print
+include Printf
 
-module Ls = List with Labels, LExceptionless
-module En = Enum with Labels, LExceptionless
-module Opt = Option with Labels
-module Ht = Hashtbl with Labels, Exceptionless
+module Ls = ExtList.List
+module En = Enum
+module Opt = struct
+    include Option
+    let bind f =
+        function
+            | Some s -> f s
+            | None -> None
+end
+
+
+module Ht = ExtHashtbl.Hashtbl
 
 let pcre_matches rex str = (
     try ignore (Pcre.exec ~rex str); true with Not_found -> false
 )
 
+let (|>) = fun a b -> b a
+
 module Str = struct
-    include String
+    include ExtString.String
     let rev_idx s c =
         try Some (rindex s c) with Not_found -> None
 
-
+(*
     let nsplit str sep = (
         if str = "" then []
         else 
@@ -44,7 +54,7 @@ module Str = struct
             in
             (aux [] (length str - 1 ))
     )
-
+*)
 
 
 end

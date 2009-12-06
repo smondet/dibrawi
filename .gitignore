@@ -3,3 +3,6 @@ dbw
 dbw.native
 dbwpp
 dbwpp.native
+*~
+*.omc
+.omake*
