@@ -112,19 +112,18 @@ module Data_source = struct
 
 
     let get_file_tree ?(data_root="./data/") () = (
-        let module Sh = Shell in
         let module FT = File_tree in
         let ls dir =
             let sort a = Array.fast_sort Str.compare a; a in
-            Shell.readdir dir |> sort |> Array.to_list in 
-        if is_directory data_root then (
+            Sys.readdir dir |> sort |> Array.to_list in 
+        if Sys.is_directory data_root then (
             let rec explore path name =
                 let next_path = path ^ "/" ^ name in
                 let real_path = data_root ^ "/" ^ next_path in
-                if is_directory real_path then
-                    Dir (path, name, Ls.map (explore next_path)  (ls real_path))
+                if Sys.is_directory real_path then
+                    FT.Dir (path, name, Ls.map (explore next_path)  (ls real_path))
                 else
-                    File (path, name) 
+                    FT.File (path, name) 
             in
             Ls.map (explore ".")  (ls data_root)
         ) else (
@@ -133,10 +132,10 @@ module Data_source = struct
     )
 
     let get_page path = (
-        (IO.read_all (open_in path))
+        (Io.read_all (Io.open_in path))
     )
     let get_file path = (
-        (IO.read_all (open_in path))
+        (Io.read_all (Io.open_in path))
     )
 
 
@@ -156,11 +155,12 @@ module Todo_list = struct
     let is_empty t = !t = []
 
     let to_string ?(sep="; ") tl =
+        let strpath = Str.concat "/" in
         String.concat sep (Ls.map !tl ~f:(function
             | `pdf (path, from) ->
-                sprintf "Build PDF: %s from %{string list}" path from
+                sprintf "Build PDF: %s from %s" path (strpath from)
             | `copy (path, from) ->
-                sprintf "Copy File: %s from %{string list}" path from
+                sprintf "Copy File: %s from %s" path (strpath from)
             | `bibtex -> "Build the BibTeX"
         ))
     let iter t ~f = Ls.iter !t ~f
@@ -176,7 +176,7 @@ module Special_paths = struct
         try match path.[0] with
             | '/' ->
                 let depth = Ls.length from - 1 in
-                "./" ^ (Str.concat "/" (Ls.init depth ~f:(fun _ -> ".."))) ^ path
+                "./" ^ (Str.concat "/" (Ls.init depth (fun _ -> ".."))) ^ path
             | '#' ->
                 (Filename.chop_extension (Ls.hd from)) ^ path
             | _ -> path
@@ -240,25 +240,32 @@ module Preprocessor = struct
     ?todo_list
     ?(html_cite=default_html_cite default_html_biblio_page)
     ?(output=`html) ~from brtx = (
-
-        Pcre.substitute ~rex:prepro_regexp brtx ~subst:(fun s ->
+        let subst s = 
             (* Shell.catch_break true; *)
+            let clean_cite s =
+                let ls = Str.explode s in
+                let filtered_ls =
+                    Ls.filter
+                        (function 'a' .. 'b' | 'A' .. 'B' | '0' .. '9' -> true 
+                             | _ -> false) ls in
+                Str.implode filtered_ls in
             match s with
             | cite when Str.head cite 5 = "{cite" ->
-                let cites =
-                    Ls.map
-                        (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",")
-                        ~f:Str.trim in
-                if output = `html then (
-                    html_cite cites
-                ) else (
-                    Opt.may todo_list ~f:(fun tl -> tl := `bibtex :: !tl);
-                    sprintf "{bypass}\\cite{%s}{end}"
-                        (Str.concat "," cites)
-                        (* (Str.sub s 6 (String.length s - 7)) *)
-                )
-            | s -> s;
-        )
+                  let cites =
+                      Ls.map
+                          (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",")
+                          ~f:clean_cite in
+                  if output = `html then (
+                      html_cite cites
+                  ) else (
+                      Opt.may todo_list ~f:(fun tl -> tl := `bibtex :: !tl);
+                      sprintf "{bypass}\\cite{%s}{end}"
+                          (Str.concat "," cites)
+                          (* (Str.sub s 6 (String.length s - 7)) *)
+                  )
+            | s -> s
+        in
+        Pcre.substitute ~rex:prepro_regexp brtx ~subst
     )
 end
 
@@ -414,7 +421,7 @@ module HTML_menu = struct
     )
     let get_menu factory ~from = (
         let depth = Ls.length from - 1 in
-        match Ht.find factory.cache depth with
+        match Ht.find_opt factory.cache depth with
         | Some s -> s
         | None ->
             let new_one = html_menu ~from factory.source in
@@ -428,9 +435,9 @@ end
 module Latex = struct
 
     let build path = (
-        let pwd = Shell.getcwd () in
+        let pwd = Sys.getcwd () in
         let cd = Filename.dirname path in
-        Shell.chdir cd;
+        Sys.chdir cd;
         let pdflatex = 
             "pdflatex -interaction=nonstopmode" in
         let target = Filename.chop_extension (Filename.basename path) in
@@ -443,10 +450,10 @@ module Latex = struct
                 Unix.system (sprintf "%s %s > /dev/null" pdflatex target) in
             let _ =
                 Unix.system (sprintf "%s %s > /dev/null" pdflatex target) in
-            Shell.chdir pwd;
+            Sys.chdir pwd;
             return
         ) else (
-            Shell.chdir pwd;
+            Sys.chdir pwd;
             return
         )
     )
@@ -472,13 +479,13 @@ module Address_book = struct
 
         let string_of_address_book ab  = (
             let s = sexp_of_address_book ab in 
-            (* Sexplib.Sexp.to_string *)
-            (SExpr.to_string_hum ~indent:4 s)
+            Sexplib.Sexp.to_string s
+            (* (SExpr.to_string_hum ~indent:4 s) *)
         )
 
-        let get_one field_name (k, i, f) =
-            Ls.find f ~f:(function
-                | f :: _ when f = field_name -> true
+        let get_one field_name (k, i, ff) =
+            Ls.find_opt ff ~f:(function
+                | fn :: _ when fn = field_name -> true
                 | _ -> false)
         let get_all field_name (k, i, f) =
             Ls.find_all f ~f:(function

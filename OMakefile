@@ -1,12 +1,18 @@
 
+## Friend libraries: Bracetax and Sebib
+BRACETAX_PATH=$(getenv BRACETAX_LIB_PATH, /bracetax/path/to/lib)
+SEBIB_PATH=$(getenv SEBIB_LIB_PATH, /sebib/path/to/lib)
 
+OCAMLINCLUDES += $(BRACETAX_PATH) $(SEBIB_PATH)
+OCAML_LIBS +=  $(BRACETAX_PATH)/ocamlbracetax $(SEBIB_PATH)/sebib
 
-.PHONY: clean update_yaboons
+.PHONY: clean update_yaboons test_dbw
 
 USE_OCAMLFIND = true
 
 OCAMLPACKS[] =
    xml-light
+   str # just Sebib uses the Str lib
    unix
    extlib
    pcre
