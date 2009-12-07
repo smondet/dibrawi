@@ -47,6 +47,7 @@ module Comparisons = struct
     let gef (a:float) (b:float)   = gepoly a b
 
     let eqs (a:string) (b:string) = (String.compare a b) = 0
+    let nes (a:string) (b:string) = (String.compare a b) <> 0
 
     let minpoly = min
     let maxpoly = max
@@ -70,8 +71,8 @@ module CompAndOveridePoly = struct
     include CompAndNoPolyPhy
     let (=)  = eqi
     let (=.) = eqf
-    let (<>)  = eqi
-    let (<>.) = eqf
+    let (<>)  = nei
+    let (<>.) = nef
     let (<)  = lti
     let (<.) = ltf
     let (>)  = gti
@@ -81,7 +82,9 @@ module CompAndOveridePoly = struct
     let (>=) = gei
     let (>=.)= gef
     let (=$=) = eqs
+    let (<$>) = nes
     let (=@=) = eqpoly
+    let (<@>) = nepoly
     let min = mini
     let max = maxi
 end

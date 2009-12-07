@@ -1,7 +1,7 @@
 
 include Printf
 include Ext_PolyComp.CompAndOveridePoly
-let (<$>) a b = nei (String.compare a b) 0
+
 
 module Ls = struct
     include ExtList.List
