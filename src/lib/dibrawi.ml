@@ -246,7 +246,7 @@ module Preprocessor = struct
                 let ls = Str.explode s in
                 let filtered_ls =
                     Ls.filter
-                        (function 'a' .. 'b' | 'A' .. 'B' | '0' .. '9' -> true 
+                        (function 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' -> true 
                              | _ -> false) ls in
                 Str.implode filtered_ls in
             match s with
