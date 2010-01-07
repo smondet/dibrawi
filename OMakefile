@@ -11,7 +11,6 @@ OCAML_LIBS +=  $(BRACETAX_PATH)/ocamlbracetax $(SEBIB_PATH)/sebib
 USE_OCAMLFIND = true
 
 OCAMLPACKS[] =
-   str # just Sebib uses the Str lib
    unix
    extlib
    pcre
