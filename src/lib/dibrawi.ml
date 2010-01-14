@@ -274,7 +274,7 @@ module Bibliography = struct
 
     (* str_list is a list S-Expressions (already loaded in memory) *)
     let load str_list = (
-        Sebib.Biblio.set_of_string (Str.concat " " str_list)
+        Sebib.Parsing.parse (Str.concat " " str_list)
     )
     let to_brtx biblio = (
         let pattern = "
@@ -291,7 +291,9 @@ module Bibliography = struct
             {b|Tags:} {i|@{tags}} {br} \
             @{if (has keywords)}{b|Keywords:} {i|@{keywords}} {br}@{endif} \
             @{if (has abstract)}{b|Abstract:} {br} @{abstract} {br}@{endif} \
-            @{if (has comments)}{b|Comments:} {br} @{comments}@{endif}" in
+            @{if (has (comment short))}{b|Description:}  \
+                 @{comment-short}{br}@{endif}\
+            @{if (has (comment main))}{b|Comments:} {br} @{comment}@{endif}" in
         "{header|{title|Bibliography}}" ^ (Sebib.Format.str ~pattern biblio)
     )
     let bibtex = Sebib.BibTeX.str
