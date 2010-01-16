@@ -1,4 +1,4 @@
-(person oneguy (
+(person oneguy 
                 (name "First M." Last)
                 (phone mobile +4578456885445)
                 (phone home +78624584555)
@@ -12,17 +12,17 @@
                 (link local:orgofguys "His work" "employee")
                 (comments "It is a {i|guy}")
                 (tags real_person guy)
-                ))
+                )
 
-(organisation  orgofguys (
+(organisation  orgofguys 
                           (name "Organisation of Working Guys")
-                          (address "Somewhere on Earth" )))
+                          (address "Somewhere on Earth" ))
 
-(group grpofguys (
+(group grpofguys 
             (name "Team of ProjectOne developpers")
             (head oneguy)
             (member otherguy)
             (comment "This project is not dead{~}{...}")
-            ))
+            )
 
 

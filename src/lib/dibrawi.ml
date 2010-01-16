@@ -1,4 +1,3 @@
-TYPE_CONV_PATH "ModuleDibrawi"
 
 open Dibrawi_std
 
@@ -465,25 +464,64 @@ end
 
 
 module Address_book = struct
-    (* When grown up, this Adbose module is expected to become a 
-     * standalone library 
-     * *)
+  (* When grown up, this Adbose module is expected to become a 
+   * standalone library 
+   * *)
+  
+  module Adbose = struct
+    module Sx = Sexplib.Sexp
+    
+    type field = string list
+    type kind = [ `person | `group | `organisation ]
+    type entry = kind * string * (field list)
+      
+    type address_book = entry list
+    exception Parse_error of string
+       
+    let address_book_of_string str = 
+      let fail msg =
+        raise (Parse_error (sprintf "Address Book Syntax Error: %s" msg)) in
+      let parse_field =
+        function 
+        | Sx.Atom s -> fail (sprintf "Unexpected atom: %s" s)
+        | Sx.List l as sx->
+            Ls.map l ~f:(function Sx.Atom s -> s
+                         | _ -> 
+                             fail (sprintf "Expecting list of atoms: %s"
+                                     (Sx.to_string sx))) in
+      let kind_of_string =
+        function
+        | "person" -> `person
+        | "group" -> `group
+        | "organisation" -> `organisation
+        | s -> fail (sprintf "Unknown kind of entry: %s" s) in
+      let parse_entry =
+        function
+        | (Sx.Atom k) :: (Sx.Atom id) :: fields ->
+            (kind_of_string k, id, Ls.map parse_field fields)
+        | sx -> 
+            fail (sprintf "Can't understand: %s" (Sx.to_string (Sx.List sx))) in
+      let sexp = 
+        try Sx.of_string (sprintf "(%s)" str) 
+        with Failure msg ->
+          raise (Parse_error (sprintf "Request Syntax Error (sexplib): %s" msg))
+      in
+      let fail_atom s = fail (sprintf "Unexpected atom: %s" s) in
+      match sexp with
+      | Sx.Atom s -> fail_atom s
+      | Sx.List l ->
+          Ls.map l
+            ~f:(function
+                | Sx.Atom s -> fail_atom s
+                | Sx.List l -> parse_entry l)
 
-    module Adbose = struct
-        type field = string list with sexp
-        type kind = [ `person | `group | `organisation ] with sexp
-        type entry = kind * string * (field list) with sexp
 
-        type address_book = entry list with sexp
 
-        let address_book_of_string str = 
-            Sexplib.Sexp.of_string ("(" ^ str ^ ")") |> address_book_of_sexp
-
-        let string_of_address_book ab  = (
+(*        let string_of_address_book ab  = (
             let s = sexp_of_address_book ab in 
             Sexplib.Sexp.to_string s
             (* (SExpr.to_string_hum ~indent:4 s) *)
-        )
+        )*)
 
         let get_one field_name (k, i, ff) =
             Ls.find_opt ff ~f:(function
