@@ -284,16 +284,16 @@ module Bibliography = struct
             @{if (has authors)}@{authors-and}\
                 @{else}{i|-- no authors --}@{endif}{br}\
             @{year} - {i|@{how}}{br} \
-            @{if (lo ((has url) (has pdfurl) (has doi)))} {b|Links:} \
+            @{if (or (has url) (has pdfurl) (has doi))} {b|Links:} \
             @{if (has url)}{t|{link @{url}|URL}}@{endif} \
             @{if (has pdfurl)}{t|{link @{pdfurl}|PDF}}@{endif} \
             @{if (has doi)}{t|{link @{doi}|doi}}@{endif}{br}@{endif} \
             {b|Tags:} {i|@{tags}} {br} \
             @{if (has keywords)}{b|Keywords:} {i|@{keywords}} {br}@{endif} \
             @{if (has abstract)}{b|Abstract:} {br} @{abstract} {br}@{endif} \
-            @{if (has (comment short))}{b|Description:}  \
+            @{if (has comment-short)}{b|Description:}  \
                  @{comment-short}{br}@{endif}\
-            @{if (has (comment main))}{b|Comments:} {br} @{comment}@{endif}" in
+            @{if (has comment-main)}{b|Comments:} {br} @{comment}@{endif}" in
         "{header|{title|Bibliography}}" ^ (Sebib.Format.str ~pattern biblio)
     )
     let bibtex = Sebib.BibTeX.str
