@@ -470,14 +470,14 @@ module Address_book = struct
   
   module Adbose = struct
     module Sx = Sexplib.Sexp
-    
+      
     type field = string list
     type kind = [ `person | `group | `organisation ]
     type entry = kind * string * (field list)
-      
+        
     type address_book = entry list
     exception Parse_error of string
-       
+      
     let address_book_of_string str = 
       let fail msg =
         raise (Parse_error (sprintf "Address Book Syntax Error: %s" msg)) in
@@ -515,25 +515,18 @@ module Address_book = struct
                 | Sx.Atom s -> fail_atom s
                 | Sx.List l -> parse_entry l)
 
-
-
-(*        let string_of_address_book ab  = (
-            let s = sexp_of_address_book ab in 
-            Sexplib.Sexp.to_string s
-            (* (SExpr.to_string_hum ~indent:4 s) *)
-        )*)
-
-        let get_one field_name (k, i, ff) =
-            Ls.find_opt ff ~f:(function
-                | fn :: _ when fn =$= field_name -> true
-                | _ -> false)
-        let get_all field_name (k, i, f) =
-            Ls.find_all f ~f:(function
-                | f :: _ when f =$= field_name -> true
-                | _ -> false)
+    let get_one field_name (k, i, ff) =
+      Ls.find_opt ff ~f:(function
+                         | fn :: _ when fn =$= field_name -> true
+                         | _ -> false)
+    let get_all field_name (k, i, f) =
+      Ls.find_all f ~f:(function
+                        | f :: _ when f =$= field_name -> true
+                        | _ -> false)
         
-        let sort_by_family ab = 
-            Ls.sort ab ~cmp:(fun e1 e2 ->
+    let sort_by_family ab = 
+      Ls.sort ab
+        ~cmp:(fun e1 e2 ->
                 match (get_one "name" e1), (get_one "name" e2) with
                 | Some [_; _; l1], Some [_; _; l2] -> Str.compare l1 l2
                 | Some [_; l1], Some [_; l2] -> Str.compare l1 l2
@@ -545,82 +538,86 @@ module Address_book = struct
                 | Some [_; l1], _ -> 1
                 | _, _ -> 0)
 
-    end
-    let load str_list = (
-        Adbose.address_book_of_string (Str.concat " " str_list)
-    )
-    let to_brtx abook = (
-        let get_needed ((kind, id, fields) as entry) = 
-            let kind_str = 
-                match kind with
-                | `person -> "Person"
-                | `group -> "Group"
-                | `organisation -> "Organisation" in
-            let name_str =
-                match Adbose.get_one "name" entry with
-                | Some (_ :: f :: l :: _) -> sprintf "%s, %s" l f
-                | Some (_ :: f :: []) -> f
-                | _ -> "___NO__VALID_NAME___" in
-            (kind_str, id, name_str)
-        in
-        let header =
-            "{header|{title|Address Book}}\n\n" in
-        let sections =
-            let convert_std = function
-                | [_; n] -> (sprintf "{i|%s}" n)
-                | [_; t; n] -> (sprintf "{b|[%s]} {i|%s}" t n)
-                | _ -> "___NOT_A_VALID_STD_FIELD___" in
-            let convert_link = function
-                | [_; t] -> (sprintf "{link %s}" t)
-                | [_; t; n] -> (sprintf "{link %s|%s}" t n)
-                | [_; t; n; c] -> (sprintf "{link %s|%s} ({i|%s})" t n c)
-                | _ -> "___NOT_A_VALID_LINK_FIELD___" in
-            let if_something m f = match m with [] -> "" | l -> f l in
-            let get_if_one_or_more fild etri ~one ~more =
-                match Adbose.get_all fild etri with
-                [] -> "" | [x] -> one x | l -> more l
-            in
-            let make_list ?(plural=fun x -> x ^ "s")
-            field_name convert_entry entry_name entry =
-                get_if_one_or_more field_name entry
-                    ~one:(fun x ->
-                        sprintf "\n{b|%s:} %s{p}" entry_name (convert_entry x))
-                    ~more:(fun l -> 
-                        let f = convert_entry in
-                        (sprintf "\n{b|%s:}{list|\n{*} %s\n}{p}\n"
-                            (plural entry_name)
-                            (Str.concat "\n{*}" (Ls.map l ~f))))
-            in
+  end
 
-            Ls.map (Adbose.sort_by_family abook) ~f:(fun entry ->
-                let kstr, id, name = get_needed entry in
-                let birthday =
-                    if_something (Adbose.get_all "birthday" entry) (fun l ->
-                        (sprintf "{b|Birthday}: %s{br}\n"
-                            (Str.concat ", " (Ls.tl (Ls.hd l))))) in
-                let phones =
-                    make_list "phone" convert_std "Phone number" entry in
-                let addresses =
-                    let plural = fun x -> x ^ "es" in
-                    make_list ~plural "address" convert_std "Address" entry in
-                let emails =
-                    make_list "email" convert_std "E-Mail" entry in
-                let links =
-                    make_list "link" convert_link "Link" entry in
-                let tags =
-                    if_something (Adbose.get_all "tags" entry) (fun l ->
-                        (sprintf "{b|Tags}: %s{br}\n"
-                            (Str.concat ", " (Ls.tl (Ls.hd l))))) in
-                let comments =
-                    if_something (Adbose.get_all "comments" entry) (fun l ->
-                        (sprintf "{b|Comments}:{br}\n%s{br}\n"
-                            (Str.concat "{br}\n" (Ls.tl (Ls.hd l))))) in
+  let load str_list =
+    Adbose.address_book_of_string (Str.concat " " str_list)
 
-                (sprintf "{section 1 %s|%s (%s)}%s%s%s%s%s%s%s"
-                    id name kstr birthday phones addresses emails links
-                    tags comments)) in
-        (header ^ (Str.concat "\n\n" sections))
-    )
+  let to_brtx abook =
+    let get_needed ((kind, id, fields) as entry) = 
+      let kind_str = 
+        match kind with
+        | `person -> "Person"
+        | `group -> "Group"
+        | `organisation -> "Organisation" in
+      let name_str =
+        match Adbose.get_one "name" entry with
+        | Some (_ :: f :: l :: _) -> sprintf "%s, %s" l f
+        | Some (_ :: f :: []) -> f
+        | _ -> "___NO__VALID_NAME___" in
+      (kind_str, id, name_str)
+    in
+    let header =
+      "{header|{title|Address Book}}\n\n" in
+    let sections =
+      let convert_std = function
+        | [_; n] -> (sprintf "{i|%s}" n)
+        | [_; t; n] -> (sprintf "{b|[%s]} {i|%s}" t n)
+        | _ -> "___NOT_A_VALID_STD_FIELD___" in
+      let convert_link = function
+        | [_; t] -> (sprintf "{link %s}" t)
+        | [_; t; n] -> (sprintf "{link %s|%s}" t n)
+        | [_; t; n; c] -> (sprintf "{link %s|%s} ({i|%s})" t n c)
+        | _ -> "___NOT_A_VALID_LINK_FIELD___" in
+      let if_something m f = match m with [] -> "" | l -> f l in
+      let get_if_one_or_more fild etri ~one ~more =
+        match Adbose.get_all fild etri with
+          [] -> "" | [x] -> one x | l -> more l
+      in
+      let make_list ?(plural=fun x -> x ^ "s")
+          field_name convert_entry entry_name entry =
+        get_if_one_or_more field_name entry
+          ~one:(fun x ->
+                  sprintf "\n{b|%s:} %s{p}" entry_name (convert_entry x))
+          ~more:(fun l -> 
+                   let f = convert_entry in
+                   (sprintf "\n{b|%s:}{list|\n{*} %s\n}{p}\n"
+                      (plural entry_name)
+                      (Str.concat "\n{*}" (Ls.map l ~f))))
+      in
+
+      Ls.map (Adbose.sort_by_family abook)
+        ~f:(fun entry ->
+              let kstr, id, name = get_needed entry in
+              let birthday =
+                if_something (Adbose.get_all "birthday" entry)
+                  (fun l ->
+                     (sprintf "{b|Birthday}: %s{br}\n"
+                        (Str.concat ", " (Ls.tl (Ls.hd l))))) in
+              let phones =
+                make_list "phone" convert_std "Phone number" entry in
+              let addresses =
+                let plural = fun x -> x ^ "es" in
+                make_list ~plural "address" convert_std "Address" entry in
+              let emails =
+                make_list "email" convert_std "E-Mail" entry in
+              let links =
+                make_list "link" convert_link "Link" entry in
+              let tags =
+                if_something (Adbose.get_all "tags" entry)
+                  (fun l ->
+                     (sprintf "{b|Tags}: %s{br}\n"
+                        (Str.concat ", " (Ls.tl (Ls.hd l))))) in
+              let comments =
+                if_something (Adbose.get_all "comments" entry) 
+                  (fun l ->
+                     (sprintf "{b|Comments}:{br}\n%s{br}\n"
+                        (Str.concat "{br}\n" (Ls.tl (Ls.hd l))))) in
+
+              (sprintf "{section 1 %s|%s (%s)}%s%s%s%s%s%s%s"
+                 id name kstr birthday phones addresses emails links
+                 tags comments)) in
+    (header ^ (Str.concat "\n\n" sections))
 
 
 end
