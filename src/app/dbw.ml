@@ -39,40 +39,10 @@ file_name content_buffer err_buffer = (
     if s <$> "" then (eprintf "Errors for %s:\n%s\n" file_name s;);
 )
 
-let build_pdf ~latex_template texname = (
-    let absolut s = 
-        (Sys.getcwd ()) ^ "/" ^ (Filename.chop_extension texname) ^ s in
-    let tmp =
-        Dbw_unix.with_new_tmp ~suffix:".tex" ~prefix:"dbw_"
-            (fun o name ->
-                 fprintf o "%s" (latex_template (absolut ".tex"));
-                 name
-            ) in
-    let name = (Filename.chop_extension tmp) in
-    begin match Dibrawi.Latex.build tmp with
-    | Unix.WEXITED 0 ->
-        ignore (Unix.system ("mv " ^ name ^ ".pdf " ^ (absolut ".pdf")));
-        ignore (Unix.system ("mv " ^ name ^ ".log " ^ (absolut ".log")));
-    | Unix.WEXITED n ->
-        printf "PDF: Compilation of %s failed with error code: %d\n\
-            see %s\n" texname n (absolut ".log");
-        ignore (Unix.system ("mv " ^ name ^ ".log " ^ (absolut ".log")));
-    | _ ->
-        printf "PDF: Compilation of %s got killed (?)\n\
-            see %s\n" texname (absolut ".tex");
-        ignore (Unix.system ("mv " ^ name ^ ".log " ^ (absolut ".log")));
-    end;
-)
 
 open Dibrawi
 
-let transform
-?(make_all_pdfs=false) ?(dependent_pdfs=false)
-?(biblio_pdf=false) ?(abook_pdf=false)
-?(latex_template="") ?(html_template="")
-?(href_is_footnote=false)
-?things_to_build
-data_root build = (
+let transform ?(html_template="") ?(href_is_footnote=false) data_root build = (
     let the_source_tree = 
         Data_source.get_file_tree ~data_root () in
     let todo_list = Todo_list.empty () in
@@ -90,15 +60,9 @@ data_root build = (
         else
             Templating.html_default
     in
-    let latex_templ_fun = 
-        if latex_template <$> "" then 
-            Templating.load_latex (Data_source.get_file latex_template)
-        else
-            Templating.latex_default
-    in
     let list_sebibs =
         File_tree.str_and_path_list ~filter:"\\.sebib$" the_source_tree in
-    let bibtex_path = 
+    let () = 
         let bib =
             Bibliography.load (Ls.map list_sebibs 
                 ~f:(fun (str, path) ->
@@ -114,23 +78,6 @@ data_root build = (
         output_buffers
             ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Bibliography")
             html html_buffer err_buffer;
-        let bibtex = Bibliography.bibtex bib in
-        let dot_bib = (Sys.getcwd ()) ^ "/" ^ build ^ "/biblio.bib" in
-        Dbw_unix.with_new_out dot_bib (fun o ->
-            fprintf o "%s" bibtex);
-        if make_all_pdfs || biblio_pdf then (
-            let tex = build ^ "/bibliography.tex" in
-            let latex_buffer, err_buffer, (title, authors, subtitle) = 
-                Brtx_transform.to_latex
-                    ~href_is_footnote ~todo_list ~from brtx in
-            output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
-            let title, authors, subtitle = "Bibliography", "", "" in
-            let latex_template = 
-                (latex_templ_fun ~title ~authors ~subtitle ~bibtex_path:dot_bib)
-            in
-            build_pdf ~latex_template tex;
-        );
-        dot_bib
     in
 
     let list_abs =
@@ -150,21 +97,7 @@ data_root build = (
         output_buffers
             ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Address Book")
             html html_buffer err_buffer;
-        if make_all_pdfs || abook_pdf then (
-            let tex = build ^ "/address_book.tex" in
-            let latex_buffer, err_buffer, (title, authors, subtitle) = 
-                Brtx_transform.to_latex
-                    ~href_is_footnote ~todo_list ~from brtx in
-            output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
-            let title, authors, subtitle = 
-                "Address Book", "Sebastien Mondet", "" in
-            let latex_template = 
-                (latex_templ_fun ~title ~authors ~subtitle ~bibtex_path) in
-            build_pdf ~latex_template tex;
-        );
     in
-
-
 
 
     let list_brtxes = File_tree.str_and_path_list the_source_tree in
@@ -183,18 +116,6 @@ data_root build = (
             Brtx_transform.to_html ~todo_list ~filename:str ~from page in
         output_buffers ~templ_fun:(html_templ_fun ~menu ~toc ~title)
             html html_buffer err_buffer; 
-        if make_all_pdfs then (
-            (* let title = Filename.chop_extension str in *)
-            let tex = build ^ "/" ^ (Filename.chop_extension str) ^ ".tex" in
-            let from = path in
-            let latex_buffer, err_buffer, (title, authors, subtitle) = 
-                Brtx_transform.to_latex
-                    ~href_is_footnote ~todo_list ~filename:str ~from page in
-            output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
-            let latex_template = 
-                (latex_templ_fun ~title ~authors ~subtitle ~bibtex_path) in
-            build_pdf ~latex_template tex;
-        );
     );
 
     Todo_list.simplify todo_list;
@@ -207,24 +128,6 @@ data_root build = (
             ignore (Unix.system (sprintf "cp %s %s" origin dest));
             (* printf "Should copy: %s -> %s\n" origin dest; *)
             []
-        | `pdf (path, from) when dependent_pdfs ->
-            let from_path = String.concat "/" (Ls.rev (Ls.tl from)) in
-            let pdf = from_path ^ "/" ^ path in
-            let tex =
-                build ^ "/" ^ (Filename.chop_extension pdf) ^ ".tex" in
-            let brtx =
-                data_root ^ "/" ^ (Filename.chop_extension pdf) ^ ".brtx"
-            in
-            let page = Data_source.get_page brtx in
-            let latex_buffer, err_buffer, (title, authors, subtitle) = 
-                Brtx_transform.to_latex
-                    ~href_is_footnote ~filename:tex ~from page in
-            output_buffers ~templ_fun:(fun s -> s) tex latex_buffer err_buffer;
-            let latex_template = 
-                (latex_templ_fun ~title ~authors ~subtitle ~bibtex_path) in
-            build_pdf ~latex_template tex;
-            []
-        | s -> [s]
     );
     if not (Todo_list.is_empty todo_list) then (
         printf "Still TODO: %s\n" (Todo_list.to_string todo_list)
@@ -235,13 +138,6 @@ data_root build = (
 let () = (
     let print_version = ref false in
     let html_tmpl = ref "" in
-    let latex_tmpl = ref "" in
-    let all_pdfs = ref false in
-    let bib_pdf = ref false in
-    let ab_pdf = ref false in
-    let dependent_pdfs = ref false in
-    let to_build = ref [] in
-    let footnote_links = ref false in
 
     let arg_cmd ~doc key spec = (key, spec, doc) in
     let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
@@ -254,34 +150,6 @@ let () = (
             ~doc:"<path>\n\tSet an HTML template file"
             "-html-template"
             (Arg.Set_string html_tmpl);
-        arg_cmd
-            ~doc:"<path>\n\tSet a LaTeX template file"
-            "-latex-template"
-            (Arg.Set_string latex_tmpl);
-        arg_cmd
-            ~doc:"\n\tBuild (or try to) all the PDFs"
-            "-all-pdfs"
-            (Arg.Set all_pdfs);
-        arg_cmd
-            ~doc:"\n\tBuild the \"needed\" PDFs"
-            "-pdfs"
-            (Arg.Set dependent_pdfs);
-        arg_cmd
-            ~doc:"\n\tBuild the PDF of the bibliography"
-            "-bib-pdf"
-            (Arg.Set bib_pdf);
-        arg_cmd
-            ~doc:"\n\tIn PDFs, put all links as footnotes"
-            "-footnote-links"
-            (Arg.Set footnote_links);
-        arg_cmd
-            ~doc:"<dbw-path>\n\tBuild only <path>"
-            "-build"
-            (Arg.String (fun s -> to_build := s :: !to_build));
-        arg_cmd
-            ~doc:"\n\tBuild the PDF of the address_book"
-            "-ab-pdf"
-            (Arg.Set ab_pdf);
     ] in 
     let anonymous_arguments =
         let anons = ref [] in
@@ -296,34 +164,9 @@ let () = (
             Sys.ocaml_version  Pcre.version
             Bracetax.Info.version Sebib.Info.version;
     ) else (
-        let things_to_build = 
-            match !to_build with
-            | [] -> None
-            | l -> 
-                  let parse s =
-                      let todo_list = ref [] in
-                      let path =
-                          Dibrawi.Special_paths.rewrite_url
-                              ~todo_list ~from:["CmdLine"] s in
-                      match !todo_list with
-                      | (`pdf (p, f)) :: [] ->
-                            printf "pdf: p: %s f: %s, path: %s\n" 
-                                p (Str.concat "//" f) path;
-                            (`pdf, path)
-                      | _ -> (`html, path)
-                  in
-                  Some (Ls.rev_map l ~f:parse)
-        in
         begin match anonymous_arguments with
         | [i; o] ->
-              transform
-                  ?things_to_build
-                  ~make_all_pdfs:!all_pdfs ~html_template:!html_tmpl
-                  ~dependent_pdfs:!dependent_pdfs
-                  ~biblio_pdf:!bib_pdf
-                  ~abook_pdf:!ab_pdf
-                  ~href_is_footnote:!footnote_links
-                  ~latex_template:!latex_tmpl i o
+              transform ~html_template:!html_tmpl i o 
         | _ -> 
               printf "Wrong number of arguments: %d\n" 
                   (Ls.length anonymous_arguments);

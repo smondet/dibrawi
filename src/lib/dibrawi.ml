@@ -144,9 +144,7 @@ end
 module Todo_list = struct
 
     type todo = [
-        | `pdf  of (string * (string list))
         | `copy of (string * (string list))
-        | `bibtex
     ]
     type t = todo list ref
 
@@ -156,11 +154,8 @@ module Todo_list = struct
     let to_string ?(sep="; ") tl =
         let strpath = Str.concat "/" in
         String.concat sep (Ls.map !tl ~f:(function
-            | `pdf (path, from) ->
-                sprintf "Build PDF: %s from %s" path (strpath from)
             | `copy (path, from) ->
                 sprintf "Copy File: %s from %s" path (strpath from)
-            | `bibtex -> "Build the BibTeX"
         ))
     let iter t ~f = Ls.iter !t ~f
     let do_things t ~(f:todo -> todo list) =
@@ -200,9 +195,6 @@ module Special_paths = struct
         | s when Str.head s 4 =$= "pdf:" ->
             let pdfpath = 
                 compute_path from (Str.tail s 4) ".pdf" in
-            Opt.may todo_list ~f:(fun rl ->
-                rl := (`pdf (pdfpath, from)) :: !rl;
-            );
             pdfpath 
         | s when Str.head s 5 =$= "page:" ->
             (compute_path from (Str.tail s 5) ".html")
@@ -257,7 +249,6 @@ module Preprocessor = struct
                   if output =@= `html then (
                       html_cite cites
                   ) else (
-                      Opt.may todo_list ~f:(fun tl -> tl := `bibtex :: !tl);
                       sprintf "{bypass}\\cite{%s}{end}"
                           (Str.concat "," cites)
                           (* (Str.sub s 6 (String.length s - 7)) *)
@@ -327,22 +318,6 @@ module Brtx_transform = struct
             to_html ~class_hook:"dbwtoc" ~from:[""]
                 (Buffer.contents brtx_buffer) in
         (Buffer.contents h)
-    )
-
-    let to_latex ?href_is_footnote ?todo_list ?filename ~from brtx = (
-        let output = `pdf in
-        let brtx_page =
-            Preprocessor.brtx2brtx ~output ?todo_list ~from brtx in
-        let latex_buffer = Buffer.create 1024 in
-        let err_buffer = Buffer.create 512 in
-        let writer, input_char =
-            Bracetax.Transform.string_io brtx_page latex_buffer err_buffer in
-        let url_hook = Special_paths.rewrite_url ~output ?todo_list ~from in
-        let separate_header = ref ("", "", "") in
-        Bracetax.Transform.brtx_to_latex
-            ~separate_header ?href_is_footnote
-            ~writer ?filename ~img_hook:url_hook ~url_hook ~input_char ();
-        (latex_buffer, err_buffer, !separate_header)
     )
 
 end
@@ -432,36 +407,6 @@ module HTML_menu = struct
 
 
 end
-
-module Latex = struct
-
-    let build path = (
-        let pwd = Sys.getcwd () in
-        let cd = Filename.dirname path in
-        Sys.chdir cd;
-        let pdflatex = 
-            "pdflatex -interaction=nonstopmode" in
-        let target = Filename.chop_extension (Filename.basename path) in
-        let return =
-            Unix.system (sprintf "%s %s > /dev/null" pdflatex target) in
-        if return =@= (Unix.WEXITED 0) then (
-            let _ =
-                Unix.system (sprintf "bibtex %s > /dev/null"  target) in
-            let _ =
-                Unix.system (sprintf "%s %s > /dev/null" pdflatex target) in
-            let _ =
-                Unix.system (sprintf "%s %s > /dev/null" pdflatex target) in
-            Sys.chdir pwd;
-            return
-        ) else (
-            Sys.chdir pwd;
-            return
-        )
-    )
-
-
-end
-
 
 module Address_book = struct
   (* When grown up, this Adbose module is expected to become a 
