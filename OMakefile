@@ -1,16 +1,18 @@
 
 ## Friend libraries: Bracetax and Sebib
-BRACETAX_PATH=$(getenv BRACETAX_LIB_PATH, /bracetax/path/to/lib)
-SEBIB_PATH=$(getenv SEBIB_LIB_PATH, /sebib/path/to/lib)
+#BRACETAX_PATH=$(getenv BRACETAX_LIB_PATH, /bracetax/path/to/lib)
+#SEBIB_PATH=$(getenv SEBIB_LIB_PATH, /sebib/path/to/lib)
+#
+#OCAMLINCLUDES += $(BRACETAX_PATH) $(SEBIB_PATH)
+#OCAML_LIBS +=  $(BRACETAX_PATH)/ocamlbracetax $(SEBIB_PATH)/sebib
 
-OCAMLINCLUDES += $(BRACETAX_PATH) $(SEBIB_PATH)
-OCAML_LIBS +=  $(BRACETAX_PATH)/ocamlbracetax $(SEBIB_PATH)/sebib
-
-.PHONY: clean update_yaboons test_dbw
+.PHONY: clean update_yaboons test_dbw install_library
 
 USE_OCAMLFIND = true
 
 OCAMLPACKS[] =
+   sebib
+   bracetax
    unix
    extlib
    pcre
@@ -23,7 +25,7 @@ if $(not $(OCAMLFIND_EXISTS))
    exit 1
 
 NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
-BYTE_ENABLED = $(not $(OCAMLOPT_EXISTS))
+BYTE_ENABLED = true
 
 OCAMLFLAGS    +=
 OCAMLCFLAGS   +=

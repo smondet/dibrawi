@@ -8,3 +8,6 @@ LIB_MODULES[] =
 LIB_NAME = dibrawi
 
 .DEFAULT: $(OCamlLibrary $(LIB_NAME), $(LIB_MODULES))
+
+install_library: dibrawi.cma dibrawi.cmxa META
+    ocamlfind install dibrawi META *.cm[iox] dibrawi.cma dibrawi.cmxa dibrawi.a
