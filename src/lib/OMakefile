@@ -11,3 +11,7 @@ LIB_NAME = dibrawi
 
 install_library: dibrawi.cma dibrawi.cmxa META
     ocamlfind install dibrawi META *.cm[iox] dibrawi.cma dibrawi.cmxa dibrawi.a
+uninstall_library:
+    ocamlfind remove sebib
+reinstall_library: uninstall_library install_library
+

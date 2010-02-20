@@ -6,7 +6,7 @@
 #OCAMLINCLUDES += $(BRACETAX_PATH) $(SEBIB_PATH)
 #OCAML_LIBS +=  $(BRACETAX_PATH)/ocamlbracetax $(SEBIB_PATH)/sebib
 
-.PHONY: clean update_yaboons test_dbw install_library
+.PHONY: clean update_yaboons test_dbw install_library reinstall_library uninstall_library
 
 USE_OCAMLFIND = true
 
