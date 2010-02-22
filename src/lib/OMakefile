@@ -9,11 +9,11 @@ LIB_NAME = dibrawi
 
 .DEFAULT: $(OCamlLibrary $(LIB_NAME), $(LIB_MODULES))
 
-install_library: dibrawi.cma dibrawi.cmxa META
-    ocamlfind install dibrawi META *.cm[iox] dibrawi.cma dibrawi.cmxa dibrawi.a
-uninstall_library:
-    ocamlfind remove dibrawi
-reinstall_library: dibrawi.cma dibrawi.cmxa META
-    ocamlfind remove dibrawi
-    ocamlfind install dibrawi META *.cm[iox] dibrawi.cma dibrawi.cmxa dibrawi.a
+install_library:  $(LIB_NAME).cma $(LIB_NAME).cmxa META
+    ocamlfind install $(LIB_NAME) META *.cm[iox] $(LIB_NAME).cma $(LIB_NAME).cmxa $(LIB_NAME).a
 
+uninstall_library:
+    ocamlfind remove $(LIB_NAME)
+reinstall_library: $(LIB_NAME).cma $(LIB_NAME).cmxa META
+    ocamlfind remove $(LIB_NAME)
+    ocamlfind install $(LIB_NAME) META *.cm[iox] $(LIB_NAME).cma $(LIB_NAME).cmxa $(LIB_NAME).a
