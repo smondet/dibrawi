@@ -228,60 +228,61 @@ module Preprocessor = struct
                                html_biblio_page cite cite))) ^ "]"
 
     let brtx2brtx ?todo_list 
-    ?(html_cite=default_html_cite default_html_biblio_page)
-    ?(output=`html) ~from brtx = (
+        ?(html_cite=default_html_cite default_html_biblio_page)
+        ?(output=`html) ~from brtx = 
+      let clean_cite s =
+        let ls = Str.explode s in
+        let filtered_ls =
+          Ls.filter
+            (function
+               'a' .. 'z' | 'A' .. 'Z' | '0' .. '9'
+             | ':' | '.' | '-' | '_' -> true 
+             | _ -> false) ls in
+        Str.implode filtered_ls in
       let subst s = 
         (* Shell.catch_break true; *)
-        let clean_cite s =
-          let ls = Str.explode s in
-          let filtered_ls =
-            Ls.filter
-              (function
-                 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9'
-               | ':' | '.' | '-' | '_' -> true 
-               | _ -> false) ls in
-          Str.implode filtered_ls in
-            match s with
-            | cite when Str.head cite 5 =$= "{cite" ->
-                let cites =
-                  Ls.map
-                    (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",")
-                    ~f:clean_cite in
-                begin match output with
-                | `html -> html_cite cites
-                | `pdf -> 
-                    sprintf "{bypass}\\cite{%s}{end}"
-                      (Str.concat "," cites)
-                end
-            | cmt when Str.head cmt 4 =$= "{cmt" ->
-                let comment_text =
-                  Str.map 
-                    (function
-                     | '{' | '<' | '>' | '&' | '\\' | '$' | '%' -> ' '
-                     | c -> c)
-                    (Str.sub s 5 (Str.length s - 6)) in
-                begin match output with
-                | `html -> 
-                    sprintf
-                      "{bypass}<span class=\"dibrawicomment\">%s</span>{end}"
-                      comment_text
-                | `pdf -> 
-                    sprintf "{bypass}\\ifx\\dbwcmt\\undefined\
+        let endtag = "dibrawipreprocessorendtag" in
+        match s with
+        | cite when Str.head cite 5 =$= "{cite" ->
+            let cites =
+              Ls.map
+                (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",")
+                ~f:clean_cite in
+            begin match output with
+            | `html -> html_cite cites
+            | `pdf -> 
+                sprintf "{bypass %s}\\cite{%s}{%s}"
+                  endtag (Str.concat "," cites) endtag
+            end
+        | cmt when Str.head cmt 4 =$= "{cmt" ->
+            let comment_text =
+              Str.map 
+                (function
+                 | '{' | '<' | '>' | '&' | '\\' | '$' | '%' -> ' '
+                 | c -> c)
+                (Str.sub s 5 (Str.length s - 6)) in
+            begin match output with
+            | `html -> 
+                sprintf
+                  "{bypass %s}<span class=\"dibrawicomment\">%s</span>{%s}"
+                  endtag comment_text endtag
+            | `pdf -> 
+                sprintf "{bypass %s}\\ifx\\dbwcmt\\undefined\
                              \\textbf{[%s]}\
-                             \\else\\dbwcmt{%s}\\fi{end}"
-                      comment_text comment_text
-                end
-            | s -> s
-          in
-      Pcre.substitute ~rex:prepro_regexp brtx ~subst
-    )
+                             \\else\\dbwcmt{%s}\\fi{%s}"
+                  endtag comment_text comment_text endtag
+            end
+        | s -> s
+      in
+      (Pcre.substitute ~rex:prepro_regexp brtx ~subst)
+        
 end
 
 (******************************************************************************)
 module Bibliography = struct
 
-    (* str_list is a list S-Expressions (already loaded in memory) *)
-    let load str_list = (
+  (* str_list is a list S-Expressions (already loaded in memory) *)
+  let load str_list = (
         Sebib.Parsing.parse (Str.concat " " str_list)
     )
     let to_brtx biblio = (
