@@ -194,7 +194,7 @@ let transform ?(html_template="") ?persistence_file data_root build =
 let () =
   let print_version = ref false in
   let html_tmpl = ref "" in
-  let persistance = ref "" in
+  let persistence = ref "" in
 
   let arg_cmd ~doc key spec = (key, spec, doc) in
   let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
@@ -208,9 +208,9 @@ let () =
       "-html-template"
       (Arg.Set_string html_tmpl);
     arg_cmd
-      ~doc:"<path>\n\tUse a file for build persistance."
+      ~doc:"<path>\n\tUse a file for build persistence."
       "-persist-with"
-      (Arg.Set_string persistance);
+      (Arg.Set_string persistence);
   ] in 
   let anonymous_arguments =
     let anons = ref [] in
@@ -228,7 +228,7 @@ let () =
     begin match anonymous_arguments with
     | [i; o] ->
         let persistence_file =
-          if !persistance =$= "" then None else Some !persistance in
+          if !persistence =$= "" then None else Some !persistence in
         transform ~html_template:!html_tmpl ?persistence_file i o 
     | _ -> 
         printf "Wrong number of arguments: %d\n" 
