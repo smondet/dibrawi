@@ -42,7 +42,7 @@ let output_buffers
 
 open Dibrawi
 
-let transform ?(html_template="") ?(href_is_footnote=false) data_root build =
+let transform ?(html_template="") ?persistence_file data_root build =
   let the_source_tree = 
     Data_source.get_file_tree ~data_root () in
   let todo_list = Todo_list.empty () in
@@ -103,10 +103,31 @@ let transform ?(html_template="") ?(href_is_footnote=false) data_root build =
   let list_brtxes = File_tree.str_and_path_list the_source_tree in
 
   let list_with_targets =
+    let previous_content =
+      match persistence_file with
+      | None -> []
+      | Some pf ->
+          try 
+            let i = open_in pf in
+            let str_contents =
+              (Marshal.from_channel i
+                 : (string * Make.MD5.file_content * Make.MD5.file_content) list)
+            in
+            close_in i;
+            str_contents 
+          with _ -> [] (* when the file does not exist, or Marshal fails *)
+    in
+    let previous_file_content html str =
+      match Ls.find_opt previous_content ~f:(fun (s, _, _) -> s =$= str) with
+      | None -> None
+      | Some (_, cs, ch) ->
+          if html then Some ch else Some cs in
+
     let make_target_source (str, path) =
       let filename = data_root ^ "/" ^ str in
       let build_cmd () = printf "build_cmd: %s\n" filename in
-      Make.MD5.make_file_target ~filename ~build_cmd [] in
+      let initial_content = previous_file_content false str in
+      Make.MD5.make_file_target ?initial_content ~filename ~build_cmd [] in
     
     let make_target_html (str, path) =
       let filename = build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
@@ -124,8 +145,10 @@ let transform ?(html_template="") ?(href_is_footnote=false) data_root build =
           filename html_buffer err_buffer; 
       in
       let target_source, content_source = make_target_source (str, path) in
+      let initial_content = previous_file_content true str in
       let target_html, content_html =
-        Make.MD5.make_file_target ~filename ~build_cmd [target_source] in
+        Make.MD5.make_file_target ?initial_content 
+          ~filename ~build_cmd [target_source] in
       (str, path, target_source, content_source, target_html, content_html) in
     Ls.map list_brtxes ~f:make_target_html in
 
@@ -139,6 +162,16 @@ let transform ?(html_template="") ?(href_is_footnote=false) data_root build =
   ) else (
     printf "Nothing to be done.\n";
   );
+
+  begin match persistence_file with
+  | None -> ()
+  | Some pf ->
+      let str_contents =
+        Ls.map list_with_targets ~f:(fun (s,_, _,cs, _,ch) -> (s, cs, ch)) in
+      let o = open_out pf in
+      Marshal.to_channel o str_contents [];
+      close_out o;
+  end;
 
   Todo_list.simplify todo_list;
   Todo_list.do_things todo_list
@@ -161,6 +194,7 @@ let transform ?(html_template="") ?(href_is_footnote=false) data_root build =
 let () =
   let print_version = ref false in
   let html_tmpl = ref "" in
+  let persistance = ref "" in
 
   let arg_cmd ~doc key spec = (key, spec, doc) in
   let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
@@ -173,6 +207,10 @@ let () =
       ~doc:"<path>\n\tSet an HTML template file"
       "-html-template"
       (Arg.Set_string html_tmpl);
+    arg_cmd
+      ~doc:"<path>\n\tUse a file for build persistance."
+      "-persist-with"
+      (Arg.Set_string persistance);
   ] in 
   let anonymous_arguments =
     let anons = ref [] in
@@ -189,7 +227,9 @@ let () =
   ) else (
     begin match anonymous_arguments with
     | [i; o] ->
-        transform ~html_template:!html_tmpl i o 
+        let persistence_file =
+          if !persistance =$= "" then None else Some !persistance in
+        transform ~html_template:!html_tmpl ?persistence_file i o 
     | _ -> 
         printf "Wrong number of arguments: %d\n" 
           (Ls.length anonymous_arguments);

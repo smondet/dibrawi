@@ -115,6 +115,8 @@ module MD5 = struct
       | Some rs -> Some (Digest.string rs) in
     make_digestible_target ?initial_content ~build_command ~digest dependencies
 
+  type file_content = (Digest.t, string) digestible_content
+
   let make_file_target ?initial_content ~filename  ~build_cmd dependencies =
     let md5_file file = try Some (Digest.file file) with _ -> None in
     let build_command = function
