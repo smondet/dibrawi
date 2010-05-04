@@ -2,6 +2,7 @@
 open Dibrawi_std
 
 module Templating = Dibrawi_templating
+module Make = Dibrawi_make
 
 module Info = struct
     let version = 0

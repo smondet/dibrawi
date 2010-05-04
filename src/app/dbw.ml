@@ -102,6 +102,45 @@ let transform ?(html_template="") ?(href_is_footnote=false) data_root build = (
 
     let list_brtxes = File_tree.str_and_path_list the_source_tree in
 
+    let list_with_targets =
+      let make_target_source (str, path) =
+        let filename = data_root ^ "/" ^ str in
+        let build_cmd () = printf "build_cmd: %s\n" filename in
+        Make.MD5.make_file_target ~filename ~build_cmd [] in
+      
+      let make_target_html (str, path) =
+        let filename = build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
+        let build_cmd () = 
+          printf "build_cmd: %s\n" filename;
+          let brtx = data_root ^ "/" ^ str in
+          let title = Filename.chop_extension str in
+          let from = path in
+          let menu = HTML_menu.get_menu ~from menu_factory in
+          let page = Data_source.get_page brtx in
+          let toc = Brtx_transform.html_toc ~filename:str page in
+          let html_buffer, err_buffer = 
+            Brtx_transform.to_html ~todo_list ~filename:str ~from page in
+          output_buffers ~templ_fun:(html_templ_fun ~menu ~toc ~title)
+            filename html_buffer err_buffer; 
+        in
+        let target_source, content_source = make_target_source (str, path) in
+        let target_html, content_html =
+          Make.MD5.make_file_target ~filename ~build_cmd [target_source] in
+        (str, path, target_source, content_source, target_html, content_html) in
+      Ls.map list_brtxes ~f:make_target_html in
+
+    let main_target, _ =
+      let build_cmd () = printf "Making the main target\n" in
+      Make.MD5.make_phony_target ~name:"Main" ~build_cmd 
+        (Ls.map list_with_targets ~f:(fun (_,_, _,_, th,_) -> th)) in
+
+    if Make.make main_target then (
+      printf "End of build\n";
+    ) else (
+      printf "Nothing to be done.\n";
+    );
+
+(*
     Ls.iter list_brtxes ~f:(fun (str, path) ->
         let brtx = data_root ^ "/" ^ str in
         let title = Filename.chop_extension str in
@@ -117,7 +156,7 @@ let transform ?(html_template="") ?(href_is_footnote=false) data_root build = (
         output_buffers ~templ_fun:(html_templ_fun ~menu ~toc ~title)
             html html_buffer err_buffer; 
     );
-
+*)
     Todo_list.simplify todo_list;
     Todo_list.do_things todo_list ~f:(function 
         | `copy (path, from) ->

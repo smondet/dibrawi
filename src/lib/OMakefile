@@ -3,6 +3,7 @@ LIB_MODULES[] =
     dibrawi_Yaboon_PolyComp
     dibrawi_std
     dibrawi_templating
+    dibrawi_make
     dibrawi
 
 LIB_NAME = dibrawi
