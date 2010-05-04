@@ -102,13 +102,9 @@ end
 
 module Data_source = struct
     (* Future: 
-        - get_page: path -> string
         - is_valid_zipimg: path -> bool
 
         *)
-
-
-
 
     let get_file_tree ?(data_root="./data/") () = (
         let module FT = File_tree in
@@ -130,12 +126,14 @@ module Data_source = struct
         )
     )
 
-    let get_page path = (
-        (Io.read_all (Io.open_in path))
-    )
-    let get_file path = (
-        (Io.read_all (Io.open_in path))
-    )
+
+  let get_file path =
+    let i = Io.open_in path in
+    let all = Io.read_all i in
+    Io.close_in i;
+    all
+
+  let get_page path = get_file path
 
 
 end
