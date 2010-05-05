@@ -59,17 +59,17 @@ let transform ?(html_template="") ?persistence_file data_root build =
           in
           close_in i;
           str_contents 
-          with _ -> [] (* when the file does not exist, or Marshal fails *)
+        with _ -> [] (* when the file does not exist, or Marshal fails *)
   in
   let previous_file_content str =
     match Ls.find_opt previous_content ~f:(fun (s, _) -> s =$= str) with
     | None -> None
     | Some (_, c) -> Some c in
   
-  let make_target_source str =
+  let make_target_source ?(prefix="") str =
     let filename = data_root ^ "/" ^ str in
-    let build_cmd () = printf "build_cmd: %s\n" filename in
-    let initial_content = previous_file_content ("src:" ^ str) in
+    let build_cmd () = printf "build_cmd: %s%s [%s]\n" prefix str filename in
+    let initial_content = previous_file_content (prefix ^ str) in
     Make.MD5.make_file_target ?initial_content ~filename ~build_cmd [] in
   
 
@@ -122,7 +122,7 @@ let transform ?(html_template="") ?persistence_file data_root build =
       Make.MD5.make_file_target ?initial_content 
         ~filename:html ~build_cmd deps in
     (html, target_html, content_html), sebib_targets_and_contents in 
-    
+  
   let str_trg_ctt_addbook, str_trg_ctt_addbook_list = 
     let list_abs =
       File_tree.str_and_path_list ~filter:"\\.abs$" the_source_tree in
@@ -177,11 +177,12 @@ let transform ?(html_template="") ?persistence_file data_root build =
           filename html_buffer err_buffer; 
       in
       let target_source, content_source = make_target_source str in
-      let initial_content = previous_file_content ("html:" ^ str) in
+      let initial_content = previous_file_content filename in
       let target_html, content_html =
         Make.MD5.make_file_target ?initial_content 
           ~filename ~build_cmd [target_source] in
-      (str, path, target_source, content_source, target_html, content_html) in
+      (str, target_source, content_source,
+       filename, target_html, content_html) in
     Ls.map list_brtxes ~f:make_target_html in
 
   let main_target, _ =
@@ -200,26 +201,38 @@ let transform ?(html_template="") ?persistence_file data_root build =
 
 
   Todo_list.simplify todo_list;
+  let previous_todo_content = 
+    ref (Ls.filter previous_content
+           ~f:(fun (s, _) -> "todo:" =$= (Str.sub s 0 5))) in
+  (* printf "previous_todo_content: [%s]\n"
+    (Str.concat "; " (Ls.map !previous_todo_content ~f:fst)); *)
+  let remove_previous_todo str =
+    previous_todo_content :=
+      Ls.remove_if (fun (s, _) -> s =$= str) !previous_todo_content in
   let todo_targets_contents =
     Ls.map !todo_list
       ~f:(function 
           | `copy (path, from) ->
               let from_path = String.concat "/" (Ls.rev (Ls.tl from)) in
-              let origin_str = from_path ^ "/" ^ path in
-              let origin = data_root ^ "/" ^ origin_str in
+              let origin_str = "todo:" ^ from_path ^ "/" ^ path in
+              let origin = from_path ^ "/" ^ path in
               let dest = build ^ "/" ^ from_path ^ "/" ^ path in
+              let dest_str = "todo:" ^ dest in
               let build_cmd () =
                 Dbw_unix.mkdir_p (Filename.dirname dest);
-                ignore (Unix.system (sprintf "cp %s %s" origin dest));
-                printf "copied: %s -> %s\n" origin dest;
+                ignore (Unix.system (sprintf "cp %s/%s %s" data_root origin dest));
+                printf "build_cmd: cp %s/%s -> %s\n" data_root origin dest;
               in
-              let target_source, content_source = make_target_source origin_str in
-              let initial_content = previous_file_content dest in
+              let target_source, content_source =
+                make_target_source  ~prefix:"todo:" origin in
+              let initial_content = previous_file_content dest_str in
               let target, content =
                 Make.MD5.make_file_target ?initial_content 
                   ~filename:dest ~build_cmd [target_source] in
+              remove_previous_todo origin_str;
+              remove_previous_todo dest_str;
               (origin_str, target_source, content_source, 
-               dest, target, content)
+               dest_str, target, content)
          ) in
   let todo_target, _ =
     let build_cmd () = printf "Made the remaining ToDos.\n" in
@@ -236,15 +249,17 @@ let transform ?(html_template="") ?persistence_file data_root build =
   | Some pf ->
       let str_contents =
         List.concat [
-          Ls.map todo_targets_contents ~f:(fun (s,_,c,_,_,_) -> ("src:" ^ s, c));
+          Ls.map todo_targets_contents ~f:(fun (s,_,c,_,_,_) -> (s, c));
           Ls.map todo_targets_contents ~f:(fun (_,_,_,s,_,c) -> (s, c));
+          !previous_todo_content;
           [let s, _, c = str_trg_ctt_biblio in (s, c)];
-          Ls.map str_trg_ctt_sebib_list ~f:(fun (s,_,c) -> ("src:" ^ s, c));
+          Ls.map str_trg_ctt_sebib_list ~f:(fun (s,_,c) -> (s, c));
           [let s, _, c = str_trg_ctt_addbook in (s, c)];
-          Ls.map str_trg_ctt_addbook_list ~f:(fun (s,_,c) -> ("src:" ^ s, c));
-          Ls.map list_with_targets ~f:(fun (s,_, _,c, _,_) -> ("src:" ^ s, c));
-          Ls.map list_with_targets ~f:(fun (s,_, _,_, _,c) -> ("html:" ^ s, c));
+          Ls.map str_trg_ctt_addbook_list ~f:(fun (s,_,c) -> (s, c));
+          Ls.map list_with_targets ~f:(fun (s,_,c,_,_,_) -> (s, c));
+          Ls.map list_with_targets ~f:(fun (_,_,_,s,_,c) -> (s, c));
         ] in
+      (* List.iter (fun (s,_) -> printf "str: %s\n" s) str_contents; *)
       let o = open_out pf in
       Marshal.to_channel o str_contents [];
       close_out o;
