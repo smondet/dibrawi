@@ -42,7 +42,7 @@ let output_buffers
 
 open Dibrawi
 
-let transform ?(html_template="") ?persistence_file data_root build =
+let transform ?html_template ?persistence_file data_root build =
 
   let the_source_tree = Data_source.get_file_tree ~data_root () in
   let todo_list = Todo_list.empty () in
@@ -83,10 +83,9 @@ let transform ?(html_template="") ?persistence_file data_root build =
     HTML_menu.make_menu_factory source_menu
   in
   let html_templ_fun = 
-    if html_template <$> "" then 
-      Templating.load_html (Data_source.get_file html_template)
-    else
-      Templating.html_default
+    match html_template with
+    | Some h -> Templating.load_html (Data_source.get_file h)
+    | None -> Templating.html_default
   in
 
   let str_trg_ctt_biblio, str_trg_ctt_sebib_list = 
@@ -305,7 +304,9 @@ let () =
     | [i; o] ->
         let persistence_file =
           if !persistence =$= "" then None else Some !persistence in
-        transform ~html_template:!html_tmpl ?persistence_file i o 
+        let html_template =
+          if !html_tmpl =$= "" then None else Some !html_tmpl in
+        transform ?html_template ?persistence_file i o 
     | _ -> 
         printf "Wrong number of arguments: %d\n" 
           (Ls.length anonymous_arguments);
