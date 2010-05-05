@@ -21,9 +21,25 @@ module Dbw_unix = struct
   let with_new_out filename f = 
     let o = open_out filename in
     try let r = f o in close_out o; r with e -> close_out o; raise e
+
+  let with_file_in filename f = 
+    let i = open_in filename in
+    try let r = f i in close_in i; r with e -> close_in i; raise e
+
   let with_new_tmp ?(suffix=".tmp") ?(prefix="dbw_") f =
     let name, o = Filename.open_temp_file prefix suffix in
     try let r = f o name in close_out o; r with e -> close_out o; raise e
+
+      
+  let copy src dest =
+    with_file_in src 
+      (fun i ->
+         with_new_out dest
+           (fun o ->
+              try while true do output_char o (input_char i) done;
+              with End_of_file -> ()))
+
+
 
 end
 
@@ -128,7 +144,7 @@ let transform ?html_template ?persistence_file data_root build =
       let is_ok =
         output_buffers
           ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Bibliography")
-           html html_buffer err_buffer in
+          html html_buffer err_buffer in
       if not is_ok then None else (Some html)
     in
     let initial_content = previous_file_content html in
@@ -165,7 +181,7 @@ let transform ?html_template ?persistence_file data_root build =
         output_buffers
           ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Address Book")
           html html_buffer err_buffer in
-     if not is_ok then None else (Some html)
+      if not is_ok then None else (Some html)
     in
     let initial_content = previous_file_content html in
     let target_html, content_html =
@@ -238,9 +254,14 @@ let transform ?html_template ?persistence_file data_root build =
               let dest_str = "todo:" ^ dest in
               let build_cmd () =
                 Dbw_unix.mkdir_p (Filename.dirname dest);
-                ignore (Unix.system (sprintf "cp %s/%s %s" data_root origin dest));
-                printf "Copying %s/%s to %s\n" data_root origin dest;
-                (Some dest)
+                try 
+                  Dbw_unix.copy (sprintf "%s/%s" data_root origin) dest;
+                  printf "Copied %s/%s to %s\n" data_root origin dest;
+                  (Some dest)
+                with e ->
+                  printf "ERROR copying %s/%s to %s: %s\n"
+                    data_root origin dest (Printexc.to_string e);
+                  None
               in
               let target_source, content_source =
                 make_target_source  ~prefix:"todo:" origin in
