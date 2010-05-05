@@ -87,14 +87,10 @@ let transform ?(html_template="") ?persistence_file data_root build =
     else
       Templating.html_default
   in
-  let list_sebibs =
-    File_tree.str_and_path_list ~filter:"\\.sebib$" the_source_tree in
+
   let str_trg_ctt_biblio, str_trg_ctt_sebib_list = 
-    (* let make_target_source (str, path) = *)
-    (*   let filename = data_root ^ "/" ^ str in *)
-    (*   let build_cmd () = printf "build_cmd: %s\n" filename in *)
-    (*   let initial_content = previous_file_content false str in *)
-    (*   Make.MD5.make_file_target ?initial_content ~filename ~build_cmd [] in *)
+    let list_sebibs =
+      File_tree.str_and_path_list ~filter:"\\.sebib$" the_source_tree in
     let sebib_targets_and_contents =
       (Ls.map list_sebibs 
          ~f:(fun (str, path) ->
@@ -148,9 +144,8 @@ let transform ?(html_template="") ?persistence_file data_root build =
   in
 
 
-  let list_brtxes = File_tree.str_and_path_list the_source_tree in
-
   let list_with_targets =
+    let list_brtxes = File_tree.str_and_path_list the_source_tree in
     
     let make_target_html (str, path) =
       let filename = build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
@@ -187,7 +182,7 @@ let transform ?(html_template="") ?persistence_file data_root build =
   if Make.make main_target then (
     printf "End of build\n";
   ) else (
-    printf "Nothing to be done.\n";
+    failwith "Phony target returns false build??";
   );
 
   begin match persistence_file with
