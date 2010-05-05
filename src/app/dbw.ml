@@ -27,6 +27,32 @@ module Dbw_unix = struct
 
 end
 
+module Persistence = struct
+
+  type build_persistence = (string * Dibrawi.Make.MD5.file_content) list
+
+  let from_file pf =
+    try 
+      let i = open_in pf in
+      let str_contents = (Marshal.from_channel i : build_persistence) in
+      close_in i;
+      str_contents 
+    with _ -> [] (* when the file does not exist, or Marshal fails *)
+
+  let find_str_opt bp str =
+    match Ls.find_opt bp ~f:(fun (s, _) -> s =$= str) with
+    | None -> None
+    | Some (_, c) -> Some c
+
+  let save str_contents pf =
+    let o = open_out pf in
+    Marshal.to_channel o str_contents [];
+    close_out o;
+    ()
+
+end
+
+
 let output_buffers
     ~(templ_fun:string -> string) file_name content_buffer err_buffer =
   Dbw_unix.mkdir_p (Filename.dirname file_name);
@@ -48,23 +74,10 @@ let transform ?html_template ?persistence_file data_root build =
   let todo_list = Todo_list.empty () in
 
   let previous_content =
-    match persistence_file with
-    | None -> []
-    | Some pf ->
-        try 
-          let i = open_in pf in
-          let str_contents =
-            (Marshal.from_channel i
-               : (string * Make.MD5.file_content) list)
-          in
-          close_in i;
-          str_contents 
-        with _ -> [] (* when the file does not exist, or Marshal fails *)
-  in
-  let previous_file_content str =
-    match Ls.find_opt previous_content ~f:(fun (s, _) -> s =$= str) with
-    | None -> None
-    | Some (_, c) -> Some c in
+    Opt.map_default Persistence.from_file [] persistence_file in
+  
+  let previous_file_content str = 
+    Persistence.find_str_opt previous_content str in
   
   let make_target_source ?(prefix="") str =
     let filename = data_root ^ "/" ^ str in
@@ -258,9 +271,7 @@ let transform ?html_template ?persistence_file data_root build =
           Ls.map list_with_targets ~f:(fun (_,_,_,s,_,c) -> (s, c));
         ] in
       (* List.iter (fun (s,_) -> printf "str: %s\n" s) str_contents; *)
-      let o = open_out pf in
-      Marshal.to_channel o str_contents [];
-      close_out o;
+      Persistence.save str_contents pf;
   end;
 
   ()
