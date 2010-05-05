@@ -47,6 +47,33 @@ let transform ?(html_template="") ?persistence_file data_root build =
     Data_source.get_file_tree ~data_root () in
   let todo_list = Todo_list.empty () in
 
+  let previous_content =
+    match persistence_file with
+    | None -> []
+    | Some pf ->
+        try 
+          let i = open_in pf in
+          let str_contents =
+            (Marshal.from_channel i
+               : (string * Make.MD5.file_content) list)
+          in
+          close_in i;
+          str_contents 
+          with _ -> [] (* when the file does not exist, or Marshal fails *)
+  in
+  let previous_file_content str =
+    match Ls.find_opt previous_content ~f:(fun (s, _) -> s =$= str) with
+    | None -> None
+    | Some (_, c) -> Some c in
+  
+  let make_target_source (str, path) =
+    let filename = data_root ^ "/" ^ str in
+    let build_cmd () = printf "build_cmd: %s\n" filename in
+    let initial_content = previous_file_content ("src:" ^ str) in
+    Make.MD5.make_file_target ?initial_content ~filename ~build_cmd [] in
+  
+
+
   let menu_factory =
     let source_menu =
       ((File_tree.File ("", "bibliography.brtx"))
@@ -62,24 +89,45 @@ let transform ?(html_template="") ?persistence_file data_root build =
   in
   let list_sebibs =
     File_tree.str_and_path_list ~filter:"\\.sebib$" the_source_tree in
-  let () = 
-    let bib =
-      Bibliography.load (Ls.map list_sebibs 
-                           ~f:(fun (str, path) ->
-                                 Data_source.get_page (data_root ^ "/" ^ str)))
-    in
-    let menu = HTML_menu.get_menu ~from:["bibliography"] menu_factory in
-    let brtx = Bibliography.to_brtx bib in
-    let toc = Brtx_transform.html_toc ~filename:"Bibliography" brtx in
+  let str_trg_ctt_biblio, str_trg_ctt_sebib_list = 
+    (* let make_target_source (str, path) = *)
+    (*   let filename = data_root ^ "/" ^ str in *)
+    (*   let build_cmd () = printf "build_cmd: %s\n" filename in *)
+    (*   let initial_content = previous_file_content false str in *)
+    (*   Make.MD5.make_file_target ?initial_content ~filename ~build_cmd [] in *)
+    let sebib_targets_and_contents =
+      (Ls.map list_sebibs 
+         ~f:(fun (str, path) ->
+               let target_source, content_source = 
+                 make_target_source (str, path) in
+               (str, target_source, content_source))) in
     let html = build ^ "/bibliography.html" in
-    let from =  ["bibliography.html"] in
-    let html_buffer, err_buffer = 
-      Brtx_transform.to_html ~todo_list ~from brtx in
-    output_buffers
-      ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Bibliography")
-      html html_buffer err_buffer;
-  in
-
+    let build_cmd () =
+      printf "build_cmd: %s\n" html;
+      let bib =
+        Bibliography.load
+          (Ls.map list_sebibs 
+             ~f:(fun (str, path) ->
+                   Data_source.get_page (data_root ^ "/" ^ str)))
+      in
+      let menu = HTML_menu.get_menu ~from:["bibliography"] menu_factory in
+      let brtx = Bibliography.to_brtx bib in
+      let toc = Brtx_transform.html_toc ~filename:"Bibliography" brtx in
+      let from =  ["bibliography.html"] in
+      let html_buffer, err_buffer = 
+        Brtx_transform.to_html ~todo_list ~from brtx in
+      output_buffers
+        ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Bibliography")
+        html html_buffer err_buffer;
+    in
+    let initial_content = previous_file_content html in
+    let target_html, content_html =
+      let deps =
+        Ls.map sebib_targets_and_contents ~f:(fun (_, t, _) -> t) in
+      Make.MD5.make_file_target ?initial_content 
+        ~filename:html ~build_cmd deps in
+    (html, target_html, content_html), sebib_targets_and_contents in 
+    
   let list_abs =
     File_tree.str_and_path_list ~filter:"\\.abs$" the_source_tree in
   let () =
@@ -103,31 +151,6 @@ let transform ?(html_template="") ?persistence_file data_root build =
   let list_brtxes = File_tree.str_and_path_list the_source_tree in
 
   let list_with_targets =
-    let previous_content =
-      match persistence_file with
-      | None -> []
-      | Some pf ->
-          try 
-            let i = open_in pf in
-            let str_contents =
-              (Marshal.from_channel i
-                 : (string * Make.MD5.file_content * Make.MD5.file_content) list)
-            in
-            close_in i;
-            str_contents 
-          with _ -> [] (* when the file does not exist, or Marshal fails *)
-    in
-    let previous_file_content html str =
-      match Ls.find_opt previous_content ~f:(fun (s, _, _) -> s =$= str) with
-      | None -> None
-      | Some (_, cs, ch) ->
-          if html then Some ch else Some cs in
-
-    let make_target_source (str, path) =
-      let filename = data_root ^ "/" ^ str in
-      let build_cmd () = printf "build_cmd: %s\n" filename in
-      let initial_content = previous_file_content false str in
-      Make.MD5.make_file_target ?initial_content ~filename ~build_cmd [] in
     
     let make_target_html (str, path) =
       let filename = build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
@@ -145,7 +168,7 @@ let transform ?(html_template="") ?persistence_file data_root build =
           filename html_buffer err_buffer; 
       in
       let target_source, content_source = make_target_source (str, path) in
-      let initial_content = previous_file_content true str in
+      let initial_content = previous_file_content ("html:" ^ str) in
       let target_html, content_html =
         Make.MD5.make_file_target ?initial_content 
           ~filename ~build_cmd [target_source] in
@@ -154,8 +177,12 @@ let transform ?(html_template="") ?persistence_file data_root build =
 
   let main_target, _ =
     let build_cmd () = printf "Making the main target\n" in
-    Make.MD5.make_phony_target ~name:"Main" ~build_cmd 
-      (Ls.map list_with_targets ~f:(fun (_,_, _,_, th,_) -> th)) in
+    let deps =
+      (let _, tbib, _ = str_trg_ctt_biblio in tbib)
+      :: (Ls.map list_with_targets ~f:(fun (_,_, _,_, th,_) -> th))
+    in
+    Make.MD5.make_phony_target ~name:"Main" ~build_cmd deps
+  in
 
   if Make.make main_target then (
     printf "End of build\n";
@@ -167,7 +194,12 @@ let transform ?(html_template="") ?persistence_file data_root build =
   | None -> ()
   | Some pf ->
       let str_contents =
-        Ls.map list_with_targets ~f:(fun (s,_, _,cs, _,ch) -> (s, cs, ch)) in
+        List.concat [
+          [let s, _, c = str_trg_ctt_biblio in (s, c)];
+          Ls.map str_trg_ctt_sebib_list ~f:(fun (s,_,c) -> ("src:" ^ s, c));
+          Ls.map list_with_targets ~f:(fun (s,_, _,c, _,_) -> ("src:" ^ s, c));
+          Ls.map list_with_targets ~f:(fun (s,_, _,_, _,c) -> ("html:" ^ s, c));
+        ] in
       let o = open_out pf in
       Marshal.to_channel o str_contents [];
       close_out o;
