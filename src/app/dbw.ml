@@ -66,7 +66,7 @@ let transform ?(html_template="") ?persistence_file data_root build =
     | None -> None
     | Some (_, c) -> Some c in
   
-  let make_target_source (str, path) =
+  let make_target_source str =
     let filename = data_root ^ "/" ^ str in
     let build_cmd () = printf "build_cmd: %s\n" filename in
     let initial_content = previous_file_content ("src:" ^ str) in
@@ -94,8 +94,7 @@ let transform ?(html_template="") ?persistence_file data_root build =
     let sebib_targets_and_contents =
       (Ls.map list_sebibs 
          ~f:(fun (str, path) ->
-               let target_source, content_source = 
-                 make_target_source (str, path) in
+               let target_source, content_source = make_target_source str in
                (str, target_source, content_source))) in
     let html = build ^ "/bibliography.html" in
     let build_cmd () =
@@ -130,8 +129,7 @@ let transform ?(html_template="") ?persistence_file data_root build =
     let abs_targets_and_contents =
       (Ls.map list_abs
          ~f:(fun (str, path) ->
-               let target_source, content_source = 
-                 make_target_source (str, path) in
+               let target_source, content_source = make_target_source str in
                (str, target_source, content_source))) in
     let html = build ^ "/address_book.html" in
     let build_cmd () =
@@ -178,7 +176,7 @@ let transform ?(html_template="") ?persistence_file data_root build =
         output_buffers ~templ_fun:(html_templ_fun ~menu ~toc ~title)
           filename html_buffer err_buffer; 
       in
-      let target_source, content_source = make_target_source (str, path) in
+      let target_source, content_source = make_target_source str in
       let initial_content = previous_file_content ("html:" ^ str) in
       let target_html, content_html =
         Make.MD5.make_file_target ?initial_content 
@@ -187,7 +185,7 @@ let transform ?(html_template="") ?persistence_file data_root build =
     Ls.map list_brtxes ~f:make_target_html in
 
   let main_target, _ =
-    let build_cmd () = printf "Making the main target\n" in
+    let build_cmd () = printf "Built the HTML.\n" in
     let deps =
       (let _, tbib, _ = str_trg_ctt_biblio in tbib)
       :: (let _, tadb, _ = str_trg_ctt_addbook in tadb)
@@ -196,10 +194,41 @@ let transform ?(html_template="") ?persistence_file data_root build =
     Make.MD5.make_phony_target ~name:"Main" ~build_cmd deps
   in
 
-  if Make.make main_target then (
-    printf "End of build\n";
-  ) else (
-    failwith "Phony target returns false build??";
+  if not (Make.make main_target) then (
+    failwith "Phony target returns false??";
+  );
+
+
+  Todo_list.simplify todo_list;
+  let todo_targets_contents =
+    Ls.map !todo_list
+      ~f:(function 
+          | `copy (path, from) ->
+              let from_path = String.concat "/" (Ls.rev (Ls.tl from)) in
+              let origin_str = from_path ^ "/" ^ path in
+              let origin = data_root ^ "/" ^ origin_str in
+              let dest = build ^ "/" ^ from_path ^ "/" ^ path in
+              let build_cmd () =
+                Dbw_unix.mkdir_p (Filename.dirname dest);
+                ignore (Unix.system (sprintf "cp %s %s" origin dest));
+                printf "copied: %s -> %s\n" origin dest;
+              in
+              let target_source, content_source = make_target_source origin_str in
+              let initial_content = previous_file_content dest in
+              let target, content =
+                Make.MD5.make_file_target ?initial_content 
+                  ~filename:dest ~build_cmd [target_source] in
+              (origin_str, target_source, content_source, 
+               dest, target, content)
+         ) in
+  let todo_target, _ =
+    let build_cmd () = printf "Made the remaining ToDos.\n" in
+    let deps =
+      Ls.map todo_targets_contents ~f:(fun (_,_,_,_,t,_) -> t) in
+    Make.MD5.make_phony_target ~name:"Todos" ~build_cmd deps
+  in
+  if not (Make.make todo_target) then (
+    failwith "Phony target returns false???";
   );
 
   begin match persistence_file with
@@ -207,6 +236,8 @@ let transform ?(html_template="") ?persistence_file data_root build =
   | Some pf ->
       let str_contents =
         List.concat [
+          Ls.map todo_targets_contents ~f:(fun (s,_,c,_,_,_) -> ("src:" ^ s, c));
+          Ls.map todo_targets_contents ~f:(fun (_,_,_,s,_,c) -> (s, c));
           [let s, _, c = str_trg_ctt_biblio in (s, c)];
           Ls.map str_trg_ctt_sebib_list ~f:(fun (s,_,c) -> ("src:" ^ s, c));
           [let s, _, c = str_trg_ctt_addbook in (s, c)];
@@ -219,21 +250,6 @@ let transform ?(html_template="") ?persistence_file data_root build =
       close_out o;
   end;
 
-  Todo_list.simplify todo_list;
-  Todo_list.do_things todo_list
-    ~f:(function 
-        | `copy (path, from) ->
-            let from_path = String.concat "/" (Ls.rev (Ls.tl from)) in
-            let origin = data_root ^ "/" ^ from_path ^ "/" ^ path in
-            let dest = build ^ "/" ^ from_path ^ "/" ^ path in
-            Dbw_unix.mkdir_p (Filename.dirname dest);
-            ignore (Unix.system (sprintf "cp %s %s" origin dest));
-            (* printf "Should copy: %s -> %s\n" origin dest; *)
-            []
-       );
-  if not (Todo_list.is_empty todo_list) then (
-    printf "Still TODO: %s\n" (Todo_list.to_string todo_list)
-  );
   ()
 
 
