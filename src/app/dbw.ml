@@ -62,8 +62,8 @@ let output_buffers
        fprintf o "%s" content_content;
        fprintf o "%!";);
   let s = Buffer.contents err_buffer in
-  if s <$> "" then (eprintf "Errors for %s:\n%s\n" file_name s;);
-  ()
+  if s <$> "" then (eprintf "Errors for %s:\n%s\n" file_name s;false)
+  else true
 
 
 open Dibrawi
@@ -82,7 +82,8 @@ let transform ?html_template ?persistence_file data_root build =
   let make_target_source ?(prefix="") str =
     let filename = data_root ^ "/" ^ str in
     let build_cmd () =
-      printf "Source '%s%s' has changed [%s]\n" prefix str filename in
+      printf "Source '%s%s' has changed [%s]\n" prefix str filename;
+      Some filename in
     let initial_content = previous_file_content (prefix ^ str) in
     Make.MD5.make_file_target ?initial_content ~filename ~build_cmd [] in
   
@@ -124,9 +125,11 @@ let transform ?html_template ?persistence_file data_root build =
       let from =  ["bibliography.html"] in
       let html_buffer, err_buffer = 
         Brtx_transform.to_html ~todo_list ~from brtx in
-      output_buffers
-        ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Bibliography")
-        html html_buffer err_buffer;
+      let is_ok =
+        output_buffers
+          ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Bibliography")
+           html html_buffer err_buffer in
+      if not is_ok then None else (Some html)
     in
     let initial_content = previous_file_content html in
     let target_html, content_html =
@@ -158,9 +161,11 @@ let transform ?html_template ?persistence_file data_root build =
       let from =  ["address_book.html"] in
       let html_buffer, err_buffer = 
         Brtx_transform.to_html ~todo_list ~from brtx in
-      output_buffers
-        ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Address Book")
-        html html_buffer err_buffer;
+      let is_ok =
+        output_buffers
+          ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Address Book")
+          html html_buffer err_buffer in
+     if not is_ok then None else (Some html)
     in
     let initial_content = previous_file_content html in
     let target_html, content_html =
@@ -186,8 +191,10 @@ let transform ?html_template ?persistence_file data_root build =
         let toc = Brtx_transform.html_toc ~filename:str page in
         let html_buffer, err_buffer = 
           Brtx_transform.to_html ~todo_list ~filename:str ~from page in
-        output_buffers ~templ_fun:(html_templ_fun ~menu ~toc ~title)
-          filename html_buffer err_buffer; 
+        let is_ok =
+          output_buffers ~templ_fun:(html_templ_fun ~menu ~toc ~title)
+            filename html_buffer err_buffer in
+        if not is_ok then None else (Some filename)
       in
       let target_source, content_source = make_target_source str in
       let initial_content = previous_file_content filename in
@@ -199,7 +206,7 @@ let transform ?html_template ?persistence_file data_root build =
     Ls.map list_brtxes ~f:make_target_html in
 
   let main_target, _ =
-    let build_cmd () = () in (* printf "Built the HTML.\n" in *)
+    let build_cmd () = Some () in (* printf "Built the HTML.\n" in *)
     let deps =
       (let _, tbib, _ = str_trg_ctt_biblio in tbib)
       :: (let _, tadb, _ = str_trg_ctt_addbook in tadb)
@@ -233,6 +240,7 @@ let transform ?html_template ?persistence_file data_root build =
                 Dbw_unix.mkdir_p (Filename.dirname dest);
                 ignore (Unix.system (sprintf "cp %s/%s %s" data_root origin dest));
                 printf "Copying %s/%s to %s\n" data_root origin dest;
+                (Some dest)
               in
               let target_source, content_source =
                 make_target_source  ~prefix:"todo:" origin in
@@ -246,7 +254,7 @@ let transform ?html_template ?persistence_file data_root build =
                dest_str, target, content)
          ) in
   let todo_target, _ =
-    let build_cmd () = () in
+    let build_cmd () = Some () in
     let deps =
       Ls.map todo_targets_contents ~f:(fun (_,_,_,_,t,_) -> t) in
     Make.MD5.make_phony_target ~name:"Todos" ~build_cmd deps

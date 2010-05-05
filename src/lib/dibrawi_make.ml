@@ -67,7 +67,7 @@ let get_content dc = dc.current_content
 
 
 let make_digestible_target
-    ~(build_command: 'content option -> 'content)
+    ~(build_command: 'content option -> 'content option)
     ~(digest: 'content option -> 'digest option)
     ?initial_content
     dependencies =
@@ -76,7 +76,7 @@ let make_digestible_target
     | None -> { current_digest = None; current_content = None; }
     | Some c -> c in
   let build_and_propagate () =
-    let new_content = Some (build_command record_for_closure.current_content) in
+    let new_content = build_command record_for_closure.current_content in
     let new_digest = digest new_content in
     (* If after rebuild, 'it' is still different from the previous,
        The parent need to force rebuild, and hence return true. *)
@@ -107,9 +107,7 @@ let make_digestible_target
 module MD5 = struct  
   let make_string_target
       ?initial_content  ~build_cmd dependencies =
-    let build_command = function
-      | None -> build_cmd ()
-      | Some s -> build_cmd () in
+    let build_command = function _ -> build_cmd () in
     let digest = function
       | None -> None
       | Some rs -> Some (Digest.string rs) in
@@ -119,18 +117,14 @@ module MD5 = struct
 
   let make_file_target ?initial_content ~filename  ~build_cmd dependencies =
     let md5_file file = try Some (Digest.file file) with _ -> None in
-    let build_command = function
-      | None -> (build_cmd ():unit); filename
-      | Some s -> build_cmd (); filename in
+    let build_command = function _ -> build_cmd () in
     let digest = function
       | None -> None
       | Some rs -> md5_file rs in
     make_digestible_target ?initial_content ~build_command ~digest dependencies
 
   let make_phony_target ?initial_content ~name ~build_cmd dependencies =
-    let build_command = function
-      | None -> (build_cmd ():unit); name
-      | Some s -> build_cmd (); name in
+    let build_command = function _ -> build_cmd () in
     let digest = fun _ -> None in
     make_digestible_target ?initial_content ~build_command ~digest dependencies
 end
