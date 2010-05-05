@@ -124,24 +124,40 @@ let transform ?(html_template="") ?persistence_file data_root build =
         ~filename:html ~build_cmd deps in
     (html, target_html, content_html), sebib_targets_and_contents in 
     
-  let list_abs =
-    File_tree.str_and_path_list ~filter:"\\.abs$" the_source_tree in
-  let () =
-    let ab =
-      Address_book.load
-        (Ls.map list_abs ~f:(fun (str, path) ->
-                               Data_source.get_page (data_root ^ "/" ^ str))) in
-    let menu = HTML_menu.get_menu ~from:["address_book"] menu_factory in
-    let brtx = Address_book.to_brtx ab in
-    let toc = Brtx_transform.html_toc ~filename:"address_book" brtx in
+  let str_trg_ctt_addbook, str_trg_ctt_addbook_list = 
+    let list_abs =
+      File_tree.str_and_path_list ~filter:"\\.abs$" the_source_tree in
+    let abs_targets_and_contents =
+      (Ls.map list_abs
+         ~f:(fun (str, path) ->
+               let target_source, content_source = 
+                 make_target_source (str, path) in
+               (str, target_source, content_source))) in
     let html = build ^ "/address_book.html" in
-    let from =  ["address_book.html"] in
-    let html_buffer, err_buffer = 
-      Brtx_transform.to_html ~todo_list ~from brtx in
-    output_buffers
-      ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Address Book")
-      html html_buffer err_buffer;
-  in
+    let build_cmd () =
+      printf "build_cmd: %s\n" html;
+      let ab =
+        Address_book.load
+          (Ls.map list_abs ~f:(fun (str, path) ->
+                                 Data_source.get_page (data_root ^ "/" ^ str)))
+      in
+      let menu = HTML_menu.get_menu ~from:["address_book"] menu_factory in
+      let brtx = Address_book.to_brtx ab in
+      let toc = Brtx_transform.html_toc ~filename:"address_book" brtx in
+      let from =  ["address_book.html"] in
+      let html_buffer, err_buffer = 
+        Brtx_transform.to_html ~todo_list ~from brtx in
+      output_buffers
+        ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Address Book")
+        html html_buffer err_buffer;
+    in
+    let initial_content = previous_file_content html in
+    let target_html, content_html =
+      let deps =
+        Ls.map abs_targets_and_contents ~f:(fun (_, t, _) -> t) in
+      Make.MD5.make_file_target ?initial_content 
+        ~filename:html ~build_cmd deps in
+    (html, target_html, content_html), abs_targets_and_contents in 
 
 
   let list_with_targets =
@@ -174,6 +190,7 @@ let transform ?(html_template="") ?persistence_file data_root build =
     let build_cmd () = printf "Making the main target\n" in
     let deps =
       (let _, tbib, _ = str_trg_ctt_biblio in tbib)
+      :: (let _, tadb, _ = str_trg_ctt_addbook in tadb)
       :: (Ls.map list_with_targets ~f:(fun (_,_, _,_, th,_) -> th))
     in
     Make.MD5.make_phony_target ~name:"Main" ~build_cmd deps
@@ -192,6 +209,8 @@ let transform ?(html_template="") ?persistence_file data_root build =
         List.concat [
           [let s, _, c = str_trg_ctt_biblio in (s, c)];
           Ls.map str_trg_ctt_sebib_list ~f:(fun (s,_,c) -> ("src:" ^ s, c));
+          [let s, _, c = str_trg_ctt_addbook in (s, c)];
+          Ls.map str_trg_ctt_addbook_list ~f:(fun (s,_,c) -> ("src:" ^ s, c));
           Ls.map list_with_targets ~f:(fun (s,_, _,c, _,_) -> ("src:" ^ s, c));
           Ls.map list_with_targets ~f:(fun (s,_, _,_, _,c) -> ("html:" ^ s, c));
         ] in
