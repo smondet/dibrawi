@@ -1,24 +1,29 @@
 open Dibrawi_std
 
 type html_template =
-    ?menu:string -> ?toc:string -> ?title:string -> ?footer:string -> string ->
-    string
+    ?menu:string -> ?toc:string -> ?title:string -> ?footer:string ->
+    ?from:(string list) ->
+    string -> string
 
 
 (* Generates a BIG closure !! *)
 let tmpl_regexp =
-    Pcre.regexp "DIBRAWI_TEMPLATE_[A-Z]+"
+    Pcre.regexp "DIBRAWI_TEMPLATE_[A-Z_]+"
 
-let load_html str = (
-    fun ?(menu="") ?(toc="")  ?(title="") ?(footer="") content ->
-        Pcre.substitute ~rex:tmpl_regexp ~subst:(function
-            | "DIBRAWI_TEMPLATE_TITLE" -> title
-            | "DIBRAWI_TEMPLATE_MENU" -> menu
-            | "DIBRAWI_TEMPLATE_TOC" -> toc
-            | "DIBRAWI_TEMPLATE_CONTENT" -> content
-            | "DIBRAWI_TEMPLATE_FOOTER" -> footer
-            | s -> s) str
-)
+let load_html str : html_template = 
+  fun ?(menu="") ?(toc="")  ?(title="") ?(footer="") ?(from=[""]) content ->
+    Pcre.substitute ~rex:tmpl_regexp
+      ~subst:(function
+        | "DIBRAWI_TEMPLATE_TITLE" -> title
+        | "DIBRAWI_TEMPLATE_MENU" -> menu
+        | "DIBRAWI_TEMPLATE_TOC" -> toc
+        | "DIBRAWI_TEMPLATE_CONTENT" -> content
+        | "DIBRAWI_TEMPLATE_FOOTER" -> footer
+        | "DIBRAWI_TEMPLATE_PATH_TO_ROOT" -> 
+          let depth = Ls.length from - 1 in
+          ("./" ^ (Str.concat "/" (Ls.init depth (fun _ -> ".."))))
+        | s -> s) str
+      
 
 let tmpl_html_default =
 "<!DOCTYPE html\n\

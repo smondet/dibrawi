@@ -143,7 +143,7 @@ let transform ?html_template ?persistence_file data_root build =
         Brtx_transform.to_html ~todo_list ~from brtx in
       let is_ok =
         output_buffers
-          ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Bibliography")
+          ~templ_fun:(html_templ_fun ~from ~menu ~toc ~title:"Bibliography")
           html html_buffer err_buffer in
       if not is_ok then None else (Some html)
     in
@@ -179,7 +179,7 @@ let transform ?html_template ?persistence_file data_root build =
         Brtx_transform.to_html ~todo_list ~from brtx in
       let is_ok =
         output_buffers
-          ~templ_fun:(html_templ_fun ~menu ~toc ~title:"Address Book")
+          ~templ_fun:(html_templ_fun ~from ~menu ~toc ~title:"Address Book")
           html html_buffer err_buffer in
       if not is_ok then None else (Some html)
     in
@@ -208,7 +208,7 @@ let transform ?html_template ?persistence_file data_root build =
         let html_buffer, err_buffer = 
           Brtx_transform.to_html ~todo_list ~filename:str ~from page in
         let is_ok =
-          output_buffers ~templ_fun:(html_templ_fun ~menu ~toc ~title)
+          output_buffers ~templ_fun:(html_templ_fun ~from ~menu ~toc ~title)
             filename html_buffer err_buffer in
         if not is_ok then None else (Some filename)
       in

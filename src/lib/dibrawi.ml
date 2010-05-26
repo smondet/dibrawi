@@ -165,16 +165,19 @@ end
 
 module Special_paths = struct
 
-    let relativize from path = (
-        try match path.[0] with
-            | '/' ->
-                let depth = Ls.length from - 1 in
-                "./" ^ (Str.concat "/" (Ls.init depth (fun _ -> ".."))) ^ path
-            | '#' ->
-                (Filename.chop_extension (Ls.hd from)) ^ path
-            | _ -> path
-        with _ -> (Filename.chop_extension (Ls.hd from)) (* the string is empty*)
-    )
+  let parent_directories_path from =
+    let depth = Ls.length from - 1 in
+    ("./" ^ (Str.concat "/" (Ls.init depth (fun _ -> ".."))))
+  
+
+  let relativize from path =
+    try
+      match path.[0] with
+      | '/' -> (parent_directories_path from) ^ path
+      | '#' -> (Filename.chop_extension (Ls.hd from)) ^ path
+      | _ -> path
+    with _ -> (Filename.chop_extension (Ls.hd from)) (* the string is empty*)
+    
     let typify url extension = (
         match Str.rev_idx url '#', Str.rev_idx url '/' with
         | Some h , None ->
