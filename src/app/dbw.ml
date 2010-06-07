@@ -45,26 +45,37 @@ end
 
 module Persistence = struct
 
-  type build_persistence = (string * Dibrawi.Make.MD5.file_content) list
+  type build_persistence = {
+    mutable file_hashes: (string * Dibrawi.Make.MD5.file_content) list;
+    menu_hash: string;
+  }
+
+  let empty ?(menu_hash="") () = { file_hashes = []; menu_hash = menu_hash }
 
   let from_file pf =
     try 
       let i = open_in pf in
       let str_contents = (Marshal.from_channel i : build_persistence) in
       close_in i;
-      str_contents 
-    with _ -> [] (* when the file does not exist, or Marshal fails *)
+      Some str_contents 
+    with _ -> None (* when the file does not exist, or Marshal fails *)
 
-  let find_str_opt bp str =
-    match Ls.find_opt bp ~f:(fun (s, _) -> s =$= str) with
+  let find_file_opt bp str =
+    match Ls.find_opt bp.file_hashes ~f:(fun (s, _) -> s =$= str) with
     | None -> None
     | Some (_, c) -> Some c
 
-  let save str_contents pf =
+  let save (str_contents: build_persistence) pf =
     let o = open_out pf in
     Marshal.to_channel o str_contents [];
     close_out o;
     ()
+
+  let menu_hash bp = bp.menu_hash
+
+  let filter_files ~f bp = Ls.filter ~f bp.file_hashes
+
+  let set_files bp files = bp.file_hashes <- files
 
 end
 
@@ -89,11 +100,34 @@ let transform ?html_template ?persistence_file data_root build =
   let the_source_tree = Data_source.get_file_tree ~data_root () in
   let todo_list = Todo_list.empty () in
 
+
+  let menu_factory =
+    let source_menu =
+      ((File_tree.File ("", "bibliography.brtx"))
+       :: (File_tree.File ("", "address_book.brtx"))
+       :: the_source_tree) in
+    HTML_menu.make_menu_factory source_menu
+  in
+
+
+
   let previous_content =
-    Opt.map_default Persistence.from_file [] persistence_file in
+    match Opt.bind Persistence.from_file persistence_file with
+    | None -> Persistence.empty ()
+    | Some pc ->
+      let menu = HTML_menu.get_menu ~from:["level0"] menu_factory in
+      let current_menu_hash = Digest.string menu in
+      let previous_menu_hash = Persistence.menu_hash pc in
+      if previous_menu_hash =$= current_menu_hash then
+        pc
+      else (
+        printf "The File Tree has changed, everything must be rebuilt\n";
+        Persistence.empty ~menu_hash:current_menu_hash ()
+      )
+ in
   
   let previous_file_content str = 
-    Persistence.find_str_opt previous_content str in
+    Persistence.find_file_opt previous_content str in
   
   let make_target_source ?(prefix="") str =
     let filename = data_root ^ "/" ^ str in
@@ -105,13 +139,8 @@ let transform ?html_template ?persistence_file data_root build =
   
 
 
-  let menu_factory =
-    let source_menu =
-      ((File_tree.File ("", "bibliography.brtx"))
-       :: (File_tree.File ("", "address_book.brtx"))
-       :: the_source_tree) in
-    HTML_menu.make_menu_factory source_menu
-  in
+
+
   let html_templ_fun = 
     match html_template with
     | Some h -> Templating.load_html (Data_source.get_file h)
@@ -238,7 +267,7 @@ let transform ?html_template ?persistence_file data_root build =
 
   Todo_list.simplify todo_list;
   let previous_todo_content = 
-    ref (Ls.filter previous_content
+    ref (Persistence.filter_files previous_content
            ~f:(fun (s, _) -> "todo:" =$= (Str.sub s 0 5))) in
   let remove_previous_todo str =
     previous_todo_content :=
@@ -300,7 +329,8 @@ let transform ?html_template ?persistence_file data_root build =
           Ls.map list_with_targets ~f:(fun (_,_,_,s,_,c) -> (s, c));
         ] in
       (* List.iter (fun (s,_) -> printf "str: %s\n" s) str_contents; *)
-      Persistence.save str_contents pf;
+      Persistence.set_files previous_content str_contents;
+      Persistence.save previous_content pf;
   end;
 
   ()
