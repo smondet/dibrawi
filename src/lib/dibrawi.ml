@@ -101,29 +101,27 @@ module Data_source = struct
     (* Future: 
         - is_valid_zipimg: path -> bool
 
-        *)
+    *)
 
-    let get_file_tree ?(data_root="./data/") () = (
-        let module FT = File_tree in
-        let ls dir =
-            let sort a = Array.fast_sort Str.compare a; a in
-            Sys.readdir dir |> sort |> Array.to_list in 
-        if Sys.is_directory data_root then (
-            let rec explore path name =
-                let next_path = path ^ "/" ^ name in
-                let real_path = data_root ^ "/" ^ next_path in
-                if Sys.is_directory real_path then
-                    FT.Dir (path, name, Ls.map (explore next_path)  (ls real_path))
-                else
-                    FT.File (path, name) 
-            in
-            Ls.map (explore ".")  (ls data_root)
-        ) else (
-            invalid_arg (sprintf "%s is not a directory" data_root)
-        )
+  let get_file_tree ?(data_root="./data/") () =
+    let module FT = File_tree in
+    let ls dir =
+      let sort a = Array.fast_sort Str.compare a; a in
+      Sys.readdir dir |> sort |> Array.to_list in 
+    if Sys.is_directory data_root then (
+      let rec explore path name =
+        let next_path = path ^ "/" ^ name in
+        let real_path = data_root ^ "/" ^ next_path in
+        if Sys.is_directory real_path then
+          FT.Dir (path, name, Ls.map (explore next_path)  (ls real_path))
+        else
+          FT.File (path, name) 
+      in
+      Ls.map (explore ".")  (ls data_root)
+    ) else (
+      invalid_arg (sprintf "%s is not a directory" data_root)
     )
-
-
+  
   let get_file path =
     let i = Io.open_in path in
     let all = Io.read_all i in
@@ -132,31 +130,33 @@ module Data_source = struct
 
   let get_page path = get_file path
 
-
 end
 
 
 module Todo_list = struct
 
-    type todo = [
-        | `copy of (string * (string list))
-    ]
-    type t = todo list ref
+  type todo = [
+  | `copy of (string * (string list))
+  ]
+  type t = todo list ref
 
-    let empty () = ref []
-    let is_empty t = !t =@= []
+  let empty () = ref []
 
-    let to_string ?(sep="; ") tl =
-        let strpath = Str.concat "/" in
-        String.concat sep (Ls.map !tl ~f:(function
-            | `copy (path, from) ->
-                sprintf "Copy File: %s from %s" path (strpath from)
-        ))
-    let iter t ~f = Ls.iter !t ~f
-    let do_things t ~(f:todo -> todo list) =
-        t := Ls.concat (Ls.map !t ~f)
+  let is_empty t = !t =@= []
 
-    let simplify t = t := Ls.unique !t
+  let to_string ?(sep="; ") tl =
+    let strpath = Str.concat "/" in
+    String.concat sep (Ls.map !tl ~f:(function
+      | `copy (path, from) ->
+        sprintf "Copy File: %s from %s" path (strpath from)))
+      
+  let iter t ~f = Ls.iter !t ~f
+
+  let do_things t ~(f:todo -> todo list) =
+    t := Ls.concat (Ls.map !t ~f)
+
+  let simplify t = t := Ls.unique !t
+
 end
 
 module Special_paths = struct
@@ -164,7 +164,7 @@ module Special_paths = struct
   let parent_directories_path from =
     let depth = Ls.length from - 1 in
     ("./" ^ (Str.concat "/" (Ls.init depth (fun _ -> ".."))))
-  
+      
 
   let relativize from path =
     try
@@ -173,41 +173,39 @@ module Special_paths = struct
       | '#' -> (Filename.chop_extension (Ls.hd from)) ^ path
       | _ -> path
     with _ -> (Filename.chop_extension (Ls.hd from)) (* the string is empty*)
-    
-    let typify url extension = (
-        match Str.rev_idx url '#', Str.rev_idx url '/' with
-        | Some h , None ->
-            (Str.head url h) ^ extension ^ (Str.tail url h)
-        | Some h, Some l when h > l ->
-            (Str.head url h) ^ extension ^ (Str.tail url h)
-        | _, _ ->
-            url ^ extension
-    )
-    let compute_path from url extension =
-        typify (relativize from url) extension
+      
+  let typify url extension =
+    match Str.rev_idx url '#', Str.rev_idx url '/' with
+    | Some h , None ->
+      (Str.head url h) ^ extension ^ (Str.tail url h)
+    | Some h, Some l when h > l ->
+      (Str.head url h) ^ extension ^ (Str.tail url h)
+    | _, _ ->
+      url ^ extension
+        
+  let compute_path from url extension =
+    typify (relativize from url) extension
 
-    let rec rewrite_url
-    ?todo_list ?(output=`html)  ~from url = (
-        match url with
-        | s when Str.length s < 4 -> s
-        | s when Str.head s 4 =$= "pdf:" ->
-            let pdfpath = 
-                compute_path from (Str.tail s 4) ".pdf" in
-            pdfpath 
-        | s when Str.head s 5 =$= "page:" ->
-            (compute_path from (Str.tail s 5) ".html")
-        | s when Str.head s 4 =$= "fig:" ->
-            let path =
-                compute_path from (Str.tail s 4)
-                    (match output with `html -> ".png" | `pdf -> ".pdf") in
-            Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
-            path
-        | s when Str.head s 6 =$= "media:" ->
-            let path = compute_path from (Str.tail s 6) "" in
-            Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
-            path
-        | s -> s
-    )
+  let rec rewrite_url ?todo_list ?(output=`html)  ~from url =
+    match url with
+    | s when Str.length s < 4 -> s
+    | s when Str.head s 4 =$= "pdf:" ->
+      let pdfpath = 
+        compute_path from (Str.tail s 4) ".pdf" in
+      pdfpath 
+    | s when Str.head s 5 =$= "page:" ->
+      (compute_path from (Str.tail s 5) ".html")
+    | s when Str.head s 4 =$= "fig:" ->
+      let path =
+        compute_path from (Str.tail s 4)
+          (match output with `html -> ".png" | `pdf -> ".pdf") in
+      Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
+      path
+    | s when Str.head s 6 =$= "media:" ->
+      let path = compute_path from (Str.tail s 6) "" in
+      Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
+      path
+    | s -> s
 
 end
 
