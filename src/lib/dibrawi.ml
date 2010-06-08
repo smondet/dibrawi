@@ -308,119 +308,112 @@ end
 module Brtx_transform = struct
 
     (* TODO handle errors better *)
-    let to_html ?todo_list ?class_hook ?filename ~from brtx = (
-        let brtx_page =
-            Preprocessor.brtx2brtx ?todo_list ~from brtx in
-        let html_buffer = Buffer.create 1024 in
-        let err_buffer = Buffer.create 512 in
-        let writer, input_char =
-            Bracetax.Transform.string_io brtx_page html_buffer err_buffer in
-        let url_hook =
-            Special_paths.rewrite_url ?todo_list ~from in
-        Bracetax.Transform.brtx_to_html
-            ~writer ?filename ?class_hook
-            ~img_hook:url_hook ~url_hook ~input_char ();
-        (html_buffer, err_buffer)
-    )
+  let to_html ?todo_list ?class_hook ?filename ~from brtx =
+    let brtx_page =
+      Preprocessor.brtx2brtx ?todo_list ~from brtx in
+    let html_buffer = Buffer.create 1024 in
+    let err_buffer = Buffer.create 512 in
+    let writer, input_char =
+      Bracetax.Transform.string_io brtx_page html_buffer err_buffer in
+    let url_hook =
+      Special_paths.rewrite_url ?todo_list ~from in
+    Bracetax.Transform.brtx_to_html
+      ~writer ?filename ?class_hook
+      ~img_hook:url_hook ~url_hook ~input_char ();
+    (html_buffer, err_buffer)
 
-    let html_toc ?filename brtx = (
-        let brtx_buffer = Buffer.create 1024 in
-        let err_buffer = Buffer.create 512 in
-        let writer, input_char =
-            Bracetax.Transform.string_io brtx brtx_buffer err_buffer in
-        Bracetax.Transform.get_TOC ~writer ~input_char ?filename ();
-        let h, e =
-            to_html ~class_hook:"dbwtoc" ~from:[""]
-                (Buffer.contents brtx_buffer) in
-        (Buffer.contents h)
-    )
+  let html_toc ?filename brtx =
+    let brtx_buffer = Buffer.create 1024 in
+    let err_buffer = Buffer.create 512 in
+    let writer, input_char =
+      Bracetax.Transform.string_io brtx brtx_buffer err_buffer in
+    Bracetax.Transform.get_TOC ~writer ~input_char ?filename ();
+    let h, e =
+      to_html ~class_hook:"dbwtoc" ~from:[""]
+        (Buffer.contents brtx_buffer) in
+    (Buffer.contents h)
 
 end
 
 
 module HTML_menu = struct
 
-    open Data_source
-    open File_tree
+  open Data_source
+  open File_tree
 
-    let brtx_menu
-    ?(url_prefix="")
-    ?(filter="\\.brtx$") ?(exclude_dir=".*\\.svn.*")
-    ?(chop_filter=true) ?(replace=".html") tree = (
-        let buf = Buffer.create 1024 in
-        let filt = Pcre.regexp filter in
-        let excl = Pcre.regexp exclude_dir in
-        let presort l =
-            let dirs, files =
-                Ls.partition (function Dir _ -> false | _ -> true) l in
-            dirs @ files in
-        let rec to_brtx  = function
-            | Dir (path, name, l) ->
+  let brtx_menu
+      ?(url_prefix="")
+      ?(filter="\\.brtx$") ?(exclude_dir=".*\\.svn.*")
+      ?(chop_filter=true) ?(replace=".html") tree =
+    let buf = Buffer.create 1024 in
+    let filt = Pcre.regexp filter in
+    let excl = Pcre.regexp exclude_dir in
+    let presort l =
+      let dirs, files =
+        Ls.partition (function Dir _ -> false | _ -> true) l in
+      dirs @ files in
+    let rec to_brtx  = function
+      | Dir (path, name, l) ->
                 (* eprintf "path: %s, name: %s\n" path name; *)
-                if not (pcre_matches excl name) then (
-                    Buffer.add_string buf 
-                        (sprintf "{*} %s\n{begin list}\n" name);
-                    Ls.iter ~f:to_brtx (presort l);
-                    Buffer.add_string buf (sprintf "{end} # %s\n" name);
-                ) else (
-                    Buffer.add_string buf
-                        (sprintf "# ignore: %s %s\n" path name);
-                );
-            | File (path, name) ->
-                if pcre_matches filt name then (
-                    let rex = filt in
-                    let link =
-                        path ^ "/" ^ (Pcre.replace ~rex ~templ:replace name) in
-                    let official_name =
-                        if chop_filter
-                        then Pcre.replace ~rex ~templ:"" name
-                        else name in
-                    Buffer.add_string buf
-                        (sprintf "{*} {link %s%s|%s}\n" url_prefix link official_name);
-                );
-        in
-        Buffer.add_string buf (sprintf "{begin list}\n");
-        Ls.iter to_brtx (presort tree);
-        Buffer.add_string buf (sprintf "{end} # Root\n");
-        Buffer.contents buf
-    )
-
-    let html_menu 
-    ?(url_prefix="page:/")
-    ?(filter="\\.brtx$") ?(exclude_dir=".*\\.svn.*")
-    ?(chop_filter=true) ?(replace="") ~from tree = (
-        let brtx =
-            brtx_menu
-                ~url_prefix ~filter ~exclude_dir ~replace ~chop_filter tree in
-        let buf, err =
-            Brtx_transform.to_html
-                ~filename:"BRTX MENU" ~class_hook:"dibrawi_menu" ~from brtx in
-        if (Buffer.contents err <$> "") then (
-            eprintf "Errors in the bracetax: \n%s\n------------%s\n"
-                brtx (Buffer.contents err);
-            failwith "brtx ended with errors";
+        if not (pcre_matches excl name) then (
+          Buffer.add_string buf 
+            (sprintf "{*} %s\n{begin list}\n" name);
+          Ls.iter ~f:to_brtx (presort l);
+          Buffer.add_string buf (sprintf "{end} # %s\n" name);
+        ) else (
+          Buffer.add_string buf
+            (sprintf "# ignore: %s %s\n" path name);
         );
-        (Buffer.contents buf)
-    )
+      | File (path, name) ->
+        if pcre_matches filt name then (
+          let rex = filt in
+          let link =
+            path ^ "/" ^ (Pcre.replace ~rex ~templ:replace name) in
+          let official_name =
+            if chop_filter
+            then Pcre.replace ~rex ~templ:"" name
+            else name in
+          Buffer.add_string buf
+            (sprintf "{*} {link %s%s|%s}\n" url_prefix link official_name);
+        );
+    in
+    Buffer.add_string buf (sprintf "{begin list}\n");
+    Ls.iter to_brtx (presort tree);
+    Buffer.add_string buf (sprintf "{end} # Root\n");
+    (Buffer.contents buf)
 
-    type menu_factory = {
-        cache: (int, string) Ht.t;
-        source: File_tree.file_tree;
-    }
-    let make_menu_factory source_menu = (
-        {cache = Ht.create 5; source = source_menu; }
-    )
-    let get_menu factory ~from = (
-        let depth = Ls.length from - 1 in
-        match Ht.find_opt factory.cache depth with
-        | Some s -> s
-        | None ->
-            let new_one = html_menu ~from factory.source in
-            Ht.add factory.cache depth new_one;
-            new_one
-    )
+  let html_menu 
+      ?(url_prefix="page:/")
+      ?(filter="\\.brtx$") ?(exclude_dir=".*\\.svn.*")
+      ?(chop_filter=true) ?(replace="") ~from tree =
+    let brtx =
+      brtx_menu ~url_prefix ~filter ~exclude_dir ~replace ~chop_filter tree in
+    let buf, err =
+      Brtx_transform.to_html
+        ~filename:"BRTX MENU" ~class_hook:"dibrawi_menu" ~from brtx in
+    if (Buffer.contents err <$> "") then (
+      eprintf "Errors in the bracetax: \n%s\n------------%s\n"
+        brtx (Buffer.contents err);
+      failwith "brtx ended with errors";
+    );
+    (Buffer.contents buf)
 
 
+  type menu_factory = {
+    cache: (int, string) Ht.t;
+    source: File_tree.file_tree;
+  }
+  let make_menu_factory source_menu =
+    {cache = Ht.create 5; source = source_menu; }
+
+  let get_menu factory ~from =
+    let depth = Ls.length from - 1 in
+    match Ht.find_opt factory.cache depth with
+    | Some s -> s
+    | None ->
+      let new_one = html_menu ~from factory.source in
+      Ht.add factory.cache depth new_one;
+      new_one
 end
 
 module Address_book = struct
