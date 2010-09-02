@@ -211,7 +211,9 @@ end
 
 module Preprocessor = struct
 
-  let prepro_regexp = Pcre.regexp "\\{(cite|cmt)\\s+[^\\}]*\\}"
+  let prepro_regexp = 
+    Pcre.regexp
+      "(\\#\\#|\\{(cite|cmt|mix:ignore|mix:code|mix:end)\\s*[^\\}]*\\})"
 
   let default_html_biblio_page = "page:/bibliography"
 
@@ -224,7 +226,7 @@ module Preprocessor = struct
 
   let brtx2brtx ?todo_list 
       ?(html_cite=default_html_cite default_html_biblio_page)
-      ?(output=`html) ~from brtx = 
+      ?(output=`html) ?(mix_output=`wiki) ~from brtx = 
     let clean_cite s =
       let ls = Str.explode s in
       let filtered_ls =
@@ -238,6 +240,26 @@ module Preprocessor = struct
         (* Shell.catch_break true; *)
       let endtag = "dibrawipreprocessorendtag" in
       match s with
+      | "##" -> 
+        begin match mix_output with
+        | `wiki -> "##"
+        | `camlmix -> "### "
+        end
+      | "{mix:ignore}" ->
+        begin match mix_output with
+        | `wiki -> "{ignore mixspecialend}"
+        | `camlmix -> "##"
+        end
+      | "{mix:code}" ->
+        begin match mix_output with
+        | `wiki -> "{code mixspecialend}"
+        | `camlmix -> "##"
+        end
+      | "{mix:end}" ->
+        begin match mix_output with
+        | `wiki -> "{mixspecialend}"
+        | `camlmix -> "##"
+        end
       | cite when Str.head cite 5 =$= "{cite" ->
         let cites =
           Ls.map
