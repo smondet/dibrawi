@@ -9,7 +9,7 @@ let () = (
     let to_preprocess = ref [] in
     let output_file = ref "" in
     let out_format = ref `html in
-
+    let mix_output = ref `wiki in
     let usage = "dbwpp [OPTIONS] file1 file2 ..." in
 
     Arg.parse [
@@ -30,6 +30,9 @@ let () = (
         ("-html",
             Arg.Unit (fun () -> out_format := `html),
             "\n\tOutput for HTML format");
+        ("-camlmix",
+            Arg.Unit (fun () -> mix_output := `camlmix),
+            "\n\tOutput mix:*'s for Camlmix");
         ("-latex",
             Arg.Unit (fun () -> out_format := `pdf),
             "\n\tOutput for LaTeX format");
@@ -54,7 +57,7 @@ let () = (
     Ls.iter (Ls.rev !to_preprocess) ~f:(fun filename ->
         let page = Dibrawi.Data_source.get_file filename in
         let preprocessed =
-            Dibrawi.Preprocessor.brtx2brtx
+            Dibrawi.Preprocessor.brtx2brtx ~mix_output:!mix_output
                 ~html_cite ~output:!out_format ~from:["cmdline"] page in
         fprintf output_chan "%s\n" preprocessed;
     );
