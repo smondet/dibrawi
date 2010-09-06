@@ -213,7 +213,7 @@ module Preprocessor = struct
 
   let prepro_regexp = 
     Pcre.regexp
-      "(\\#\\#|\\{(cite|cmt|mix:ignore|mix:code|mix:end)\\s*[^\\}]*\\})"
+      "(\\#\\#|\\{(cite|cmt|mix:ignore|mix:code|mix:end|mi|mc|me)\\s*[^\\}]*\\})"
 
   let default_html_biblio_page = "page:/bibliography"
 
@@ -245,17 +245,17 @@ module Preprocessor = struct
         | `wiki -> "##"
         | `camlmix -> "### "
         end
-      | "{mix:ignore}" ->
+      | "{mix:ignore}" | "{mi}" ->
         begin match mix_output with
         | `wiki -> "{ignore mixspecialend}"
         | `camlmix -> "##"
         end
-      | "{mix:code}" ->
+      | "{mix:code}" | "{mc}" ->
         begin match mix_output with
         | `wiki -> "{code mixspecialend}"
         | `camlmix -> "##"
         end
-      | "{mix:end}" ->
+      | "{mix:end}" | "{me}" ->
         begin match mix_output with
         | `wiki -> "{mixspecialend}"
         | `camlmix -> "##"
