@@ -16,6 +16,7 @@ OCAMLPACKS[] =
    unix
    extlib
    pcre
+   xml-light
    sexplib.core
 
 

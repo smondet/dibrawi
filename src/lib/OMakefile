@@ -5,6 +5,7 @@ LIB_MODULES[] =
     dibrawi_templating
     dibrawi_make
     dibrawi
+    dibrawi_mix
 
 LIB_NAME = dibrawi
 

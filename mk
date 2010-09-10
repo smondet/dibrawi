@@ -2,9 +2,7 @@
 
 build ()
 {
-    export BRACETAX_LIB_PATH=$PWD/../bracetax/_build/src/lib/
-    export SEBIB_LIB_PATH=$PWD/../sebib/_build/lib/
-    omake
+    omake && omake reinstall_library
     rm -f dbw && ln -s _build/app/dbw
     rm -f dbwpp && ln -s _build/app/dbwpp
 }
