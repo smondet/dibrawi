@@ -1,6 +1,10 @@
 
 include Printf
-include Dibrawi_Yaboon_PolyComp.CompAndOveridePoly
+include Dibrawi_Yaboon_PolyComp.CompAndNoPolyPhy
+let (=$=) = eqs
+let (<$>) = nes
+let (=@=) = eqpoly
+let (<@>) = nepoly
 
 
 module Ls = struct
