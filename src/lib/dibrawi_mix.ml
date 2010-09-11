@@ -814,6 +814,109 @@ module Make (Camlmix_input: CAMLMIX) = struct
     let stop = ()
   end
 
+  module LaTeX = struct
+
+    let make_letter ~src ~dest ?date ?sign ?opening ?closing content =
+      Str.concat "\n\n" [
+        sprintf "\\address{%s}" src;
+        Opt.map_default (fun s -> sprintf "\\signature{%s}" s) "% No sig" sign;
+        Opt.map_default (fun s -> sprintf "\\date{%s}" s) "% No sig" date;
+        sprintf "\\begin{letter}{%s}\n" dest;
+        Opt.map_default (fun s -> sprintf "\\opening{%s}" s) "% No open" opening;
+        content;
+      (* sprintf "\\closing{%s}" (Opt.default "CLOSING" closing); *)
+        "\\end{letter}\n";
+      ]
+    let make_french_letter
+        ~src ~dest ?(cut_rule=false)
+        ?phone ?from_city ?subject
+        ?date ?sign ?opening ?closing content =
+      Str.concat "\n\n" [
+        sprintf "\\begin{letter}{%s}\n" dest;
+        "\\nofax\n";
+        Opt.map_default (fun s -> sprintf "\\telephone{%s}" s) "\\notelephone" phone;
+      (* "\\name{Seb}\n"; *)
+        Opt.map_default (fun s -> sprintf "\\lieu{%s}" s) "\\nolieu" from_city;
+        sprintf "\\address{%s}" src;
+        Opt.map_default (fun s -> sprintf "\\conc{%s}" s) "% No conc" subject;
+        Opt.map_default (fun s -> sprintf "\\signature{%s}" s) "% No sig" sign;
+        Opt.map_default (fun s -> sprintf "\\date{%s}" s) "% No sig" date;
+        if cut_rule then "" else "\\NoRule\n";
+        Opt.map_default (fun s -> sprintf "\\opening{%s}" s) "% No open" opening;
+        content;
+        sprintf "\\closing{%s}" (Opt.default "CLOSING" closing);
+        "\\end{letter}\n";
+      ]
+        
+    let build ?(with_bibtex=false) path = 
+      let pwd = Sys.getcwd () in
+      let cd = Filename.dirname path in
+      Sys.chdir cd;
+      let pdflatex = 
+        "pdflatex -interaction=nonstopmode" in
+      let target = Filename.chop_extension (Filename.basename path) in
+      let run_command c =
+        match Unix.system c with
+        | Unix.WEXITED 0 -> ()
+        | Unix.WEXITED n ->
+          printf "PDF: Compilation of %s failed with error code: %d\n\
+                see %s/%s.log\n" target n cd target;
+          failwith "pdflatex"
+        | _ ->
+          printf "PDF: Compilation of %s got killed (?)\n\
+                see %s/%s.log\n" target cd target;
+          failwith "pdflatex"
+      in
+      let commands =
+        let latex = (sprintf "%s %s > /dev/null" pdflatex target) in
+        if with_bibtex then
+          [ latex; (sprintf "bibtex %s > /dev/null"  target); latex; latex ]
+        else
+          [ latex; latex ] in
+      begin 
+        try
+          List.iter run_command commands
+        with _ -> ()
+      end;
+      Sys.chdir pwd;
+      (sprintf "%s/%s.pdf" cd target)
+
+    let build_string ?(with_bibtex=false) str =
+      let name = "/tmp/buildpdfstring.tex" in
+      let o = open_out name in
+      output_string o str;
+      close_out o;
+      build ~with_bibtex name
+
+    let make_full_file 
+        ?(pdf_title="") ?(pdf_authors="")  ?(pdf_subject="")
+        ~latex_template
+        ?(add_document_env=true)
+        ?bibtex_style ?(bibtex_path="") content =
+      let tmpl_regexp = Pcre.regexp "[A-Z]+_TEMPLATE_[A-Z]+" in
+      let document = [
+        if add_document_env then "\\begin{document}" else "";
+        (if bibtex_style =@= None then
+            "\\renewcommand\\cite[1]{[\\hyperref[#1]{#1}]}"
+         else "");
+        content;
+        (match bibtex_style with None -> "" | Some s -> 
+          sprintf 
+            "\\bibliographystyle{%s}\n\\bibliography{%s}"
+            s bibtex_path);
+        if add_document_env then "\\end{document}" else "";
+      ] in
+      (Pcre.substitute ~rex:tmpl_regexp
+         ~subst:(function
+           | "PDF_TEMPLATE_TITLE" -> pdf_title
+           | "PDF_TEMPLATE_AUTHORS" -> pdf_authors
+           | "PDF_TEMPLATE_SUBJECT" -> pdf_subject
+           | s -> s) 
+         latex_template) ^ (Str.concat "\n" document)
+        
+
+  end
+
 
 
 end
