@@ -22,3 +22,6 @@ val is_newer : string -> string -> bool
 val run_command : string -> unit
 val feed: cmd:string -> input:string -> string
 
+module Date: sig
+  val rfc_822: unit -> string
+end
