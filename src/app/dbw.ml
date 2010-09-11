@@ -2,46 +2,7 @@
 
 open Dibrawi_std
 
-module Dbw_unix = struct
-  (** create a directory but doesn't raise an exception if the
-      directory * already exist *)
-  let mkdir_safe dir perm =
-    try Unix.mkdir dir perm with Unix.Unix_error (Unix.EEXIST, _, _) -> ()
-
-  (** create a directory, and create parent if doesn't exist
-      i.e. mkdir -p *)
-  let mkdir_p ?(perm=0o700) dir =
-    let rec p_mkdir dir =
-      let p_name = Filename.dirname dir in
-      if p_name <$> "/" && p_name <$> "."
-      then p_mkdir p_name;
-      mkdir_safe dir perm in
-    p_mkdir dir 
-
-  let with_new_out filename f = 
-    let o = open_out filename in
-    try let r = f o in close_out o; r with e -> close_out o; raise e
-
-  let with_file_in filename f = 
-    let i = open_in filename in
-    try let r = f i in close_in i; r with e -> close_in i; raise e
-
-  let with_new_tmp ?(suffix=".tmp") ?(prefix="dbw_") f =
-    let name, o = Filename.open_temp_file prefix suffix in
-    try let r = f o name in close_out o; r with e -> close_out o; raise e
-
-      
-  let copy src dest =
-    with_file_in src 
-      (fun i ->
-         with_new_out dest
-           (fun o ->
-              try while true do output_char o (input_char i) done;
-              with End_of_file -> ()))
-
-
-
-end
+module Dbw_sys = Dibrawi.System
 
 module Persistence = struct
 
@@ -82,8 +43,8 @@ end
 
 let output_buffers
     ~(templ_fun:string -> string) file_name content_buffer err_buffer =
-  Dbw_unix.mkdir_p (Filename.dirname file_name);
-  Dbw_unix.with_new_out file_name
+  Dbw_sys.mkdir_p (Filename.dirname file_name);
+  Dbw_sys.with_new_out file_name
     (fun o ->
        let content_content = templ_fun (Buffer.contents content_buffer) in
        fprintf o "%s" content_content;
@@ -282,9 +243,9 @@ let transform ?html_template ?persistence_file data_root build =
               let dest = build ^ "/" ^ from_path ^ "/" ^ path in
               let dest_str = "todo:" ^ dest in
               let build_cmd () =
-                Dbw_unix.mkdir_p (Filename.dirname dest);
+                Dbw_sys.mkdir_p (Filename.dirname dest);
                 try 
-                  Dbw_unix.copy (sprintf "%s/%s" data_root origin) dest;
+                  Dbw_sys.copy (sprintf "%s/%s" data_root origin) dest;
                   printf "Copied %s/%s to %s\n" data_root origin dest;
                   (Some dest)
                 with e ->

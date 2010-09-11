@@ -4,6 +4,8 @@ open Dibrawi_std
 module Templating = Dibrawi_templating
 module Make = Dibrawi_make
 
+module System = Dibrawi_system
+  
 module Info = struct
   let version = 0
   let version_string = sprintf "The Dibrawi library, v %d" version

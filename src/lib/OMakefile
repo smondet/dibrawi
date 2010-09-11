@@ -2,6 +2,7 @@
 LIB_MODULES[] =
     dibrawi_Yaboon_PolyComp
     dibrawi_std
+    dibrawi_system
     dibrawi_templating
     dibrawi_make
     dibrawi
