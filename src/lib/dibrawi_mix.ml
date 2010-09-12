@@ -370,20 +370,34 @@ module Make (Camlmix_input: CAMLMIX) = struct
 
     let inline f =
       let around =
-        either 
-          (sprintf "{bypass endbypass}\n<tt>%s</tt>\n{endbypass}")
-          (sprintf "{bypass endbypass}$%s${endbypass}")
-          (sprintf "{bypass endbypass}\n<math display='inline'>%s</math>\n{endbypass}")
-      in
+        Params.map_output
+          ~html:(either 
+                   (sprintf "{t|{text endformula}\n%s\n{endformula}}")
+                   (sprintf "{t|{text endformula}%s{endformula}}")
+                   (sprintf
+                      "{bypass endbypass}\n\
+                        <math display='inline'>%s</math>\n{endbypass}"))
+          ~latex:(either 
+                    (sprintf "{t|{text endformula}\n%s\n{endformula}}")
+                    (sprintf "{bypass endbypass}$%s${endbypass}")
+                    (sprintf "{t|{text endformula}\n<math display='inline'>\
+                              %s</math>\n{endformula}}"))      in
       !Camlmix_input.printer (around (to_string `inline f))
 
     let block f =
       let around =
-        either 
-          (sprintf "{bypass endbypass}\n<pre>%s</pre>\n{endbypass}")
-          (sprintf "{bypass endbypass}$$%s$${endbypass}")
-          (sprintf "{bypass endbypass}\n<math display='block'>%s</math>\n{endbypass}")
-      in
+        Params.map_output
+          ~html:(either 
+                   (sprintf "{code endformula}\n%s\n{endformula}")
+                   (sprintf "{code endformula}%s{endformula}")
+                   (sprintf
+                      "{bypass endbypass}\n\
+                        <math display='block'>%s</math>\n{endbypass}"))
+          ~latex:(either 
+                    (sprintf "{code endformula}\n%s\n{endformula}")
+                    (sprintf "{bypass endbypass}$$%s$${endbypass}")
+                    (sprintf "{code endformula}\n<math display='block'>\
+                              %s</math>\n{endformula}}"))      in
       !Camlmix_input.printer (around (to_string `block f))
 
     let array_mathml transform a =
@@ -420,16 +434,26 @@ module Make (Camlmix_input: CAMLMIX) = struct
             (Ls.mapi (fun i cell ->
               cell ^ (String.make (col_maxes.(i) - (Str.length cell)) ' ')) row)
         ) transformed in
-      sprintf "<pre>\n%s\n</pre>" (String.concat "\n" padded)
+      sprintf "\n%s\n" (String.concat "\n" padded)
 
 
     let array a =
-      let bypass = sprintf "{bypass endbypass}%s{endbypass}" in
+      let around =
+        Params.map_output
+          ~html:(either 
+                   (sprintf "{code endformula}\n%s\n{endformula}")
+                   (sprintf "{code endformula}%s{endformula}")
+                   (sprintf
+                      "{bypass endbypass}%s{endbypass}"))
+          ~latex:(either 
+                    (sprintf "{code endformula}\n%s\n{endformula}")
+                    (sprintf "{bypass endbypass}%s{endbypass}")
+                    (sprintf "{code endformula}%s{endformula}}"))      in
       !Camlmix_input.printer
         (either
-           (bypass (array_text   (to_string `inline) a))
-           (bypass (array_latex  (to_string `inline) a))
-           (bypass (array_mathml (to_string `inline) a)))
+           (around (array_text   (to_string `inline) a))
+           (around (array_latex  (to_string `inline) a))
+           (around (array_mathml (to_string `inline) a)))
 
     include Constructors
 
