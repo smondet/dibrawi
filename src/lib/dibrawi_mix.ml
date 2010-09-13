@@ -657,7 +657,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
        {endbypass42}\n"
         (Opt.map_default (sprintf "%s,") "" latex_options)
         (lstlisting_language language)
-        (Opt.map_default (sprintf ",caption=%s,label=%s" caption) "" id)
+        (Opt.map_default (sprintf ",caption={%s},label=%s" (Dbw.brtx caption))
+           "" id)
         content
         
 
