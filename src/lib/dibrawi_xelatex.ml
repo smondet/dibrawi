@@ -102,7 +102,7 @@ let make_full_file
 module Template = struct
 
 
-  let compact_title_box =
+  let compact_title_box () =
 "
 \\makeatletter
 \\def\\MyBox#1{\\framebox[\\textwidth][c]{#1}}
@@ -307,6 +307,6 @@ pdfproducer = {}}
 "
 language
 section_numbers_depth
-(Str.concat "\n" add)
+(Str.concat "\n" (Ls.map (fun x -> x ()) add))
 
 end
