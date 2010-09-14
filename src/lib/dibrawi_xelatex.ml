@@ -204,6 +204,18 @@ module Template = struct
 \\makeatother
 "
 
+  let verbatim_style ?(font_size=`footnote) params =
+    str $ sprintf
+"
+\\makeatletter
+\\renewcommand{\\verbatim@font}{%%
+  \\ttfamily\\%s\\catcode`\\<=\\active\\catcode`\\>=\\active
+}  
+\\makeatother
+"
+(match font_size with `footnote -> "footnotesize" | `small -> "small")
+
+
   (*  Caption Package: http://www.dd.chalmers.se/latex/Docs/PDF/caption.pdf *)
   let package_caption params = str
 "
