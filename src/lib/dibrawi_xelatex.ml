@@ -78,7 +78,6 @@ let make_full_file
     ~latex_template
     ?(add_document_env=true)
     ?bibtex_style ?(bibtex_path="") content =
-  let tmpl_regexp = Pcre.regexp "[A-Z]+_TEMPLATE_[A-Z]+" in
   let document = [
     if add_document_env then "\\begin{document}" else "";
     (if bibtex_style =@= None then
@@ -91,13 +90,15 @@ let make_full_file
         s bibtex_path);
     if add_document_env then "\\end{document}" else "";
   ] in
-  (Pcre.substitute ~rex:tmpl_regexp
-     ~subst:(function
-       | "PDF_TEMPLATE_TITLE" -> pdf_title
-       | "PDF_TEMPLATE_AUTHORS" -> pdf_authors
-       | "PDF_TEMPLATE_SUBJECT" -> pdf_subject
-       | s -> s) 
-     latex_template) ^ (Str.concat "\n" document)
+  let hypersetup =
+    sprintf
+      "\\hypersetup{
+          pdfauthor   = {%s},
+          pdftitle    = {%s},
+          pdfsubject  = {%s},
+        }"
+      pdf_authors pdf_title pdf_subject in
+  (latex_template ^ hypersetup ^ (Str.concat "\n" document))
         
 module Template = struct
 
