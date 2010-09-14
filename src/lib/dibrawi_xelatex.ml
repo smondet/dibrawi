@@ -263,31 +263,32 @@ vertical_cell_spacing
     str $ sprintf
 "
 \\lstset{ %%
-language=[Objective]Caml,                %% choose the language of the code
-basicstyle=\\ttfamily\\small, %%\\tiny\\bfseries, 
+language=[Objective]Caml,
+basicstyle=\\ttfamily\\small,
 %%numbers=left,  
 numberstyle=\\tiny,
-stepnumber=2, %% the step between two line-numbers. If it's 1 each line 
+stepnumber=2,
 %% will be numbered
-numbersep=5pt, %% how far the line-numbers are from the code
-backgroundcolor=\\color{white},  %% choose the background color. You must add \\usepackage{color}
-showspaces=false, %% show spaces adding particular underscores
-showstringspaces=false, %% underline spaces within strings
-showtabs=false, %% show tabs within strings adding particular underscores
-frame=single, %% adds a frame around the code
-tabsize=2, %% sets default tabsize to 2 spaces
+numbersep=5pt,
+backgroundcolor=\\color{white},
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+frame=single,
+tabsize=2,
 captionpos=b, %% sets the caption-position to bottom
 breaklines=true, %% sets automatic line breaking
-breakatwhitespace=false, %% sets if automatic breaks should only happen at whitespace
-%%title=\\lstname, %% show the filename of files included with \\lstinputlisting;
- %% also try caption instead of title
+breakatwhitespace=true, %% sets if automatic breaks should only happen at whitespace
 escapeinside={\\%%*}{*)}, %% if you want to add a comment within your code
 morekeywords={*,...}, %% if you want to add more keywords to the set
-keywordstyle=\\color{red}\\bfseries,
-commentstyle=\\color[named]{RawSienna},
-stringstyle=\\color[named]{NavyBlue},
+keywordstyle=%s\\bfseries,
+commentstyle=%s\\it,
+stringstyle=%s\\bfseries,
 }
 "
+      (if params.color_theme = `none then "" else "\\color{red}")
+      (if params.color_theme = `none then "" else "\\color[named]{RawSienna}")
+      (if params.color_theme = `none then "" else "\\color[named]{NavyBlue}")
 
 let make ?(add=[]) ?(color=`none)
     ?(language="english") ?(section_numbers_depth=3) () =
