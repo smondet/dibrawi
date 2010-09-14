@@ -101,16 +101,28 @@ let make_full_file
         
 module Template = struct
 
+  type color_theme = [`none | `classy ]
 
-  let compact_title_box () =
+  type global_parameters = {
+    color_theme: color_theme;
+  }
+
+  let compact_title_box ?with_color params =
+    let really_with_color =
+      match with_color, params.color_theme with
+      | Some cond, _ -> cond
+      | None, `none -> false
+      | None, `classy -> true in
+    sprintf
 "
+%s
 \\makeatletter
 \\def\\MyBox#1{\\framebox[\\textwidth][c]{#1}}
 \\def\\maketitle{
-    \\twocolumn[%
+    \\twocolumn[%%
 \\MyBox{\\begin{minipage}{0.7\\textwidth}
     \\begin{center}
-    \\textcolor{webred}{\\bf\\huge \\@title}
+    %s{\\bf\\huge \\@title}
     \\vskip 0.3cm
     {\\large \\@author}
     \\vskip 0.3cm
@@ -123,15 +135,17 @@ module Template = struct
 }
 \\makeatother
 " 
+(if really_with_color then "\\definecolor{webred}{rgb}{0.3,0,0}" else "")
+(if really_with_color then "\\textcolor{webred}" else "")
 
-  let change_height ?(pt=700) () =
+  let change_height ?(pt=700) params =
     sprintf 
 "
 \\usepackage{layout}
 \\setlength{\\textheight}{%dpt}
 " pt
 
-  let make_things_smaller ?(baselinestretch=0.9) ?(parskip="1ex") () =
+  let make_things_smaller ?(baselinestretch=0.9) ?(parskip="1ex") params =
     sprintf
 "
 \\renewcommand{\\baselinestretch}{%.2f}
@@ -149,7 +163,7 @@ module Template = struct
 "
   baselinestretch parskip
 
-  let small_itemize () =
+  let small_itemize params =
 "
 \\makeatletter  % makes '@' an ordinary character
 \\def\\itemhook{}
@@ -180,12 +194,12 @@ module Template = struct
 "
 
   (*  Caption Package: http://www.dd.chalmers.se/latex/Docs/PDF/caption.pdf *)
-  let package_caption () =
+  let package_caption params =
 "
 \\usepackage[margin=10pt,font=small,labelfont=bf,labelsep=endash,nooneline]{caption}
 "
 
-  let compact_sections () =
+  let compact_sections params =
 "
 \\makeatletter  % makes '@' an ordinary character
 \\renewcommand{\\paragraph}{\\@startsection{paragraph}{4}{\\z@}%
@@ -208,7 +222,7 @@ module Template = struct
              {\\normalfont\\normalsize\\bfseries}}
 \\makeatother   % makes '@' a special symbol again
 "
-  let tabular_style ?(font_size=`footnote) ?(vertical_cell_spacing=1.5) () =
+  let tabular_style ?(font_size=`footnote) ?(vertical_cell_spacing=1.5) params =
     sprintf "
 \\makeatletter
 \\let\\orig@tabular\\tabular
@@ -222,7 +236,7 @@ module Template = struct
 (match font_size with `footnote -> "footnotesize" | `small -> "small")
 vertical_cell_spacing
 
-  let listing_style () =
+  let listing_style params =
     sprintf
 "
 \\lstset{ %%
@@ -252,7 +266,11 @@ stringstyle=\\color[named]{NavyBlue},
 }
 "
 
-let make ?(add=[]) ?(language="english") ?(section_numbers_depth=3) () =
+let make ?(add=[]) ?(color=`none)
+    ?(language="english") ?(section_numbers_depth=3) () =
+  let params = {
+    color_theme = color;
+  } in
 sprintf
 "
 \\documentclass[a4paper,8pt,twocolumn]{extarticle}
@@ -267,21 +285,17 @@ sprintf
 \\usepackage{fontspec}
 \\defaultfontfeatures{Mapping=tex-text}
 \\setmainfont[]{FreeSerif}
-\\setmonofont[Scale=0.8,Color=aa5500]{DejaVu Sans Mono}
+\\setmonofont[Scale=0.8]{DejaVu Sans Mono}
 \\setsansfont[Scale=MatchLowercase]{DejaVu Sans}
 \\usepackage[                         
 bookmarks         = true,         
 bookmarksnumbered = true,         
 colorlinks        = true,         
 ]{hyperref}                           
-\\definecolor{webred}{rgb}{0.3,0,0}
-\\definecolor{blurl}{rgb}{0,0,0.3}
-\\definecolor{darkgreen}{rgb}{0,0.3,0}
+%s
 \\hypersetup{
 breaklinks = true,
-linkcolor         = webred, %% black
-citecolor         = webred, %% black
-urlcolor          = blurl , %% black
+%s
 linkbordercolor   = {1 1 1},
 citebordercolor   = {1 1 1},
 urlbordercolor    = {1 1 1},
@@ -306,7 +320,22 @@ pdfproducer = {}}
 %s
 "
 language
+(match color with
+  `none -> ""
+| `classy ->
+  "\\definecolor{webred}{rgb}{0.3,0,0}\n\
+   \\definecolor{blurl}{rgb}{0,0,0.3}\n\
+   \\definecolor{darkgreen}{rgb}{0,0.3,0}")
+(match color with
+  `none -> 
+    "linkcolor         = black,\n\
+     citecolor         = black,\n\
+     urlcolor          = black,"
+| `classy ->
+  "linkcolor         = webred, \n\
+   citecolor         = webred, \n\
+   urlcolor          = blurl,")
 section_numbers_depth
-(Str.concat "\n" (Ls.map (fun x -> x ()) add))
+(Str.concat "\n" (Ls.map (fun x -> x params) add))
 
 end
