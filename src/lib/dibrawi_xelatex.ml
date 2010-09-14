@@ -73,23 +73,31 @@ let build_string ?(with_bibtex=false) str =
   close_out o;
   build ~with_bibtex name
 
+let build_string_tree ?(with_bibtex=false) stree =
+  let name = "/tmp/xelatexbuildstringtree.tex" in
+  Io.with_file_out name (fun out ->
+    String_tree.print ~out stree;
+  );
+  build ~with_bibtex name
+
 let make_full_file 
     ?(pdf_title="") ?(pdf_authors="")  ?(pdf_subject="")
     ~latex_template
     ?(add_document_env=true)
     ?bibtex_style ?(bibtex_path="") content =
-  let document = [
-    if add_document_env then "\\begin{document}" else "";
-    (if bibtex_style =@= None then
-        "\\renewcommand\\cite[1]{[\\hyperref[#1]{#1}]}"
-     else "");
-    content;
-    (match bibtex_style with None -> "" | Some s -> 
-      sprintf 
-        "\\bibliographystyle{%s}\n\\bibliography{%s}"
-        s bibtex_path);
-    if add_document_env then "\\end{document}" else "";
-  ] in
+  let document =
+    String_tree.str_cat [
+      if add_document_env then "\\begin{document}" else "";
+      (if bibtex_style =@= None then
+          "\\renewcommand\\cite[1]{[\\hyperref[#1]{#1}]}"
+       else "");
+      content;
+      (match bibtex_style with None -> "" | Some s -> 
+        sprintf 
+          "\\bibliographystyle{%s}\n\\bibliography{%s}"
+          s bibtex_path);
+      if add_document_env then "\\end{document}" else "";
+    ] in
   let hypersetup =
     sprintf
       "\\hypersetup{
@@ -98,9 +106,13 @@ let make_full_file
           pdfsubject  = {%s},
         }"
       pdf_authors pdf_title pdf_subject in
-  (latex_template ^ hypersetup ^ (Str.concat "\n" document))
+  String_tree.cat [
+    latex_template;
+    (String_tree.str hypersetup);
+    document]
         
 module Template = struct
+  open String_tree
 
   type color_theme = [`none | `classy ]
 
@@ -272,8 +284,9 @@ let make ?(add=[]) ?(color=`none)
   let params = {
     color_theme = color;
   } in
-sprintf
-"
+  let ($) f x = f x in 
+  cat [
+    str "
 \\documentclass[a4paper,8pt,twocolumn]{extarticle}
 \\clubpenalty=10000
 \\widowpenalty=10000
@@ -281,8 +294,9 @@ sprintf
 \\usepackage[dvipsnames,usenames]{color}
 \\usepackage{ucs}
 \\usepackage{xunicode}
-\\usepackage{xltxtra}
-\\usepackage[%s]{polyglossia}
+\\usepackage{xltxtra}\n";
+    str $ sprintf "\\usepackage[%s]{polyglossia}\n" language;
+    str "
 \\usepackage{fontspec}
 \\defaultfontfeatures{Mapping=tex-text}
 \\setmainfont[]{FreeSerif}
@@ -292,51 +306,44 @@ sprintf
 bookmarks         = true,         
 bookmarksnumbered = true,         
 colorlinks        = true,         
-]{hyperref}                           
-%s
+]{hyperref}";
+    (match color with
+      `none -> str ""
+    | `classy -> str
+      "\\definecolor{webred}{rgb}{0.3,0,0}\n\
+       \\definecolor{blurl}{rgb}{0,0,0.3}\n\
+       \\definecolor{darkgreen}{rgb}{0,0.3,0}");
+    str $ sprintf "                           
 \\hypersetup{
 breaklinks = true,
 %s
 linkbordercolor   = {1 1 1},
 citebordercolor   = {1 1 1},
 urlbordercolor    = {1 1 1},
-pdfauthor   = {PDF_TEMPLATE_AUTHORS},
-pdftitle    = {PDF_TEMPLATE_TITLE},
-pdfsubject  = {PDF_TEMPLATE_SUBJECT},
 pdfkeywords = {},
 pdfcreator  = {},
 pdfproducer = {}}
+"
+      (match color with
+        `none -> 
+          "linkcolor         = black,\n\
+           citecolor         = black,\n\
+           urlcolor          = black,"
+      | `classy ->
+        "linkcolor         = webred, \n\
+         citecolor         = webred, \n\
+         urlcolor          = blurl,");
+
+    str "
 \\usepackage{multirow}
 \\usepackage{listings}
 \\usepackage{graphicx}
 \\DeclareGraphicsExtensions{.jpg,.mps,.pdf,.png}
-\\frenchspacing\
-
+\\frenchspacing
 \\newcommand\\dbwcmt[1]{\\textbf{\\textcolor{red}{[#1]}}}
-
 \\newcommand\\chapter[1]{{\\LARGE{\\textbf{Chapter: #1}}}\\setcounter{section}{0} \\par}
-\\setcounter{secnumdepth}{%d}
-
-%% Add-ons:
-%s
-"
-language
-(match color with
-  `none -> ""
-| `classy ->
-  "\\definecolor{webred}{rgb}{0.3,0,0}\n\
-   \\definecolor{blurl}{rgb}{0,0,0.3}\n\
-   \\definecolor{darkgreen}{rgb}{0,0.3,0}")
-(match color with
-  `none -> 
-    "linkcolor         = black,\n\
-     citecolor         = black,\n\
-     urlcolor          = black,"
-| `classy ->
-  "linkcolor         = webred, \n\
-   citecolor         = webred, \n\
-   urlcolor          = blurl,")
-section_numbers_depth
-(Str.concat "\n" (Ls.map (fun x -> x params) add))
-
+";
+    str $ sprintf "\\setcounter{secnumdepth}{%d}" section_numbers_depth;
+    (str_cat (Ls.map (fun x -> x params) add))
+  ]
 end
