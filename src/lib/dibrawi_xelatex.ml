@@ -119,6 +119,7 @@ module Template = struct
 
   type global_parameters = {
     color_theme: color_theme;
+    columns: [ `one | `two ];
   }
 
   let compact_title_box ?with_color params =
@@ -135,7 +136,7 @@ module Template = struct
 \\makeatletter
 \\def\\MyBox#1{\\framebox[\\textwidth][c]{#1}}
 \\def\\maketitle{
-    \\twocolumn[%%
+%s
 \\MyBox{\\begin{minipage}{0.7\\textwidth}
     \\begin{center}
     %s{\\bf\\huge \\@title}
@@ -147,14 +148,46 @@ module Template = struct
     \\end{center}
     \\end{minipage} }
     \\vskip 0.3cm
-    ]
+    %s
 }
 \\makeatother
 " 
-(if really_with_color then "\\textcolor{webred}" else "")]
+(if params.columns = `two then "\\twocolumn[%%" else "")
+(if really_with_color then "\\textcolor{webred}" else "")
+(if params.columns = `two then "]" else "")]
 
   let change_height ?(pt=700) params =
     str $ sprintf "\n\\usepackage{layout}\n\\setlength{\\textheight}{%dpt}\n" pt
+
+
+  let geometry ?(paper=`A4) params =
+    let paper_str =
+      match paper with
+      | `A0 -> "a0paper"
+      | `A1 -> "a1paper"
+      | `A2 -> "a2paper"
+      | `A3 -> "a3paper"
+      | `A4 -> "a4paper"
+      | `A5 -> "a5paper"
+      | `A6 -> "a6paper"
+    in
+    let usepackage = str_cat ["\n\\usepackage["; paper_str; "]{geometry}\n" ] in
+    usepackage
+    (*
+"
+\\geometry{%marginparwidth=0.7cm,
+%  margin=0.1cm,
+% left=2cm,
+% right=1cm,
+twoside,
+inner=1.5cm, outer=0.7cm,
+ top=0.7cm,
+ bottom=0.6cm,
+nohead, vcentering,
+includeheadfoot
+}
+"
+    *)
 
   let make_things_smaller ?(baselinestretch=0.9) ?(parskip="1ex") params =
     str $ sprintf
@@ -290,14 +323,54 @@ stringstyle=%s\\bfseries,
       (if params.color_theme = `none then "" else "\\color[named]{RawSienna}")
       (if params.color_theme = `none then "" else "\\color[named]{NavyBlue}")
 
+  (* http://texblog.wordpress.com/2007/11/07/headerfooter-in-latex-with-fancyhdr/ *)
+  let package_fancyhdr param = 
+    str "
+\\usepackage{fancyhdr}
+\\pagestyle{fancy}
+% with this we ensure that the chapter and section
+% headings are in lowercase
+\\renewcommand{\\chaptermark}[1]{\\markboth{Chapter \\thechapter:\\ #1}{}}
+\\renewcommand{\\sectionmark}[1]{\\markright{\\thesection\\ #1}}
+%\\fancyhf{} %delete the current section for header and footer
+\\fancyhead[LE,RO]{\\thepage}
+\\fancyhead[LO]{\\rightmark}
+\\fancyhead[RE]{\\leftmark}
+\\fancyfoot[C]{}
+"
+
+
+
 let make ?(add=[]) ?(color=`none)
-    ?(language="english") ?(section_numbers_depth=3) () =
+    ?(language="english") 
+    ?(section_numbers_depth=3)
+    ?(document_class=`article 8)
+    ?(columns=`two)
+    ?(geometry=geometry ~paper:`A6)
+    () =
   let params = {
     color_theme = color;
+    columns = columns;
   } in
+  let docclass =
+    let col = match columns with `one -> "" | `two -> ",twocolumn" in
+    str 
+      (match document_class with
+      | `article pt ->
+        sprintf 
+          "\\documentclass[%dpt%s]{extarticle}\n\
+           \\newcommand\\chapter[1]{{\\LARGE{\\textbf{Chapter: #1}}}\
+              \\setcounter{section}{0} \\par}"
+          pt col
+      | `book pt ->
+        sprintf 
+          "\\documentclass[%dpt,twoside%s]{extbook}"
+          pt col
+      ) in
   cat [
+    docclass;
+    geometry ();
     str "
-\\documentclass[a4paper,8pt,twocolumn]{extarticle}
 \\clubpenalty=10000
 \\widowpenalty=10000
 \\sloppy
@@ -351,7 +424,6 @@ pdfproducer = {}}
 \\DeclareGraphicsExtensions{.jpg,.mps,.pdf,.png}
 \\frenchspacing
 \\newcommand\\dbwcmt[1]{\\textbf{\\textcolor{red}{[#1]}}}
-\\newcommand\\chapter[1]{{\\LARGE{\\textbf{Chapter: #1}}}\\setcounter{section}{0} \\par}
 ";
     str $ sprintf "\\setcounter{secnumdepth}{%d}" section_numbers_depth;
     (cat (Ls.map (fun x -> x params) add))
