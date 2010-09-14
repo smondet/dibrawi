@@ -78,6 +78,7 @@ module String_tree = struct
   let str s = Str s
   let cat l = Cat l
   let new_line () = Str "\n"
+  let str_cat l = cat (Ls.map str l)
     
   let rec print ?(out=Io.stdout) = function
     | Str s -> Io.nwrite out s
