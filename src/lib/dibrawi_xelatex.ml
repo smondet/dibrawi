@@ -113,6 +113,7 @@ let make_full_file
         
 module Template = struct
   open String_tree
+  let ($) f x = f x
 
   type color_theme = [`none | `classy ]
 
@@ -126,9 +127,11 @@ module Template = struct
       | Some cond, _ -> cond
       | None, `none -> false
       | None, `classy -> true in
-    sprintf
+    cat [
+      str (if really_with_color then
+          "\\definecolor{webred}{rgb}{0.3,0,0}" else "");
+      str  $ sprintf
 "
-%s
 \\makeatletter
 \\def\\MyBox#1{\\framebox[\\textwidth][c]{#1}}
 \\def\\maketitle{
@@ -148,18 +151,13 @@ module Template = struct
 }
 \\makeatother
 " 
-(if really_with_color then "\\definecolor{webred}{rgb}{0.3,0,0}" else "")
-(if really_with_color then "\\textcolor{webred}" else "")
+(if really_with_color then "\\textcolor{webred}" else "")]
 
   let change_height ?(pt=700) params =
-    sprintf 
-"
-\\usepackage{layout}
-\\setlength{\\textheight}{%dpt}
-" pt
+    str $ sprintf "\n\\usepackage{layout}\n\\setlength{\\textheight}{%dpt}\n" pt
 
   let make_things_smaller ?(baselinestretch=0.9) ?(parskip="1ex") params =
-    sprintf
+    str $ sprintf
 "
 \\renewcommand{\\baselinestretch}{%.2f}
 \\setlength{\\parindent}{0em}
@@ -176,7 +174,7 @@ module Template = struct
 "
   baselinestretch parskip
 
-  let small_itemize params =
+  let small_itemize params = str
 "
 \\makeatletter  % makes '@' an ordinary character
 \\def\\itemhook{}
@@ -207,12 +205,12 @@ module Template = struct
 "
 
   (*  Caption Package: http://www.dd.chalmers.se/latex/Docs/PDF/caption.pdf *)
-  let package_caption params =
+  let package_caption params = str
 "
 \\usepackage[margin=10pt,font=small,labelfont=bf,labelsep=endash,nooneline]{caption}
 "
 
-  let compact_sections params =
+  let compact_sections params = str
 "
 \\makeatletter  % makes '@' an ordinary character
 \\renewcommand{\\paragraph}{\\@startsection{paragraph}{4}{\\z@}%
@@ -236,7 +234,7 @@ module Template = struct
 \\makeatother   % makes '@' a special symbol again
 "
   let tabular_style ?(font_size=`footnote) ?(vertical_cell_spacing=1.5) params =
-    sprintf "
+    str $ sprintf "
 \\makeatletter
 \\let\\orig@tabular\\tabular
 \\let\\endorig@tabular\\endtabular
@@ -250,7 +248,7 @@ module Template = struct
 vertical_cell_spacing
 
   let listing_style params =
-    sprintf
+    str $ sprintf
 "
 \\lstset{ %%
 language=[Objective]Caml,                %% choose the language of the code
@@ -284,7 +282,6 @@ let make ?(add=[]) ?(color=`none)
   let params = {
     color_theme = color;
   } in
-  let ($) f x = f x in 
   cat [
     str "
 \\documentclass[a4paper,8pt,twocolumn]{extarticle}
@@ -344,6 +341,6 @@ pdfproducer = {}}
 \\newcommand\\chapter[1]{{\\LARGE{\\textbf{Chapter: #1}}}\\setcounter{section}{0} \\par}
 ";
     str $ sprintf "\\setcounter{secnumdepth}{%d}" section_numbers_depth;
-    (str_cat (Ls.map (fun x -> x params) add))
+    (cat (Ls.map (fun x -> x params) add))
   ]
 end
