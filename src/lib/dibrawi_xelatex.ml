@@ -160,7 +160,7 @@ module Template = struct
     str $ sprintf "\n\\usepackage{layout}\n\\setlength{\\textheight}{%dpt}\n" pt
 
 
-  let geometry ?(paper=`A4) params =
+  let package_geometry ?(paper=`A4) ?(raw_options="") params =
     let paper_str =
       match paper with
       | `A0 -> "a0paper"
@@ -171,7 +171,8 @@ module Template = struct
       | `A5 -> "a5paper"
       | `A6 -> "a6paper"
     in
-    let usepackage = str_cat ["\n\\usepackage["; paper_str; "]{geometry}\n" ] in
+    let usepackage =
+      str_cat ["\n\\usepackage["; paper_str; raw_options; "]{geometry}\n" ] in
     usepackage
     (*
 "
@@ -346,7 +347,7 @@ let make ?(add=[]) ?(color=`none)
     ?(section_numbers_depth=3)
     ?(document_class=`article 8)
     ?(columns=`two)
-    ?(geometry=geometry ~paper:`A6)
+    ?(geometry:(unit -> String_tree.t) option)
     () =
   let params = {
     color_theme = color;
@@ -369,7 +370,9 @@ let make ?(add=[]) ?(color=`none)
       ) in
   cat [
     docclass;
-    geometry ();
+    (match geometry with
+    | None -> package_geometry ~paper:`A4 ()
+    | Some f -> f ());
     str "
 \\clubpenalty=10000
 \\widowpenalty=10000
