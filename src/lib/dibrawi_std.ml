@@ -30,6 +30,20 @@ module Io = struct
     IO.input_channel i
   let open_out f = 
     IO.output_channel (Pervasives.open_out f)
+  let stdout = output_channel stdout
+
+  let with_file_out filename f = 
+    let o = open_out filename in
+    try let r = f o in close_out o; r with e -> close_out o; raise e
+
+  let with_file_in filename f = 
+    let i = open_in filename in
+    try let r = f i in close_in i; r with e -> close_in i; raise e
+
+  let with_new_tmp ?(suffix=".tmp") ?(prefix="promiwag_") f =
+    let name, o = Filename.open_temp_file prefix suffix in
+    let o = output_channel o in
+    try let r = f o name in close_out o; r with e -> close_out o; raise e
 end
 
 module Ht = struct
@@ -53,5 +67,20 @@ module Str = struct
   let tail str pos =
     sub str pos (length str - pos)
 
+
+end
+
+module String_tree = struct
+  type t = 
+    | Str of string
+    | Cat of t list
+        
+  let str s = Str s
+  let cat l = Cat l
+  let new_line () = Str "\n"
+    
+  let rec print ?(out=Io.stdout) = function
+    | Str s -> Io.nwrite out s
+    | Cat l -> Ls.iter (print ~out) l
 
 end
