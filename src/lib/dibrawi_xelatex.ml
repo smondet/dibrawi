@@ -163,13 +163,13 @@ module Template = struct
   let package_geometry ?(paper=`A4) ?(raw_options="") params =
     let paper_str =
       match paper with
-      | `A0 -> "a0paper"
-      | `A1 -> "a1paper"
-      | `A2 -> "a2paper"
-      | `A3 -> "a3paper"
-      | `A4 -> "a4paper"
-      | `A5 -> "a5paper"
-      | `A6 -> "a6paper"
+      | `A0 -> "a0paper,"
+      | `A1 -> "a1paper,"
+      | `A2 -> "a2paper,"
+      | `A3 -> "a3paper,"
+      | `A4 -> "a4paper,"
+      | `A5 -> "a5paper,"
+      | `A6 -> "a6paper,"
     in
     let usepackage =
       str_cat ["\n\\usepackage["; paper_str; raw_options; "]{geometry}\n" ] in
