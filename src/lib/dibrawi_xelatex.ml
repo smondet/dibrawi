@@ -190,23 +190,19 @@ includeheadfoot
 "
     *)
 
-  let make_things_smaller ?(baselinestretch=0.9) ?(parskip="1ex") params =
-    str $ sprintf
-"
-\\renewcommand{\\baselinestretch}{%.2f}
-\\setlength{\\parindent}{0em}
-\\usepackage[small,compact]{titlesec}
-\\setlength{\\topsep}{0pt}
-\\setlength{\\itemsep}{0pt}
-\\setlength{\\parskip}{%s}
-\\setlength{\\parsep}{0pt}
-\\setlength{\\headsep}{0pt}
-\\setlength{\\topskip}{0pt}
-\\setlength{\\topmargin}{0pt}
-\\setlength{\\topsep}{0pt}
-\\setlength{\\partopsep}{0pt}
-"
-  baselinestretch parskip
+  let make_things_smaller
+      ?(baselinestretch=0.9) ?parskip
+      ?parindent ?(compact_sections=true) params =
+    let omd f o = Opt.map_default f "" o in
+    str_cat [
+      sprintf "\\renewcommand{\\baselinestretch}{%.2f}\n" baselinestretch;
+      omd (sprintf "\\setlength{\\parindent}{%s}\n") parindent;
+      if compact_sections then
+        "\\usepackage[small,compact]{titlesec}\n"
+      else
+        "";
+      omd (sprintf "\\setlength{\\parskip}{%s}\n") parskip
+    ]
 
   let small_itemize params = str
 "
