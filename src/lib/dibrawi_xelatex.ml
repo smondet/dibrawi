@@ -174,21 +174,6 @@ module Template = struct
     let usepackage =
       str_cat ["\n\\usepackage["; paper_str; raw_options; "]{geometry}\n" ] in
     usepackage
-    (*
-"
-\\geometry{%marginparwidth=0.7cm,
-%  margin=0.1cm,
-% left=2cm,
-% right=1cm,
-twoside,
-inner=1.5cm, outer=0.7cm,
- top=0.7cm,
- bottom=0.6cm,
-nohead, vcentering,
-includeheadfoot
-}
-"
-    *)
 
   let make_things_smaller
       ?(baselinestretch=0.9) ?parskip
@@ -335,7 +320,12 @@ stringstyle=%s\\bfseries,
 \\fancyhead[RE]{\\leftmark}
 \\fancyfoot[C]{}
 "
-
+  let hyphenations l params =
+    str_cat [
+      "\\hyphenation{";
+      Str.concat " " l;
+      "}\n";
+    ]
 
 
 let make ?(add=[]) ?(color=`none)
