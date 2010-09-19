@@ -351,7 +351,7 @@ let make ?(add=[]) ?(color=`none)
           pt col
       | `book pt ->
         sprintf 
-          "\\documentclass[%dpt,twoside%s]{extbook}"
+          "\\documentclass[%dpt,twoside%s]{extbook}\n"
           pt col
       | `french_letter pt ->
         sprintf "
@@ -360,6 +360,8 @@ let make ?(add=[]) ?(color=`none)
 \\newcommand*{\\NoRule}{\\renewcommand*{\\rule@length}{0}}
 \\makeatother
 " pt
+      | `letter pt ->
+        sprintf "\\documentclass[%dpt]{letter}\n" pt
       ) in
   cat [
     docclass;
