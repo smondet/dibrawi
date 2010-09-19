@@ -353,6 +353,13 @@ let make ?(add=[]) ?(color=`none)
         sprintf 
           "\\documentclass[%dpt,twoside%s]{extbook}"
           pt col
+      | `french_letter pt ->
+        sprintf "
+\\documentclass[%dpt]{lettre}
+\\makeatletter
+\\newcommand*{\\NoRule}{\\renewcommand*{\\rule@length}{0}}
+\\makeatother
+" pt
       ) in
   cat [
     docclass;
