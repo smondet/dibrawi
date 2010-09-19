@@ -44,11 +44,11 @@ let build ?(with_bibtex=false) path =
     match Unix.system c with
     | Unix.WEXITED 0 -> ()
     | Unix.WEXITED n ->
-      printf "XeLaTeX: Compilation of %s failed with error code: %d\n\
+      eprintf "XeLaTeX: Compilation of %s failed with error code: %d\n\
                 see %s/%s.log\n" target n cd target;
       failwith "xelatex"
     | _ ->
-      printf "XeLaTeX: Compilation of %s got killed (?)\n\
+      eprintf "XeLaTeX: Compilation of %s got killed (?)\n\
                 see %s/%s.log\n" target cd target;
       failwith "xelatex"
   in
@@ -66,19 +66,29 @@ let build ?(with_bibtex=false) path =
   Sys.chdir pwd;
   (sprintf "%s/%s.pdf" cd target)
 
+let do_clean basename =
+  let exts = [ ".aux"; ".bbl"; ".blg"; ".out"; ".toc"; ".tns" ] in
+  let cmd =
+    "rm -f " ^ (Str.concat " " (Ls.map exts ~f:((^) basename))) in
+  ignore (Unix.system cmd)
+
 let build_string ?(with_bibtex=false) str =
   let name = "/tmp/buildpdfstring.tex" in
   let o = open_out name in
   output_string o str;
   close_out o;
-  build ~with_bibtex name
+  let result = build ~with_bibtex name in
+  do_clean "/tmp/buildpdfstring";
+  result
 
 let build_string_tree ?(with_bibtex=false) stree =
   let name = "/tmp/xelatexbuildstringtree.tex" in
   Io.with_file_out name (fun out ->
     String_tree.print ~out stree;
   );
-  build ~with_bibtex name
+  let result = build ~with_bibtex name in
+  do_clean "/tmp/xelatexbuildstringtree";
+  result
 
 let make_full_file 
     ?(pdf_title="") ?(pdf_authors="")  ?(pdf_subject="")
