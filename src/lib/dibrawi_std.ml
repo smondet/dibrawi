@@ -93,6 +93,8 @@ module Substitute = struct
   let create l = ref l
   let add t sa sb = t := (sa, sb) :: !t
 
+  let copy t = ref !t
+
   let string t str =
     let escaped = Ls.map !t ~f:(fun (a,b) -> Pcre.quote a) in
     let rex = Pcre.regexp_or escaped in
