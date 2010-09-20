@@ -251,17 +251,21 @@ module Preprocessor = struct
         end
       | "{mix:ignore}" | "{mi}" ->
         begin match mix_output with
-        | `wiki -> "{ignore mixspecialend}"
+        | `wiki -> 
+          "{bypass endfordiv}<div class=\"dbwmixignore\">{endfordiv}\
+          {ignore mixspecialend}"
         | `camlmix -> "##"
         end
       | "{mix:code}" | "{mc}" ->
         begin match mix_output with
-        | `wiki -> "{code mixspecialend}"
+        | `wiki ->
+          "{bypass endfordiv}<div class=\"dbwmixcode\">{endfordiv}\
+          {code mixspecialend}"
         | `camlmix -> "##"
         end
       | "{mix:end}" | "{me}" ->
         begin match mix_output with
-        | `wiki -> "{mixspecialend}"
+        | `wiki -> "{mixspecialend}{bypass endfordiv}</div>{endfordiv}"
         | `camlmix -> "##"
         end
       | cite when Str.head cite 5 =$= "{cite" ->
