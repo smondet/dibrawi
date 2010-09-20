@@ -377,7 +377,7 @@ let make ?(add=[]) ?(color=`none)
   cat [
     docclass;
     (match geometry with
-    | None -> package_geometry ~paper:`A4 ()
+    | None -> str "" (* package_geometry ~paper:`A4 () *)
     | Some f -> f ());
     str "
 \\clubpenalty=10000
