@@ -230,7 +230,7 @@ module Preprocessor = struct
 
   let brtx2brtx ?todo_list 
       ?(html_cite=default_html_cite default_html_biblio_page)
-      ?(output=`html) ?(mix_output=`wiki) ~from brtx = 
+      ?(output=`html) ?(mix_output=`wiki) ?from brtx = 
     let clean_cite s =
       let ls = Str.explode s in
       let filtered_ls =
@@ -355,8 +355,9 @@ module Brtx_transform = struct
   let html_toc ?filename brtx =
     let brtx_buffer = Buffer.create 1024 in
     let err_buffer = Buffer.create 512 in
+    let only_brtx = Preprocessor.brtx2brtx brtx in
     let writer, input_char =
-      Bracetax.Transform.string_io brtx brtx_buffer err_buffer in
+      Bracetax.Transform.string_io only_brtx brtx_buffer err_buffer in
     Bracetax.Transform.get_TOC ~writer ~input_char ?filename ();
     let h, e =
       to_html ~class_hook:"dbwtoc" ~from:[""]
