@@ -15,6 +15,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
   include Dibrawi_std
 
   let pr s = !Camlmix_input.printer s
+  let print_if = Camlmix_input.print_if
+  let end_if = ()
 
   module Params: sig
     type output
