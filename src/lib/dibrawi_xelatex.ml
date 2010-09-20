@@ -372,6 +372,7 @@ let make ?(add=[]) ?(color=`none)
 " pt
       | `letter pt ->
         sprintf "\\documentclass[%dpt]{letter}\n" pt
+      | `none -> ""
       ) in
   cat [
     docclass;
