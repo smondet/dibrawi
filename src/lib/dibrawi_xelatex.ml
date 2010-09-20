@@ -337,6 +337,15 @@ stringstyle=%s\\bfseries,
       "}\n";
     ]
 
+  let fontspec params =
+    str "
+\\usepackage{fontspec}
+\\defaultfontfeatures{Mapping=tex-text}
+\\setmainfont[]{FreeSerif}
+\\setmonofont[Scale=0.8]{DejaVu Sans Mono}
+\\setsansfont[Scale=MatchLowercase]{DejaVu Sans}
+"
+
 
 let make ?(add=[]) ?(color=`none)
     ?(language="english") 
@@ -344,6 +353,7 @@ let make ?(add=[]) ?(color=`none)
     ?(document_class=`article 8)
     ?(columns=`two)
     ?(geometry:(unit -> String_tree.t) option)
+    ?(fontspec:(global_parameters -> String_tree.t) option)
     () =
   let params = {
     color_theme = color;
@@ -388,12 +398,10 @@ let make ?(add=[]) ?(color=`none)
 \\usepackage{xunicode}
 \\usepackage{xltxtra}\n";
     str $ sprintf "\\usepackage[%s]{polyglossia}\n" language;
+    (match fontspec with
+    | None -> str ""
+    | Some f -> f params);
     str "
-\\usepackage{fontspec}
-\\defaultfontfeatures{Mapping=tex-text}
-\\setmainfont[]{FreeSerif}
-\\setmonofont[Scale=0.8]{DejaVu Sans Mono}
-\\setsansfont[Scale=MatchLowercase]{DejaVu Sans}
 \\usepackage[                         
 bookmarks         = true,         
 bookmarksnumbered = true,         
