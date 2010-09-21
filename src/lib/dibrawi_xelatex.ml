@@ -9,7 +9,7 @@ let make_letter ~src ~dest ?date ?sign ?opening ?closing content =
     sprintf "\\begin{letter}{%s}\n" dest;
     Opt.map_default (fun s -> sprintf "\\opening{%s}" s) "% No open" opening;
     content;
-        (* sprintf "\\closing{%s}" (Opt.default "CLOSING" closing); *)
+    Opt.map_default (sprintf "\\closing{%s}") "% No closing" closing;
     "\\end{letter}\n";
   ]
 let make_french_letter
