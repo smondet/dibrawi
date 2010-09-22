@@ -74,15 +74,18 @@ module String_tree = struct
   type t = 
     | Str of string
     | Cat of t list
-        
+    | Empty        
+
   let str s = Str s
   let cat l = Cat l
   let new_line () = Str "\n"
   let str_cat l = cat (Ls.map str l)
-    
+  let empty = Empty
+
   let rec print ?(out=Io.stdout) = function
     | Str s -> Io.nwrite out s
     | Cat l -> Ls.iter (print ~out) l
+    | Empty -> ()
 
 end
 
