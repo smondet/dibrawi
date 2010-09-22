@@ -5,6 +5,7 @@ LIB_MODULES[] =
     dibrawi_system
     dibrawi_xelatex
     dibrawi_templating
+    dibrawi_html_template
     dibrawi_make
     dibrawi
     dibrawi_mix
