@@ -81,6 +81,8 @@ module String_tree = struct
     function
       | [] -> Empty
       | [one] -> one
+      | Empty :: t ->
+        cat_sep sep t
       | h :: t ->
         Cat [h; sep; cat_sep sep t ]
 
