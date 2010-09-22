@@ -77,10 +77,22 @@ module String_tree = struct
     | Empty        
 
   let str s = Str s
-  let cat l = Cat l
+  let rec cat_sep sep =
+    function
+      | [] -> Empty
+      | [one] -> one
+      | h :: t ->
+        Cat [h; sep; cat_sep sep t ]
+
+  let cat ?sep l =
+    match sep with
+    | None -> Cat l
+    | Some s -> cat_sep s l
+
   let new_line () = Str "\n"
   let str_cat l = cat (Ls.map str l)
   let empty = Empty
+
 
   let rec print ?(out=Io.stdout) = function
     | Str s -> Io.nwrite out s
