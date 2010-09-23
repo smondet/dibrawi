@@ -3,29 +3,27 @@ open String_tree
 let ($) f x = f x
 let opt_str_map f o = Opt.map_default (fun s -> str (f s)) empty o
 
+module Color = struct
+  type color = string
+  type theme = (string * color option * color option) list
 
-type color = string
-type color_theme = 
-  [
-  | `background
-  | `main_font
-  | `a_link
-  | `a_visited
-  | `a_hover
-  | `a_hover_background
-  ] -> color option
+  let color ?bg ?fg who = (who, fg, bg)
+  let fg who c = (who, Some c, None)  
 
-let no_theme = function
-  | `background 
-  | `main_font 
-  | `a_link
-  | `a_visited
-  | `a_hover
-  | `a_hover_background -> None
-let dummy_color_theme: color_theme = fun _ -> Some "DummyColor"
+  let empty_theme:theme = []
+  let dummy_theme:theme = [
+    color "body"     ~fg:"FG" ~bg:"BG";
+    color "a:link"   ~fg:"FGa" ~bg:"BGa";
+    color "a:link"   ~fg:"FGa" ~bg:"BGa";
+    color "a:hover"  ~fg:"FGa" ~bg:"BGa"; 
+    color "tt,pre,code"  ~fg:"FGcode" ;
+    fg ".dbwmixcode" "#dd0000";
+  ]
+
+end
 
 type css_global_parameters = {
-  color_theme: color_theme;
+  color_theme: Color.theme;
 }
 
 let opt_fill_css param opt =
@@ -35,27 +33,21 @@ let opt_fill_css param opt =
     str $ sprintf "   %s: %s;" param value
 
 let css_block ?class_opt name l =
-  cat [ Opt.map_default (fun s -> str (s ^ " ")) empty class_opt;
-        str name; str " {"; cat l; str "}"]
+  cat [
+    Opt.map_default (fun s -> str (s ^ " ")) empty class_opt;
+    str name; str " {\n"; cat ~sep:new_line l; str "\n}"]
     
-let set_colors ?for_class ?(overwrite_color_theme:color_theme option) params =
+
+let set_colors ?for_class ?(overwrite_color_theme:Color.theme option) params =
   let theme = Opt.default params.color_theme overwrite_color_theme in
-  let color x = opt_fill_css "color" (theme x) in
-  let background x = opt_fill_css "background-color" (theme x) in
+  let color x = opt_fill_css "color" x in
+  let background x = opt_fill_css "background-color" x in
   let block = css_block ?class_opt:for_class in
-  cat ~sep:new_line [
-    block "body" [
-      background `background;
-      color `main_font;
-    ];
-    block "a:link" [ color `a_link ];
-    block "a:link" [ color `a_visited ];
-    block "a:hover" [ color `a_hover; background `a_hover_background; ];
-
-  ]
+  cat ~sep:new_line 
+    (Ls.map theme ~f:(fun (p, f, b) -> block p [ color f; background b]))
 
 
-let css ?(color_theme=no_theme) l =
+let css ?(color_theme=Color.empty_theme) l =
   let params = {
     color_theme = color_theme;
   } in
@@ -166,7 +158,7 @@ let _test () =
   in
   let tmplc = 
     make ()
-      ~css:(css ~color_theme:dummy_color_theme [
+      ~css:(css ~color_theme:Color.dummy_theme [
          set_colors;
       ])
       ~body:(body (`three_columns (fun _ -> "<!-- Right Side Insertion -->")))
