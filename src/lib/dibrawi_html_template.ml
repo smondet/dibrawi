@@ -55,15 +55,33 @@ type html_global_parameters = {
 type body_style = html_global_parameters -> html_template
     
 let body style params =
+  let sep = new_line in
   fun ?menu  ?toc ?title ?footer ?from content ->
     match style with
     | `raw | `simple ->
-      cat ~sep:new_line [
+      cat ~sep [
         opt_str_map (sprintf "<div class=\"dibrawititle\">%s</div>") title;
         opt_str_map (sprintf "<div class=\"dibrawimenu\">%s</div>") menu;
         opt_str_map (sprintf "<div class=\"dibrawitoc\">%s</div>") toc;
         str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
         opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
+      ]
+    | `three_columns top_right ->
+      cat ~sep [
+        str "<div class=\"leftside\">";
+        opt_str_map (sprintf "<b>Page:</b> %s <br/>") title;
+        opt_str_map 
+          (sprintf "<hr/><b>Menu: </b><ul class=\"beginmenu\">%s</ul>")
+          menu;
+        str "</div>";
+        str "<div class=\"rightside\">";
+        str (top_right from);
+        opt_str_map (sprintf "<hr/><b>Table of contents:</b><br/>%s<br/>") toc;
+        opt_str_map (sprintf "<hr/>%s<br/>") footer;
+        str "</div>";
+        str "<div class=\"content\">";
+        str content;
+        str "</div>";
       ]
 
 
@@ -119,6 +137,14 @@ let _test () =
       ])
       ~body:(body `simple)
   in
-  print $ doc tmpla;
-  print $ doc tmplb;
+  let tmplc = 
+    make ()
+      ~css:(css [
+      ])
+      ~body:(body (`three_columns (fun _ -> "<!-- Right Side Insertion -->")))
+  in
+  let next () = printf "==================================================\n" in
+  print $ doc tmpla; next ();
+  print $ doc tmplb; next ();
+  print $ doc tmplc; next ();
   ()
