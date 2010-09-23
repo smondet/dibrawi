@@ -1,6 +1,8 @@
 open Dibrawi_std
 open String_tree
 let ($) f x = f x
+let opt_str_map f o = Opt.map_default (fun s -> str (f s)) empty o
+
 
 type color = string
 type color_theme = [ `background | `main_font ] -> color option
@@ -19,7 +21,7 @@ let opt_fill_css param opt =
   | Some value ->
     str $ sprintf "   %s: %s;" param value
 
-let body params =
+let body_colors_deprecated params =
   cat ~sep:(str "\n") [
     str "body {";
     opt_fill_css "background-color" (params.color_theme `background);
@@ -49,7 +51,24 @@ type html_global_parameters = {
   path_to_root: string list;
 }
 
-let make ?(css=`none) () =
+
+type body_style = html_global_parameters -> html_template
+    
+let body style params =
+  fun ?menu  ?toc ?title ?footer ?from content ->
+    match style with
+    | `raw | `simple ->
+      cat ~sep:new_line [
+        opt_str_map (sprintf "<div class=\"dibrawititle\">%s</div>") title;
+        opt_str_map (sprintf "<div class=\"dibrawimenu\">%s</div>") menu;
+        opt_str_map (sprintf "<div class=\"dibrawitoc\">%s</div>") toc;
+        str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
+        opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
+      ]
+
+
+
+let make ?(css=`none) ?(body:body_style option) () =
 
   let insert_css css params =
     match css with
@@ -68,7 +87,6 @@ let make ?(css=`none) () =
   in
   let template_function  ?menu ?toc ?title ?footer ?(from=[]) content =
     let params = { path_to_root = from } in
-    let opt_str_map f o = Opt.map_default (fun s -> str (f s)) empty o in
     cat ~sep:(str "\n") [
       str "<!DOCTYPE html\n\
         PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n\
@@ -80,11 +98,11 @@ let make ?(css=`none) () =
       insert_css css params;
       opt_str_map (sprintf "<title>%s</title>")  title;
       str "</head>\n<body>";
-      opt_str_map (sprintf "<div class=\"dibrawititle\">%s</div>") title;
-      opt_str_map (sprintf "<div class=\"dibrawimenu\">%s</div>") menu;
-      opt_str_map (sprintf "<div class=\"dibrawitoc\">%s</div>") toc;
-      str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
-      opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
+      begin match body with
+      | None -> str "<!-- No Body -->"
+      | Some b ->
+        (b params) ?menu  ?toc ?title ?footer ~from content
+      end;
       str "</body></html>\n";
     ]
   in
@@ -96,9 +114,11 @@ let _test () =
       "The content..." in
   let tmpla = make ~css:(`link_from_root "fromroot.css") () in
   let tmplb = 
-    make ~css:(css [
-      body;
-    ]) () in
+    make ()
+      ~css:(css [
+      ])
+      ~body:(body `simple)
+  in
   print $ doc tmpla;
   print $ doc tmplb;
   ()
