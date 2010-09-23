@@ -5,11 +5,24 @@ let opt_str_map f o = Opt.map_default (fun s -> str (f s)) empty o
 
 
 type color = string
-type color_theme = [ `background | `main_font ] -> color option
+type color_theme = 
+  [
+  | `background
+  | `main_font
+  | `a_link
+  | `a_visited
+  | `a_hover
+  | `a_hover_background
+  ] -> color option
 
 let no_theme = function
   | `background 
-  | `main_font -> None
+  | `main_font 
+  | `a_link
+  | `a_visited
+  | `a_hover
+  | `a_hover_background -> None
+let dummy_color_theme: color_theme = fun _ -> Some "DummyColor"
 
 type css_global_parameters = {
   color_theme: color_theme;
@@ -21,13 +34,26 @@ let opt_fill_css param opt =
   | Some value ->
     str $ sprintf "   %s: %s;" param value
 
-let body_colors_deprecated params =
-  cat ~sep:(str "\n") [
-    str "body {";
-    opt_fill_css "background-color" (params.color_theme `background);
-    opt_fill_css "color" (params.color_theme `main_font);
-    str "}";
+let css_block ?class_opt name l =
+  cat [ Opt.map_default (fun s -> str (s ^ " ")) empty class_opt;
+        str name; str " {"; cat l; str "}"]
+    
+let set_colors ?for_class ?(overwrite_color_theme:color_theme option) params =
+  let theme = Opt.default params.color_theme overwrite_color_theme in
+  let color x = opt_fill_css "color" (theme x) in
+  let background x = opt_fill_css "background-color" (theme x) in
+  let block = css_block ?class_opt:for_class in
+  cat ~sep:new_line [
+    block "body" [
+      background `background;
+      color `main_font;
+    ];
+    block "a:link" [ color `a_link ];
+    block "a:link" [ color `a_visited ];
+    block "a:hover" [ color `a_hover; background `a_hover_background; ];
+
   ]
+
 
 let css ?(color_theme=no_theme) l =
   let params = {
@@ -134,12 +160,14 @@ let _test () =
   let tmplb = 
     make ()
       ~css:(css [
+         set_colors ~for_class:".the_class";
       ])
       ~body:(body `simple)
   in
   let tmplc = 
     make ()
-      ~css:(css [
+      ~css:(css ~color_theme:dummy_color_theme [
+         set_colors;
       ])
       ~body:(body (`three_columns (fun _ -> "<!-- Right Side Insertion -->")))
   in
