@@ -91,7 +91,7 @@ module String_tree = struct
     | None -> Cat l
     | Some s -> cat_sep s l
 
-  let new_line () = Str "\n"
+  let new_line = Str "\n"
   let str_cat l = cat (Ls.map str l)
   let empty = Empty
 
