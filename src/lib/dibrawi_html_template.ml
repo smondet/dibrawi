@@ -3,6 +3,19 @@ open String_tree
 let ($) f x = f x
 let opt_str_map f o = Opt.map_default (fun s -> str (f s)) empty o
 
+let opt_fill_css param opt =
+  match opt with
+  | None -> empty
+  | Some value ->
+    str $ sprintf "   %s: %s;" param value
+
+let css_block ?class_opt name l =
+  cat [
+    Opt.map_default (fun s -> str (s ^ " ")) empty class_opt;
+    str name; str " {\n"; cat ~sep:new_line l; str "\n}"]
+
+
+
 module Color = struct
   type color = string
   type theme = (string * color option * color option) list
@@ -20,32 +33,25 @@ module Color = struct
     fg ".dbwmixcode" "#dd0000";
   ]
 
+  let install_theme ?for_class theme =
+    let color x = opt_fill_css "color" x in
+    let background x = opt_fill_css "background-color" x in
+    let block = css_block ?class_opt:for_class in
+    cat ~sep:new_line 
+      (Ls.map theme ~f:(fun (p, f, b) -> block p [ color f; background b]))
+
+
 end
+    
 
 type css_global_parameters = {
   color_theme: Color.theme;
 }
 
-let opt_fill_css param opt =
-  match opt with
-  | None -> empty
-  | Some value ->
-    str $ sprintf "   %s: %s;" param value
-
-let css_block ?class_opt name l =
-  cat [
-    Opt.map_default (fun s -> str (s ^ " ")) empty class_opt;
-    str name; str " {\n"; cat ~sep:new_line l; str "\n}"]
-    
-
-let set_colors ?for_class ?(overwrite_color_theme:Color.theme option) params =
+let install_color_theme
+    ?for_class ?(overwrite_color_theme:Color.theme option) params =
   let theme = Opt.default params.color_theme overwrite_color_theme in
-  let color x = opt_fill_css "color" x in
-  let background x = opt_fill_css "background-color" x in
-  let block = css_block ?class_opt:for_class in
-  cat ~sep:new_line 
-    (Ls.map theme ~f:(fun (p, f, b) -> block p [ color f; background b]))
-
+  Color.install_theme ?for_class theme
 
 let css ?(color_theme=Color.empty_theme) l =
   let params = {
@@ -152,14 +158,14 @@ let _test () =
   let tmplb = 
     make ()
       ~css:(css [
-         set_colors ~for_class:".the_class";
+         install_color_theme ~for_class:".the_class";
       ])
       ~body:(body `simple)
   in
   let tmplc = 
     make ()
       ~css:(css ~color_theme:Color.dummy_theme [
-         set_colors;
+        install_color_theme;
       ])
       ~body:(body (`three_columns (fun _ -> "<!-- Right Side Insertion -->")))
   in
