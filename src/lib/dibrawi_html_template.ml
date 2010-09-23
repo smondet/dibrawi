@@ -42,6 +42,50 @@ module Color = struct
 
 
 end
+
+
+module Font = struct
+
+  type spec = {
+    family: string option;
+    align: string option;
+    size: string option;
+    variant: string option;
+    style: string option;
+  }
+  type theme = (string * spec) list
+
+  let spec ?family ?align ?size ?variant ?style () = {
+    family = family; align = align; size = size; variant = variant; style = style;
+  }
+
+  let associate what spec = (what, spec)
+
+  let specify  ?family ?align ?size ?variant ?style what =
+    associate what (spec  ?family ?align ?size ?variant ?style ())
+
+  let empty_theme = []
+  let dummy_theme = [
+    specify "h1" ~variant:"small-caps" ~size:"250%";
+    specify "body" ~align:"justify";
+    specify ".emph" ~style:"italic";
+  ]
+
+  let install_theme ?for_class theme =
+    let block = css_block ?class_opt:for_class in
+    cat ~sep:new_line 
+      (Ls.map theme ~f:(fun (w, s) -> block w [
+        opt_fill_css "font-family" s.family;
+        opt_fill_css "text-align" s.align;
+        opt_fill_css "font-size" s.size;
+        opt_fill_css "font-variant" s.variant;
+        opt_fill_css "font-style" s.style;
+      ]))
+
+
+end
+
+
     
 
 type css_global_parameters = {
@@ -53,14 +97,18 @@ let install_color_theme
   let theme = Opt.default params.color_theme overwrite_color_theme in
   Color.install_theme ?for_class theme
 
+let install_font_theme ?for_class theme params =
+  Font.install_theme ?for_class theme
+
 let css ?(color_theme=Color.empty_theme) l =
   let params = {
     color_theme = color_theme;
   } in
+  let sep = new_line in
   let tree =
-    cat ~sep:(str "\n") [
+    cat ~sep [
       str "<style type=\"text/css\">";
-      cat (Ls.map ~f:(fun f -> f params) l);
+      cat ~sep (Ls.map ~f:(fun f -> f params) l);
       str "</style>";
     ] in
   `inline tree
@@ -166,6 +214,7 @@ let _test () =
     make ()
       ~css:(css ~color_theme:Color.dummy_theme [
         install_color_theme;
+        install_font_theme Font.dummy_theme;
       ])
       ~body:(body (`three_columns (fun _ -> "<!-- Right Side Insertion -->")))
   in
