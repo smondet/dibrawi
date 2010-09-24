@@ -25,11 +25,11 @@ module Color = struct
 
   let empty_theme:theme = []
   let dummy_theme:theme = [
-    color "body"     ~fg:"FG" ~bg:"BG";
-    color "a:link"   ~fg:"FGa" ~bg:"BGa";
-    color "a:link"   ~fg:"FGa" ~bg:"BGa";
-    color "a:hover"  ~fg:"FGa" ~bg:"BGa"; 
-    color "tt,pre,code"  ~fg:"FGcode" ;
+    color "body"     ~fg:"#113311" ~bg:"#ccccff";
+    color "a:link"    ~fg:"#000044";
+    color "a:visited" ~fg:"#440000";
+    color "a:hover"  ~fg:"#00eeee" ~bg:"#0000ee"; 
+    color "tt,pre,code"  ~fg:"#331133";
     fg ".dbwmixcode" "#dd0000";
   ]
 
@@ -69,8 +69,9 @@ module Font = struct
   let empty_theme = []
   let dummy_theme = [
     specify "h1" ~variant:"small-caps" ~size:"250%";
-    specify "body" ~align:"justify";
+    specify "body" ~align:"justify" ~size:"80%";
     specify ".emph" ~style:"italic";
+    specify "a" ~decoration:"underline thin";
   ]
 
   let install_theme ?for_class theme =
