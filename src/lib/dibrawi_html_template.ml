@@ -252,6 +252,54 @@ let code_blocks ?(with_border=`dashed) params =
     str "}";
   ]
 
+let layout kind params =
+  match kind with
+  | `simple -> str "body {margin-left: 10%; max-width: 45em;}"
+  | `three_columns width ->
+    let on_the_left, on_the_right, in_the_middle =
+      let pad = 0.9 in
+      let margin = 0.4 in
+      let l = 
+        sprintf "  left:  %f%%; width: %f%%; padding: %f%%;" margin width pad in
+      let r =
+        sprintf "  right: %f%%; width: %f%%; padding: %f%%;" margin width pad in
+      let m = 
+        sprintf "  left: %f%%; right: %f%%; padding: %f%%;"
+          (margin +. pad +. width +. pad +. margin +. margin)
+          (margin +. pad +. width +. pad +. margin +. margin)
+          pad in
+      (str l, str r, str m) in
+    let frame_color = (* TODO *) "#999" in
+    let std_frame = str $ sprintf "  border: %s ridge 3px;" frame_color in
+    cat ~sep:new_line [
+      str "div.leftside {";
+      on_the_left;
+      std_frame;
+      str "    top: 2px;";
+      str "    position:fixed;";
+      str "    overflow: auto;";
+      str "    bottom: 2px;";
+      str "}";
+      str "div.rightside {";
+      on_the_right;
+      std_frame;
+      str "    top: 2px;";
+      str "    position:fixed;";
+      str "    overflow: auto;";
+      str "    bottom: 2px;";
+      str "}";
+      str "div.content {";
+      in_the_middle;
+      std_frame;
+      str "    top: 2px;";
+      str "    position: absolute;";
+      str "    text-align: justify;";
+      str "}";
+    ]
+
+
+
+
 
 let css ?(color_theme=Color.empty_theme) ?raw l =
   let params = {
