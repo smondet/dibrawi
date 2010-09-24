@@ -140,7 +140,7 @@ let blockquote ?(style=`left_bar "black") params =
       }" c
 
 
-let css ?(color_theme=Color.empty_theme) l =
+let css ?(color_theme=Color.empty_theme) ?raw l =
   let params = {
     color_theme = color_theme;
   } in
@@ -149,6 +149,7 @@ let css ?(color_theme=Color.empty_theme) l =
     cat ~sep [
       str "<style type=\"text/css\">";
       cat ~sep (Ls.map ~f:(fun f -> f params) l);
+      Opt.map_default str empty raw;
       str "</style>";
     ] in
   `inline tree
