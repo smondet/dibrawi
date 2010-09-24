@@ -416,6 +416,36 @@ let make ?(css=`none) ?(body:body_style option) () =
   in
   (template_function:html_template)
 
+module Full = struct
+
+  let three_columns_dummy
+      ?(debug=false) 
+      ?(top_right=(fun _ -> "<!-- Right Side Insertion -->")) () =
+    make ()
+      ~css:(css ~color_theme:Color.dummy_theme
+              (*~raw:"body {max-width: 50em}"*)
+              [
+          install_color_theme;
+          install_font_theme Font.dummy_theme;
+          header_block ~frame:"7px";
+          paragraph_style ~separate:"1em" ~debug;
+          enable_scrolling;
+          blockquote ~style:(`left_bar);
+          list_geometry ~style:(`compact "3em") ~debug;
+          dibrawi_cmt;
+          tables_and_figures;
+          footnotes;
+          section_numbers;
+          code_blocks;
+          layout (`three_columns 20.);
+        ])
+      ~body:(body (`three_columns top_right))
+
+
+
+end
+
+
 let _test () =
   let doc (tmpl:html_template) = 
     tmpl ~menu:"The Menu ..." ~from:[ "page.brtx"; "dir"; "dir"]
