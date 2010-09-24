@@ -240,6 +240,17 @@ let section_numbers params =
     \    counter-increment: subsubsection;\n\
     }" 
 
+let code_blocks ?(with_border=`dashed) params =
+  cat ~sep:new_line [
+    str "pre {";
+    begin match with_border with
+    | `no -> empty
+    | `dashed ->
+      str "    border: dashed thin black; padding: 1ex;"
+    end;
+    str "    position: relative; left: 5%; width: 90%; clear: left;";
+    str "}";
+  ]
 
 
 let css ?(color_theme=Color.empty_theme) ?raw l =
