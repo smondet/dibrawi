@@ -52,17 +52,19 @@ module Font = struct
     size: string option;
     variant: string option;
     style: string option;
+    decoration: string option;
   }
   type theme = (string * spec) list
 
-  let spec ?family ?align ?size ?variant ?style () = {
-    family = family; align = align; size = size; variant = variant; style = style;
+  let spec ?family ?align ?size ?variant ?style ?decoration () = {
+    family = family; align = align; size = size; variant = variant;
+    style = style; decoration = decoration;
   }
 
   let associate what spec = (what, spec)
 
-  let specify  ?family ?align ?size ?variant ?style what =
-    associate what (spec  ?family ?align ?size ?variant ?style ())
+  let specify  ?family ?align ?size ?variant ?style ?decoration what =
+    associate what (spec  ?family ?align ?size ?variant ?style ?decoration ())
 
   let empty_theme = []
   let dummy_theme = [
@@ -80,6 +82,7 @@ module Font = struct
         opt_fill_css "font-size" s.size;
         opt_fill_css "font-variant" s.variant;
         opt_fill_css "font-style" s.style;
+        opt_fill_css "text-decoration" s.decoration;
       ]))
 
 
