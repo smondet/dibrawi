@@ -31,6 +31,7 @@ module Color = struct
     color "a:hover"  ~fg:"#00eeee" ~bg:"#0000ee"; 
     color "tt,pre,code"  ~fg:"#331133";
     fg ".dbwmixcode" "#dd0000";
+    fg "div.figure:after, caption.tablefigure:after" "#00cc00"
   ]
 
   let install_theme ?for_class theme =
@@ -109,7 +110,7 @@ let paragraph_style ?(debug=false) ?(separate="0.5em") params =
     str "div.p {";
     str "    padding-bottom: 0em;";
     if debug then 
-      str "/* The debug border: */ border: thin silver solid;"
+      str "/* The debug border: */ border: thin #0e0 solid;"
     else 
       empty;
     str "}";
@@ -138,6 +139,106 @@ let blockquote ?(style=`left_bar "black") params =
       \    border-left: 2px solid %s;\n\
       \    padding-left: 1em;\n\
       }" c
+
+let list_geometry ?(style=`compact "2em") ?(debug=false) params =
+  match style with
+  | `compact indent ->
+    str $ sprintf 
+      "ul, ol {\n\
+      \    padding-top: 0em;\n\
+      \    padding-bottom: 0em;\n\
+      \    padding-left:  %s;\n\
+      \    margin-top: 0em;\n\
+      \    margin-bottom: 0em;\n\
+      %s\
+      }" indent
+      (if debug then "/* The debug border: */ border: thin #FF0000 solid;\n"
+       else "")
+
+let dibrawi_cmt params =
+  str
+    ".dibrawicomment:before { content:  \"[\"; }\n\
+    .dibrawicomment:after { content: \"]\"; }\n\
+    .dibrawicomment {\n\
+    \    background-color: yellow;\n\
+    \    color: red;\n\
+    }"
+
+let tables_and_figures params =
+  str 
+"table.tablefigure {\n\
+    margin-right:auto;\n\
+    margin-left: auto;\n\
+    border-collapse: collapse;\n\
+    min-width: 80%;\n\
+    margin-bottom: 1em;\n\
+}\n\
+caption.tablefigure {\n\
+    caption-side:bottom;\n\
+}\n\
+div.figure:after, caption.tablefigure:after { content: \" [\" attr(id) \"]\"; }\n\
+td, th {\n\
+    padding: 0.4em;\n\
+}\n\
+img {\n\
+    border: none;\n\
+    padding-bottom: 0.5em;\n\
+}div.figure, div.tablefigure {\n\
+    text-align: center;\n\
+    font-size:90%;\n\
+    border: thin #959595 solid;\n\
+    padding: 1ex;\n\
+    margin: 1em;\n\
+    width: 90%;\n\
+    margin-left: 5%;\n\
+    margin-right: 0em;\n\
+\n\
+}"
+
+let footnotes params =
+  str 
+"small.notebegin { counter-increment: footnote; }\n\
+small.noteend:before {  content: counter(footnote) }\n\
+small.note:before {  content: counter(footnote) \": \" }\n\
+body { counter-reset: footnote; }\n\
+\n\
+small.note {\n\
+    font-size: 70%;\n\
+    clear: right;\n\
+    width: 40%;\n\
+    border: thin #959595 solid;\n\
+    float: right;\n\
+    margin: 0.5em;\n\
+    margin-right: 0em;\n\
+    padding: 0.5em;\n\
+}"
+
+let section_numbers params =
+  str
+"h1 { \n\
+    counter-reset: section;\n\
+    counter-reset:footnote;\n\
+}\n\
+h2:before { content: counter(section) \". \"; }\n\
+h2 {\n\
+    counter-reset: subsubsection;\n\
+    counter-increment: section;\n\
+    counter-reset: subsection;\n\
+}\n\
+h3:before {\n\
+    content: counter(section) \".\" counter(subsection) \". \" ;\n\
+}\n\
+h3 {\n\
+    counter-increment: subsection;\n\
+    counter-reset: subsubsection;\n\
+}\n\
+h4:before {\n\
+    content: counter(section) \".\" counter(subsection) \".\" counter(subsubsection) \". \";\n\
+}\n\
+h4 {\n\
+    counter-increment: subsubsection;\n\
+}"
+
 
 
 let css ?(color_theme=Color.empty_theme) ?raw l =
