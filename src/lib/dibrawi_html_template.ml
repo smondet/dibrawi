@@ -112,6 +112,16 @@ let paragraph_style ?(debug=false) ?(separate="0.5em") params =
     str $ sprintf "div.p + div.p { padding-top: %s; }" separate;
   ]
 
+let header_block ?(frame=("black", "5px")) params =
+  let frame_color, frame_line_size = frame in
+  str $ sprintf
+    "div.header {\n\
+    \    text-align: center;\n\
+    \    border:  %s solid %s;\n\
+    \    padding-top:    2.1em;\n\
+    \    padding-bottom: 2.05em;\n\
+    \    margin-bottom: 3em;\n\
+    }" frame_color frame_line_size
 
 
 let css ?(color_theme=Color.empty_theme) l =
