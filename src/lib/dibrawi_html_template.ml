@@ -100,6 +100,20 @@ let install_color_theme
 let install_font_theme ?for_class theme params =
   Font.install_theme ?for_class theme
 
+let paragraph_style ?(debug=false) ?(separate="0.5em") params =
+  cat ~sep:new_line [
+    str "div.p {";
+    str "    padding-bottom: 0em;";
+    if debug then 
+      str "/* The debug border: */ border: thin silver solid;"
+    else 
+      empty;
+    str "}";
+    str $ sprintf "div.p + div.p { padding-top: %s; }" separate;
+  ]
+
+
+
 let css ?(color_theme=Color.empty_theme) l =
   let params = {
     color_theme = color_theme;
@@ -215,6 +229,7 @@ let _test () =
       ~css:(css ~color_theme:Color.dummy_theme [
         install_color_theme;
         install_font_theme Font.dummy_theme;
+        paragraph_style ~separate:"1em" ~debug:true;
       ])
       ~body:(body (`three_columns (fun _ -> "<!-- Right Side Insertion -->")))
   in
