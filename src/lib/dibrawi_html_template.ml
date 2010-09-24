@@ -127,6 +127,18 @@ let header_block ?(frame=("black", "5px")) params =
     \    margin-bottom: 3em;\n\
     }" frame_color frame_line_size
 
+let enable_scrolling params =
+  str "body {overflow: scroll;}"
+
+let blockquote ?(style=`left_bar "black") params =
+  match style with
+  | `left_bar c ->
+    str $ sprintf 
+      "blockquote {\n\
+      \    border-left: 2px solid %s;\n\
+      \    padding-left: 1em;\n\
+      }" c
+
 
 let css ?(color_theme=Color.empty_theme) l =
   let params = {
@@ -244,6 +256,7 @@ let _test () =
         install_color_theme;
         install_font_theme Font.dummy_theme;
         paragraph_style ~separate:"1em" ~debug:true;
+        enable_scrolling;
       ])
       ~body:(body (`three_columns (fun _ -> "<!-- Right Side Insertion -->")))
   in
@@ -251,4 +264,5 @@ let _test () =
   print $ doc tmpla; next ();
   print $ doc tmplb; next ();
   print $ doc tmplc; next ();
+  Io.with_file_out "uuuu.html" (fun out -> print ~out $ doc tmplc);
   ()
