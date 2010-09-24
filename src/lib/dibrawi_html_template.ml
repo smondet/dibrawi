@@ -18,29 +18,43 @@ let css_block ?class_opt name l =
 
 module Color = struct
   type color = string
-  type theme = (string * color option * color option) list
+  type theme = {
+    text: (string * color option * color option) list;
+    borders: (string * color) list;
+  }
 
   let color ?bg ?fg who = (who, fg, bg)
-  let fg who c = (who, Some c, None)  
+  let fg who c = (who, Some c, None)
+  let theme ?(text=[]) ?(borders=[]) () =
+    {text = text; borders = borders;}
 
-  let empty_theme:theme = []
-  let dummy_theme:theme = [
-    color "body"     ~fg:"#113311" ~bg:"#ccccff";
-    color "a:link"    ~fg:"#000044";
-    color "a:visited" ~fg:"#440000";
-    color "a:hover"  ~fg:"#00eeee" ~bg:"#0000ee"; 
-    color "tt,pre,code"  ~fg:"#331133";
-    fg ".dbwmixcode" "#dd0000";
-    fg "div.figure:after, caption.tablefigure:after" "#00cc00"
-  ]
+  let empty_theme = theme ()
+  let dummy_theme = 
+    theme ()
+      ~text:[
+        color "body"     ~fg:"#113311" ~bg:"#ccccff";
+        color "a:link"    ~fg:"#000044";
+        color "a:visited" ~fg:"#440000";
+        color "a:hover"  ~fg:"#00eeee" ~bg:"#0000ee"; 
+        color "tt,pre,code"  ~fg:"#331133";
+        fg ".dbwmixcode" "#dd0000";
+        fg "div.figure:after, caption.tablefigure:after" "#00cc00"
+      ]
+      ~borders:[
+        ("stdframe", "#0000bb");
+        ("headerframe", "#900");
+        ("blockquotebar", "#00c")
+      ]
 
   let install_theme ?for_class theme =
     let color x = opt_fill_css "color" x in
     let background x = opt_fill_css "background-color" x in
     let block = css_block ?class_opt:for_class in
     cat ~sep:new_line 
-      (Ls.map theme ~f:(fun (p, f, b) -> block p [ color f; background b]))
+      (Ls.map theme.text ~f:(fun (p, f, b) -> block p [ color f; background b]))
 
+  let border theme name =
+    Opt.map snd (Ls.find_opt theme.borders ~f:(fun (n, c) -> n = name))
 
 end
 
@@ -117,8 +131,9 @@ let paragraph_style ?(debug=false) ?(separate="0.5em") params =
     str $ sprintf "div.p + div.p { padding-top: %s; }" separate;
   ]
 
-let header_block ?(frame=("black", "5px")) params =
-  let frame_color, frame_line_size = frame in
+let header_block ?(frame="5px") params =
+  let frame_color = 
+    Opt.default "black" (Color.border params.color_theme "headerframe") in
   str $ sprintf
     "div.header {\n\
     \    text-align: center;\n\
@@ -126,19 +141,19 @@ let header_block ?(frame=("black", "5px")) params =
     \    padding-top:    2.1em;\n\
     \    padding-bottom: 2.05em;\n\
     \    margin-bottom: 3em;\n\
-    }" frame_color frame_line_size
+    }" frame_color frame
 
 let enable_scrolling params =
   str "body {overflow: scroll;}"
 
-let blockquote ?(style=`left_bar "black") params =
+let blockquote ?(style=`left_bar) params =
   match style with
-  | `left_bar c ->
+  | `left_bar ->
     str $ sprintf 
       "blockquote {\n\
       \    border-left: 2px solid %s;\n\
       \    padding-left: 1em;\n\
-      }" c
+      }" (Opt.default "grey" (Color.border params.color_theme "blockquotebar"))
 
 let list_geometry ?(style=`compact "2em") ?(debug=false) params =
   match style with
@@ -269,7 +284,8 @@ let layout kind params =
           (margin +. pad +. width +. pad +. margin +. margin)
           pad in
       (str l, str r, str m) in
-    let frame_color = (* TODO *) "#999" in
+    let frame_color = 
+      Opt.default "#999" (Color.border params.color_theme "stdframe") in
     let std_frame = str $ sprintf "  border: %s ridge 3px;" frame_color in
     cat ~sep:new_line [
       str "div.leftside {";
