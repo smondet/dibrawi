@@ -323,6 +323,12 @@ let section_numbers params =
     \    counter-increment: subsubsection;\n\
     }" 
 
+let section_decoration params =
+  str $ sprintf
+    "h2 { border: %s solid 2px; padding: 0.2em; }\n\
+    h3 { text-decoration: underline;}"
+    (Opt.default "black" (Color.border params.color_theme "h2border"))
+
 let code_blocks ?(with_border=`dashed) params =
   cat ~sep:new_line [
     str "pre {";
@@ -529,6 +535,7 @@ module Full = struct
         tables_and_figures;
         footnotes;
         section_numbers;
+        section_decoration;
         code_blocks ~with_border:`no;
         layout (`three_columns 18.);
       ])
