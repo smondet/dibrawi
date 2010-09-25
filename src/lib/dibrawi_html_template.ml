@@ -25,6 +25,7 @@ module Color = struct
 
   let color ?bg ?fg who = (who, fg, bg)
   let fg who c = (who, Some c, None)
+  let bg who c = (who, None, Some c)
   let theme ?(text=[]) ?(borders=[]) () =
     {text = text; borders = borders;}
 
@@ -55,6 +56,56 @@ module Color = struct
 
   let border theme name =
     Opt.map snd (Ls.find_opt theme.borders ~f:(fun (n, c) -> n = name))
+
+  let greenish_main_theme, greenish_secondary_theme =
+    let whitish = "#f8f8f8" in
+    let blackish = "#070707" in
+    let light_blue = "#66BBF4" in
+    let faded_blue = "#6A96B3" in
+    let light_green = "#358C26" in
+    let middle_green = "#003702"  in
+    let dark_green = "#10360D" in
+    let highlight_orange = "#D5A96B" in
+    let highlight_slightly = "#ddd" in
+    let brownish = "#6F3F27" in
+    let main = 
+      theme ()
+        ~text:[
+          color "body" ~fg:blackish ~bg:whitish;
+          color "" ~fg:blackish ~bg:whitish;
+          color "a:link"    ~fg:light_green;
+          color "a:visited" ~fg:dark_green;
+          color "a:hover"  ~bg:highlight_orange; 
+          color "tt,pre,code"  ~fg:brownish;
+          bg ".dbwmixcode" highlight_slightly;
+          fg "div.figure:after, caption.tablefigure:after" light_green;
+
+        ]
+        ~borders:[
+          ("stdframe",      middle_green);
+          ("headerframe",   middle_green);
+          ("blockquotebar", middle_green)
+        ]
+    in
+    let second =
+      theme ()
+        ~text:[
+          color "body" ~fg:whitish ~bg:middle_green;
+          color "" ~fg:whitish ~bg:middle_green;
+          color "a:link"    ~fg:light_blue;
+          color "a:visited" ~fg:faded_blue;
+          color "a:hover"   ~bg:highlight_slightly; 
+          color "tt,pre,code"  ~fg:brownish;
+          bg ".dbwmixcode" highlight_slightly;
+          fg "div.figure:after, caption.tablefigure:after" light_blue;
+
+        ]
+        ~borders:[
+        ]
+    in
+    (main, second)
+
+
 
 end
 
@@ -101,6 +152,23 @@ module Font = struct
         opt_fill_css "text-decoration" s.decoration;
       ]))
 
+  let standardish_theme size family align = [
+    specify "body" ~size ~family ~align;
+    specify "" ~size ~family ~align;
+    specify "div.header" ~align:"center";
+    specify "h1" ~size:"200%" ~variant:"small-caps";
+    specify "div.authors" ~size:"110%";
+    specify "div.subtitle" ~size:"110%" ~style:"italic";
+    specify "h2" ~size:"180%";
+    specify "h3" ~size:"150%";
+    specify "h4" ~size:"130%";
+    specify "h5" ~size:"108%";
+    specify "a" ~decoration:"underline thin";
+    specify "tt,code,pre" ~family:"monospace";
+    specify "div.figure,div.tablefigure" ~size:"90%";
+  ]
+
+
 
 end
 
@@ -112,8 +180,8 @@ type css_global_parameters = {
 }
 
 let install_color_theme
-    ?for_class ?(overwrite_color_theme:Color.theme option) params =
-  let theme = Opt.default params.color_theme overwrite_color_theme in
+    ?for_class ?(theme:Color.theme option) params =
+  let theme = Opt.default params.color_theme theme in
   Color.install_theme ?for_class theme
 
 let install_font_theme ?for_class theme params =
@@ -441,6 +509,30 @@ module Full = struct
         ])
       ~body:(body (`three_columns top_right))
 
+  let three_columns_greenish
+      ?(debug=false) 
+      ?(top_right=(fun _ -> "<!-- Right Side Insertion -->")) () =
+    make ()
+      ~css:(css ~color_theme:Color.greenish_secondary_theme [
+        install_color_theme ~for_class:".content" ~theme:Color.greenish_main_theme;
+        install_color_theme;
+        install_font_theme
+          (Font.standardish_theme "70%" "sans-serif" "none");
+        install_font_theme ~for_class:".content"
+          (Font.standardish_theme "120%" "serif" "justify");
+        header_block ~frame:"7px";
+        paragraph_style ~separate:"1em" ~debug;
+        enable_scrolling;
+        blockquote ~style:(`left_bar);
+        list_geometry ~style:(`compact "3em") ~debug;
+        dibrawi_cmt;
+        tables_and_figures;
+        footnotes;
+        section_numbers;
+        code_blocks ~with_border:`no;
+        layout (`three_columns 18.);
+      ])
+      ~body:(body (`three_columns top_right))
 
 
 end
