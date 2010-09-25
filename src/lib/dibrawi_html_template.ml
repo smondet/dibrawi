@@ -44,7 +44,8 @@ module Color = struct
       ~borders:[
         ("stdframe", "#0000bb");
         ("headerframe", "#900");
-        ("blockquotebar", "#00c")
+        ("blockquotebar", "#00c");
+        ("h2border", "#0f0");
       ]
 
   let install_theme ?for_class theme =
@@ -82,9 +83,10 @@ module Color = struct
 
         ]
         ~borders:[
-          ("stdframe",      middle_green);
+          ("stdframe",      faded_blue);
           ("headerframe",   middle_green);
-          ("blockquotebar", middle_green)
+          ("blockquotebar", middle_green);
+          ("h2border",      middle_green);
         ]
     in
     let second =
@@ -519,9 +521,9 @@ module Full = struct
       ?(debug=false) 
       ?(top_right=(fun _ -> "<!-- Right Side Insertion -->")) () =
     make ()
-      ~css:(css ~color_theme:Color.greenish_secondary_theme [
+      ~css:(css ~color_theme:Color.greenish_main_theme [
         install_color_theme ~for_class:".content" ~theme:Color.greenish_main_theme;
-        install_color_theme;
+        install_color_theme ~theme:Color.greenish_secondary_theme;
         install_font_theme
           (Font.standardish_theme "70%" "sans-serif" "none");
         install_font_theme ~for_class:".content"
