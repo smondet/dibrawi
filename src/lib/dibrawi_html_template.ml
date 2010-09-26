@@ -693,6 +693,32 @@ module Full = struct
       ])
       ~body:(body (`with_sidepane insertion))
 
+  let with_sidepane_redish 
+      ?(add_section_numbers=true) ?(side=`right)
+      ?(debug=false) 
+      ?(insertion=(fun _ -> "<!-- Side Insertion -->")) () =
+    make ()
+      ~css:(css ~color_theme:Color.sober_redish_theme [
+        install_color_theme;
+        install_font_theme
+          (Font.standardish_theme "70%" "sans-serif" "none");
+        install_font_theme ~for_class:".content"
+          (Font.standardish_theme "120%" "serif" "justify");
+        header_block ~frame:"7px";
+        paragraph_style ~separate:"0.5em" ~debug;
+        enable_scrolling;
+        blockquote ~style:(`left_bar);
+        list_geometry ~style:(`compact "1.8em") ~debug;
+        dibrawi_cmt;
+        tables_and_figures;
+        footnotes;
+        if add_section_numbers then section_numbers else (fun _ -> empty);
+        section_decoration;
+        code_blocks ~with_border:`no;
+        layout (`with_sidepane (side, 30.));
+      ])
+      ~body:(body (`with_sidepane insertion))
+
 end
 
 module File = struct
