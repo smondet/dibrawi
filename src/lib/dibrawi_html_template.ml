@@ -345,7 +345,8 @@ let code_blocks ?(with_border=`dashed) params =
 
 let layout kind params =
   match kind with
-  | `simple -> str "body {margin-left: 10%; max-width: 45em;}"
+  | `simple (left, w) ->
+    str $ sprintf "body {margin-left: %s; max-width: %s;}" left w
   | `three_columns width ->
     let on_the_left, on_the_right, in_the_middle =
       let pad = 0.9 in
@@ -424,12 +425,17 @@ let body style params =
   let sep = new_line in
   fun ?menu  ?toc ?title ?footer ?from content ->
     match style with
-    | `raw | `simple ->
+    | `raw  ->
       cat ~sep [
         str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
         opt_str_map (sprintf "<div class=\"dibrawititle\">%s</div>") title;
         opt_str_map (sprintf "<div class=\"dibrawimenu\">%s</div>") menu;
         opt_str_map (sprintf "<div class=\"dibrawitoc\">%s</div>") toc;
+        opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
+      ]
+    | `simple ->
+      cat ~sep [
+        str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
         opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
       ]
     | `three_columns top_right ->
@@ -543,12 +549,14 @@ module Full = struct
       ~body:(body (`three_columns top_right))
 
   let simple_page_greenish
+      ?(base_font_size="90%") ?(text_width="40em") ?(left_margin="4em")
       ?(debug=false) () =
     make ()
       ~css:(css ~color_theme:Color.greenish_main_theme [
         install_color_theme ~theme:Color.greenish_main_theme;
-        install_font_theme (Font.standardish_theme "90%" "serif" "justify");
-        header_block ~frame:"1px";
+        install_font_theme 
+          (Font.standardish_theme base_font_size "serif" "justify");
+        header_block ~frame:"3px";
         paragraph_style ~separate:"0.5em" ~debug;
         enable_scrolling;
         blockquote ~style:(`left_bar);
@@ -558,7 +566,7 @@ module Full = struct
         footnotes;
         section_numbers;
         code_blocks ~with_border:`no;
-        layout (`simple);
+        layout (`simple (left_margin, text_width));
       ])
       ~body:(body (`simple))
 
