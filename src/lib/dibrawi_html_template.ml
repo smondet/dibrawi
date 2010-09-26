@@ -107,7 +107,35 @@ module Color = struct
     in
     (main, second)
 
+  let sober_redish_theme =
+    let whitish = "#f8f8f8" in
+    let blackish = "#070707" in
+    let light_red = "#D62111" in
+    let dark_red = "#8F1310" in
+    let highlight_green = "#44E157" in
+    let highlight_slightly = "#ddd" in
+    let dark_green = "#135510" in
+    let main = 
+      theme ()
+        ~text:[
+          color "body" ~fg:blackish ~bg:whitish;
+          color "" ~fg:blackish ~bg:whitish;
+          color "a:link"    ~fg:light_red;
+          color "a:visited" ~fg:dark_red;
+          color "a:hover"  ~bg:highlight_green; 
+          color "tt,pre,code"  ~fg:dark_green;
+          bg ".dbwmixcode" highlight_slightly;
+          fg "div.figure:after, caption.tablefigure:after" light_red;
 
+        ]
+        ~borders:[
+          ("stdframe",      blackish);
+          ("headerframe",   dark_red);
+          ("blockquotebar", dark_red);
+          ("h2border",      dark_red);
+        ]
+    in
+    main
 
 end
 
