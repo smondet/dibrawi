@@ -40,7 +40,7 @@ module Io = struct
     let i = open_in filename in
     try let r = f i in close_in i; r with e -> close_in i; raise e
 
-  let with_new_tmp ?(suffix=".tmp") ?(prefix="promiwag_") f =
+  let with_new_tmp ?(suffix=".tmp") ?(prefix="dibrawi_") f =
     let name, o = Filename.open_temp_file prefix suffix in
     let o = output_channel o in
     try let r = f o name in close_out o; r with e -> close_out o; raise e

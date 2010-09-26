@@ -14,28 +14,14 @@ let mkdir_p ?(perm=0o700) dir =
     then p_mkdir p_name;
     mkdir_safe dir perm in
   p_mkdir dir 
-
-let with_new_out filename f = 
-  let o = open_out filename in
-  try let r = f o in close_out o; r with e -> close_out o; raise e
-
-let with_file_in filename f = 
-  let i = open_in filename in
-  try let r = f i in close_in i; r with e -> close_in i; raise e
-
-let with_new_tmp ?(suffix=".tmp") ?(prefix="dbw_") f =
-  let name, o = Filename.open_temp_file prefix suffix in
-  try let r = f o name in close_out o; r with e -> close_out o; raise e
-
     
 let copy src dest =
-  with_file_in src 
+  Io.with_file_in src 
     (fun i ->
-      with_new_out dest
+      Io.with_file_out dest
         (fun o ->
-          try while true do output_char o (input_char i) done;
+          try while true do Io.write_byte o (Io.read_byte i) done;
           with End_of_file -> ()))
-
 
 let read_command_output f s =
   let ic = Unix.open_process_in s in

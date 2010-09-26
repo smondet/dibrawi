@@ -44,11 +44,11 @@ end
 let output_buffers
     ~(templ_fun:string -> string) file_name content_buffer err_buffer =
   Dbw_sys.mkdir_p (Filename.dirname file_name);
-  Dbw_sys.with_new_out file_name
+  Io.with_file_out file_name
     (fun o ->
        let content_content = templ_fun (Buffer.contents content_buffer) in
-       fprintf o "%s" content_content;
-       fprintf o "%!";);
+       Io.printf o "%s" content_content;
+       Io.printf o "%!";);
   let s = Buffer.contents err_buffer in
   if s <$> "" then (eprintf "Errors for %s:\n%s\n" file_name s;false)
   else true
