@@ -437,7 +437,7 @@ let body style params =
         str "<div class=\"leftside\">";
         opt_str_map (sprintf "<b>Page:</b> %s <br/>") title;
         opt_str_map 
-          (sprintf "<hr/><b>Menu: </b><ul class=\"beginmenu\">%s</ul>")
+          (sprintf "<hr/><b>Menu: </b>%s")
           menu;
         str "</div>";
         str "<div class=\"rightside\">";
@@ -529,10 +529,10 @@ module Full = struct
         install_font_theme ~for_class:".content"
           (Font.standardish_theme "120%" "serif" "justify");
         header_block ~frame:"7px";
-        paragraph_style ~separate:"1em" ~debug;
+        paragraph_style ~separate:"0.5em" ~debug;
         enable_scrolling;
         blockquote ~style:(`left_bar);
-        list_geometry ~style:(`compact "3em") ~debug;
+        list_geometry ~style:(`compact "1.8em") ~debug;
         dibrawi_cmt;
         tables_and_figures;
         footnotes;
