@@ -66,7 +66,7 @@ module Color = struct
     let light_green = "#358C26" in
     let middle_green = "#003702"  in
     let dark_green = "#10360D" in
-    let highlight_orange = "#D5A96B" in
+    let highlight_orange = "#FBCD6E" in
     let highlight_slightly = "#ddd" in
     let brownish = "#6F3F27" in
     let main = 
@@ -96,7 +96,7 @@ module Color = struct
           color "" ~fg:whitish ~bg:middle_green;
           color "a:link"    ~fg:light_blue;
           color "a:visited" ~fg:faded_blue;
-          color "a:hover"   ~bg:highlight_slightly; 
+          color "a:hover"   ~bg:light_green; 
           color "tt,pre,code"  ~fg:brownish;
           bg ".dbwmixcode" highlight_slightly;
           fg "div.figure:after, caption.tablefigure:after" light_blue;
