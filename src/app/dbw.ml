@@ -55,7 +55,7 @@ let output_buffers
 
 open Dibrawi
 
-let transform ?html_template ?persistence_file data_root build =
+let transform ?(html_template=`none) ?persistence_file data_root build =
 
   let the_source_tree = Data_source.get_file_tree ~data_root () in
   let todo_list = Todo_list.empty () in
@@ -104,8 +104,12 @@ let transform ?html_template ?persistence_file data_root build =
   let html_templ_fun =
     let module Templating = Dibrawi.HTML.Template in
     match html_template with
-    | Some h -> Templating.File.load_html (Data_source.get_file h)
-    | None -> Templating.html_default
+    | `file f -> Templating.File.load_html (Data_source.get_file f)
+    | `named "three_columns_greenish" ->
+      Dibrawi.HTML.Template.Full.three_columns_greenish ()
+    | `named s ->
+      failwith (sprintf "Template \"%s\" not found." s)
+    | `none -> Templating.html_default
   in
 
   let str_trg_ctt_biblio, str_trg_ctt_sebib_list = 
@@ -313,7 +317,7 @@ let transform ?html_template ?persistence_file data_root build =
 
 let () =
   let print_version = ref false in
-  let html_tmpl = ref "" in
+  let html_tmpl = ref `none in
   let persistence = ref "" in
 
   let arg_cmd ~doc key spec = (key, spec, doc) in
@@ -325,8 +329,12 @@ let () =
       (Arg.Set print_version);
     arg_cmd
       ~doc:"<path>\n\tSet an HTML template file"
-      "-html-template"
-      (Arg.Set_string html_tmpl);
+      "-template-file"
+      (Arg.String (fun s -> html_tmpl := `file s));
+    arg_cmd
+      ~doc:"<name>\n\tSet an HTML `internal' template"
+      "-named-template"
+      (Arg.String (fun s -> html_tmpl := `named s));
     arg_cmd
       ~doc:"<path>\n\tUse a file for build persistence."
       "-persist-with"
@@ -349,9 +357,7 @@ let () =
     | [i; o] ->
         let persistence_file =
           if !persistence =$= "" then None else Some !persistence in
-        let html_template =
-          if !html_tmpl =$= "" then None else Some !html_tmpl in
-        transform ?html_template ?persistence_file i o 
+        transform ~html_template:!html_tmpl ?persistence_file i o 
     | _ -> 
         printf "Wrong number of arguments: %d\n" 
           (Ls.length anonymous_arguments);
