@@ -242,7 +242,7 @@ let header_block ?(frame="5px") params =
     }" frame_color frame
 
 let enable_scrolling params =
-  str "body {overflow: scroll;}"
+  str "body {overflow: auto;}"
 
 let blockquote ?(style=`left_bar) params =
   match style with
