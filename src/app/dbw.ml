@@ -107,6 +107,16 @@ let transform ?(html_template=`none) ?persistence_file data_root build =
     | `file f -> Templating.File.load_html (Data_source.get_file f)
     | `named "three_columns_greenish" ->
       Dibrawi.HTML.Template.Full.three_columns_greenish ()
+    | `named "three_columns_greenish-linked" ->
+      Dibrawi.HTML.Template.Full.three_columns_greenish ()
+        ~top_right:(fun from ->
+          let buf, _ =
+            Brtx_transform.to_html 
+              ~from:(Opt.default ["NONE"] from) 
+              "{link page:/Main|Main}{~}{link #|Top}{~}{link #pagefoot}{br}\n\
+              {link http://bracetax.berlios.de/bracetax_syntax.html|Bracetax Syntax}"
+          in
+          (Buffer.contents buf))
     | `named s ->
       failwith (sprintf "Template \"%s\" not found." s)
     | `none -> Templating.html_default

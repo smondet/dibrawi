@@ -447,6 +447,7 @@ let body style params =
         str "</div>";
         str "<div class=\"content\">";
         str content;
+        str "<div id=\"pagefoot\" />";
         str "</div>";
       ]
 
