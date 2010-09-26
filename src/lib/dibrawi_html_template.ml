@@ -426,10 +426,10 @@ let body style params =
     match style with
     | `raw | `simple ->
       cat ~sep [
+        str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
         opt_str_map (sprintf "<div class=\"dibrawititle\">%s</div>") title;
         opt_str_map (sprintf "<div class=\"dibrawimenu\">%s</div>") menu;
         opt_str_map (sprintf "<div class=\"dibrawitoc\">%s</div>") toc;
-        str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
         opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
       ]
     | `three_columns top_right ->
@@ -499,23 +499,21 @@ module Full = struct
       ?(debug=false) 
       ?(top_right=(fun _ -> "<!-- Right Side Insertion -->")) () =
     make ()
-      ~css:(css ~color_theme:Color.dummy_theme
-              (*~raw:"body {max-width: 50em}"*)
-              [
-          install_color_theme;
-          install_font_theme Font.dummy_theme;
-          header_block ~frame:"7px";
-          paragraph_style ~separate:"1em" ~debug;
-          enable_scrolling;
-          blockquote ~style:(`left_bar);
-          list_geometry ~style:(`compact "3em") ~debug;
-          dibrawi_cmt;
-          tables_and_figures;
-          footnotes;
-          section_numbers;
-          code_blocks;
-          layout (`three_columns 20.);
-        ])
+      ~css:(css ~color_theme:Color.dummy_theme [
+        install_color_theme;
+        install_font_theme Font.dummy_theme;
+        header_block ~frame:"7px";
+        paragraph_style ~separate:"1em" ~debug;
+        enable_scrolling;
+        blockquote ~style:(`left_bar);
+        list_geometry ~style:(`compact "3em") ~debug;
+        dibrawi_cmt;
+        tables_and_figures;
+        footnotes;
+        section_numbers;
+        code_blocks;
+        layout (`three_columns 20.);
+      ])
       ~body:(body (`three_columns top_right))
 
   let three_columns_greenish
@@ -543,6 +541,26 @@ module Full = struct
         layout (`three_columns 18.);
       ])
       ~body:(body (`three_columns top_right))
+
+  let simple_page_greenish
+      ?(debug=false) () =
+    make ()
+      ~css:(css ~color_theme:Color.greenish_main_theme [
+        install_color_theme ~theme:Color.greenish_main_theme;
+        install_font_theme (Font.standardish_theme "90%" "serif" "justify");
+        header_block ~frame:"1px";
+        paragraph_style ~separate:"0.5em" ~debug;
+        enable_scrolling;
+        blockquote ~style:(`left_bar);
+        list_geometry ~style:(`compact "1.8em") ~debug;
+        dibrawi_cmt;
+        tables_and_figures;
+        footnotes;
+        section_numbers;
+        code_blocks ~with_border:`no;
+        layout (`simple);
+      ])
+      ~body:(body (`simple))
 
 
 end
