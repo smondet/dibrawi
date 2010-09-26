@@ -42,13 +42,12 @@ end
 
 
 let output_buffers
-    ~(templ_fun:string -> string) file_name content_buffer err_buffer =
+    ~(output_content:'a Io.output -> unit) file_name err_buffer =
   Dbw_sys.mkdir_p (Filename.dirname file_name);
   Io.with_file_out file_name
     (fun o ->
-       let content_content = templ_fun (Buffer.contents content_buffer) in
-       Io.printf o "%s" content_content;
-       Io.printf o "%!";);
+      output_content o;
+      Io.printf o "%!";);
   let s = Buffer.contents err_buffer in
   if s <$> "" then (eprintf "Errors for %s:\n%s\n" file_name s;false)
   else true
@@ -133,8 +132,12 @@ let transform ?html_template ?persistence_file data_root build =
         Brtx_transform.to_html ~todo_list ~from brtx in
       let is_ok =
         output_buffers
-          ~templ_fun:(html_templ_fun ~from ~menu ~toc ~title:"Bibliography")
-          html html_buffer err_buffer in
+          ~output_content:(fun out ->
+            let whole = 
+              html_templ_fun ~from ~menu ~toc ~title:"Bibliography" 
+                (Buffer.contents html_buffer) in
+            Io.nwrite out whole;)
+          html err_buffer in
       if not is_ok then None else (Some html)
     in
     let initial_content = previous_file_content html in
@@ -169,8 +172,12 @@ let transform ?html_template ?persistence_file data_root build =
         Brtx_transform.to_html ~todo_list ~from brtx in
       let is_ok =
         output_buffers
-          ~templ_fun:(html_templ_fun ~from ~menu ~toc ~title:"Address Book")
-          html html_buffer err_buffer in
+          ~output_content:(fun out ->
+            let whole = 
+              html_templ_fun ~from ~menu ~toc ~title:"Address Book"
+                (Buffer.contents html_buffer) in
+            Io.nwrite out whole;)
+          html err_buffer in
       if not is_ok then None else (Some html)
     in
     let initial_content = previous_file_content html in
@@ -198,8 +205,14 @@ let transform ?html_template ?persistence_file data_root build =
         let html_buffer, err_buffer = 
           Brtx_transform.to_html ~todo_list ~filename:str ~from page in
         let is_ok =
-          output_buffers ~templ_fun:(html_templ_fun ~from ~menu ~toc ~title)
-            filename html_buffer err_buffer in
+        output_buffers
+          ~output_content:(fun out ->
+            let whole = 
+              html_templ_fun ~from ~menu ~toc ~title
+                (Buffer.contents html_buffer) in
+            Io.nwrite out whole;)
+          filename err_buffer in
+
         if not is_ok then None else (Some filename)
       in
       let target_source, content_source = make_target_source str in
