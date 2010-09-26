@@ -620,33 +620,3 @@ let tmpl_html_default =
 let html_default = File.load_html tmpl_html_default
 
 
-
-
-let _test () =
-  let doc (tmpl:html_template) = 
-    tmpl ~menu:"The Menu ..." ~from:[ "page.brtx"; "dir"; "dir"]
-      "The content..." in
-  let tmpla = make ~css:(`link_from_root "fromroot.css") () in
-  let tmplb = 
-    make ()
-      ~css:(css [
-         install_color_theme ~for_class:".the_class";
-      ])
-      ~body:(body `simple)
-  in
-  let tmplc = 
-    make ()
-      ~css:(css ~color_theme:Color.dummy_theme [
-        install_color_theme;
-        install_font_theme Font.dummy_theme;
-        paragraph_style ~separate:"1em" ~debug:true;
-        enable_scrolling;
-      ])
-      ~body:(body (`three_columns (fun _ -> "<!-- Right Side Insertion -->")))
-  in
-  let next () = printf "==================================================\n" in
-  print $ doc tmpla; next ();
-  print $ doc tmplb; next ();
-  print $ doc tmplc; next ();
-  Io.with_file_out "uuuu.html" (fun out -> print ~out $ doc tmplc);
-  ()
