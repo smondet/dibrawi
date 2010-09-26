@@ -523,6 +523,7 @@ module Full = struct
       ~body:(body (`three_columns top_right))
 
   let three_columns_greenish
+      ?(add_section_numbers=false)
       ?(debug=false) 
       ?(top_right=(fun _ -> "<!-- Right Side Insertion -->")) () =
     make ()
@@ -541,7 +542,7 @@ module Full = struct
         dibrawi_cmt;
         tables_and_figures;
         footnotes;
-        section_numbers;
+        if add_section_numbers then section_numbers else (fun _ -> empty);
         section_decoration;
         code_blocks ~with_border:`no;
         layout (`three_columns 18.);
@@ -549,6 +550,7 @@ module Full = struct
       ~body:(body (`three_columns top_right))
 
   let simple_page_greenish
+      ?(add_section_numbers=true)
       ?(base_font_size="90%") ?(text_width="40em") ?(left_margin="4em")
       ?(debug=false) () =
     make ()
@@ -564,7 +566,7 @@ module Full = struct
         dibrawi_cmt;
         tables_and_figures;
         footnotes;
-        section_numbers;
+        if add_section_numbers then section_numbers else (fun _ -> empty);
         code_blocks ~with_border:`no;
         layout (`simple (left_margin, text_width));
       ])
