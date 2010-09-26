@@ -389,6 +389,56 @@ let layout kind params =
       str "    text-align: justify;";
       str "}";
     ]
+  | `with_sidepane (which_side, width) ->
+    let sidepane_part, content_part =
+      let pad = 0.9 in
+      let margin = 0.4 in
+      match which_side with
+      | `left ->
+        let l = 
+          sprintf "  left:  %f%%; width: %f%%; padding: %f%%;" margin width pad
+        in
+        let m = 
+          sprintf "  left: %f%%; right: %f%%; padding: %f%%;"
+            (margin +. pad +. width +. pad +. margin +. margin)
+            (margin)
+            pad
+        in
+        (str l, str m)
+      | `right ->
+        let r =
+          sprintf "  right: %f%%; width: %f%%; padding: %f%%;" margin width pad
+        in
+        let m = 
+          sprintf "  left: %f%%; right: %f%%; padding: %f%%;"
+            (margin)
+            (margin +. pad +. width +. pad +. margin +. margin)
+            pad
+        in
+        (str r, str m)
+    in
+    let frame_color = 
+      Opt.default "#999" (Color.border params.color_theme "stdframe") in
+    let std_frame = 
+      str $ sprintf "  border-%s: %s ridge 1px;" 
+        (match which_side with `left -> "right" | `right -> "left")
+        frame_color in
+    cat ~sep:new_line [
+      str "div.sidepane {";
+      sidepane_part;
+      std_frame;
+      str "    top: 2px;";
+      str "    position:fixed;";
+      str "    overflow: auto;";
+      str "    bottom: 2px;";
+      str "}";
+      str "div.content {";
+      content_part;
+      str "    top: 2px;";
+      str "    position: absolute;";
+      str "    text-align: justify;";
+      str "}";
+    ]
 
 
 
@@ -450,6 +500,22 @@ let body style params =
         str (top_right from);
         opt_str_map (sprintf "<hr/><b>Table of contents:</b><br/>%s<br/>") toc;
         opt_str_map (sprintf "<hr/>%s<br/>") footer;
+        str "</div>";
+        str "<div class=\"content\">";
+        str content;
+        str "<div id=\"pagefoot\" />";
+        str "</div>";
+      ]
+    | `with_sidepane more_info ->
+      cat ~sep [
+        str "<div class=\"sidepane\">";
+        cat ~sep:(str "<hr/>\n") [
+          str (more_info from);
+          opt_str_map (sprintf "<b>Page:</b> %s <br/>") title;
+          opt_str_map (sprintf "<hr/><b>Menu: </b>%s") menu;
+          opt_str_map (sprintf "<hr/><b>Table of contents:</b><br/>%s<br/>") toc;
+          opt_str_map (sprintf "<hr/>%s<br/>") footer;
+        ];
         str "</div>";
         str "<div class=\"content\">";
         str content;
@@ -572,6 +638,32 @@ module Full = struct
       ])
       ~body:(body (`simple))
 
+  let with_sidepane_greenish 
+      ?(add_section_numbers=true) ?(side=`right)
+      ?(debug=false) 
+      ?(insertion=(fun _ -> "<!-- Side Insertion -->")) () =
+    make ()
+      ~css:(css ~color_theme:Color.greenish_main_theme [
+        install_color_theme ~for_class:".content" ~theme:Color.greenish_main_theme;
+        install_color_theme ~theme:Color.greenish_secondary_theme;
+        install_font_theme
+          (Font.standardish_theme "70%" "sans-serif" "none");
+        install_font_theme ~for_class:".content"
+          (Font.standardish_theme "120%" "serif" "justify");
+        header_block ~frame:"7px";
+        paragraph_style ~separate:"0.5em" ~debug;
+        enable_scrolling;
+        blockquote ~style:(`left_bar);
+        list_geometry ~style:(`compact "1.8em") ~debug;
+        dibrawi_cmt;
+        tables_and_figures;
+        footnotes;
+        if add_section_numbers then section_numbers else (fun _ -> empty);
+        section_decoration;
+        code_blocks ~with_border:`no;
+        layout (`with_sidepane (side, 30.));
+      ])
+      ~body:(body (`with_sidepane insertion))
 
 end
 
