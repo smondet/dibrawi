@@ -1,7 +1,6 @@
 
 open Dibrawi_std
 
-module Templating = Dibrawi_templating
 module Make = Dibrawi_make
 
 module System = Dibrawi_system

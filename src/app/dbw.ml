@@ -101,9 +101,10 @@ let transform ?html_template ?persistence_file data_root build =
 
 
 
-  let html_templ_fun = 
+  let html_templ_fun =
+    let module Templating = Dibrawi.HTML.Template in
     match html_template with
-    | Some h -> Templating.load_html (Data_source.get_file h)
+    | Some h -> Templating.File.load_html (Data_source.get_file h)
     | None -> Templating.html_default
   in
 
@@ -136,7 +137,7 @@ let transform ?html_template ?persistence_file data_root build =
             let whole = 
               html_templ_fun ~from ~menu ~toc ~title:"Bibliography" 
                 (Buffer.contents html_buffer) in
-            Io.nwrite out whole;)
+            String_tree.print ~out whole;)
           html err_buffer in
       if not is_ok then None else (Some html)
     in
@@ -176,7 +177,7 @@ let transform ?html_template ?persistence_file data_root build =
             let whole = 
               html_templ_fun ~from ~menu ~toc ~title:"Address Book"
                 (Buffer.contents html_buffer) in
-            Io.nwrite out whole;)
+            String_tree.print ~out whole;)
           html err_buffer in
       if not is_ok then None else (Some html)
     in
@@ -210,7 +211,7 @@ let transform ?html_template ?persistence_file data_root build =
             let whole = 
               html_templ_fun ~from ~menu ~toc ~title
                 (Buffer.contents html_buffer) in
-            Io.nwrite out whole;)
+            String_tree.print ~out whole;)
           filename err_buffer in
 
         if not is_ok then None else (Some filename)
