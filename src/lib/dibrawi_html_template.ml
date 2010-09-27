@@ -538,11 +538,11 @@ let body style params =
       cat ~sep [
         str "<div class=\"sidepane\">";
         cat ~sep:(str "<hr/>\n") [
-          str (more_info from);
           opt_str_map (sprintf "<b>Page:</b> %s <br/>") title;
-          opt_str_map (sprintf "<hr/><b>Menu: </b>%s") menu;
-          opt_str_map (sprintf "<hr/><b>Table of contents:</b><br/>%s<br/>") toc;
-          opt_str_map (sprintf "<hr/>%s<br/>") footer;
+          str (more_info from);
+          opt_str_map (sprintf "<b>Menu: </b>%s") menu;
+          opt_str_map (sprintf "<b>Table of contents:</b><br/>%s<br/>") toc;
+          opt_str_map (sprintf "%s<br/>") footer;
         ];
         str "</div>";
         str "<div class=\"content\">";
