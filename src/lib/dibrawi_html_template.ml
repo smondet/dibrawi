@@ -18,14 +18,18 @@ let css_block ?class_opt name l =
 
 module Color = struct
   type color = string
+  type text_color =
+    | One of (string * color option * color option) 
+    | List of (string list * color option * color option)
   type theme = {
-    text: (string * color option * color option) list;
+    text: text_color list;
     borders: (string * color) list;
   }
 
-  let color ?bg ?fg who = (who, fg, bg)
-  let fg who c = (who, Some c, None)
-  let bg who c = (who, None, Some c)
+  let color ?bg ?fg who = One (who, fg, bg)
+  let color_list ?bg ?fg whol = List (whol, fg, bg)
+  let fg who c = One (who, Some c, None)
+  let bg who c = One (who, None, Some c)
   let theme ?(text=[]) ?(borders=[]) () =
     {text = text; borders = borders;}
 
@@ -37,9 +41,9 @@ module Color = struct
         color "a:link"    ~fg:"#000044";
         color "a:visited" ~fg:"#440000";
         color "a:hover"  ~fg:"#00eeee" ~bg:"#0000ee"; 
-        color "tt,pre,code"  ~fg:"#331133";
+        color_list ["tt"; "pre"; "code"]  ~fg:"#331133";
         fg ".dbwmixcode" "#dd0000";
-        fg "div.figure:after, caption.tablefigure:after" "#00cc00"
+        color_list ["div.figure:after"; "caption.tablefigure:after"] ~fg:"#00cc00";
       ]
       ~borders:[
         ("stdframe", "#0000bb");
@@ -53,7 +57,10 @@ module Color = struct
     let background x = opt_fill_css "background-color" x in
     let block = css_block ?class_opt:for_class in
     cat ~sep:new_line 
-      (Ls.map theme.text ~f:(fun (p, f, b) -> block p [ color f; background b]))
+      (Ls.map theme.text ~f:(function
+        | One (p, f, b) -> block p [ color f; background b]
+        | List (pl, f, b) ->
+          cat (Ls.map pl ~f:(fun p -> block p [ color f; background b]))))
 
   let border theme name =
     Opt.map snd (Ls.find_opt theme.borders ~f:(fun (n, c) -> n = name))
@@ -77,9 +84,10 @@ module Color = struct
           color "a:link"    ~fg:light_green;
           color "a:visited" ~fg:dark_green;
           color "a:hover"  ~bg:highlight_orange; 
-          color "tt,pre,code"  ~fg:brownish;
+          color_list ["tt"; "pre"; "code"]   ~fg:brownish;
           bg ".dbwmixcode" highlight_slightly;
-          fg "div.figure:after, caption.tablefigure:after" light_green;
+          color_list ["div.figure:after"; "caption.tablefigure:after"] 
+            ~fg:light_green;
 
         ]
         ~borders:[
@@ -97,9 +105,10 @@ module Color = struct
           color "a:link"    ~fg:light_blue;
           color "a:visited" ~fg:faded_blue;
           color "a:hover"   ~bg:light_green; 
-          color "tt,pre,code"  ~fg:brownish;
+          color_list ["tt"; "pre"; "code"]  ~fg:brownish;
           bg ".dbwmixcode" highlight_slightly;
-          fg "div.figure:after, caption.tablefigure:after" light_blue;
+          color_list ["div.figure:after"; "caption.tablefigure:after"] 
+            ~fg:light_blue;
 
         ]
         ~borders:[
@@ -123,9 +132,9 @@ module Color = struct
           color "a:link"    ~fg:light_red;
           color "a:visited" ~fg:dark_red;
           color "a:hover"  ~bg:highlight_green; 
-          color "tt,pre,code"  ~fg:dark_green;
+          color_list ["tt"; "pre"; "code"] ~fg:dark_green;
           bg ".dbwmixcode" highlight_slightly;
-          fg "div.figure:after, caption.tablefigure:after" light_red;
+          color_list ["div.figure:after"; "caption.tablefigure:after"] ~fg:light_red;
 
         ]
         ~borders:[
