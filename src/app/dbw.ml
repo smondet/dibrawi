@@ -55,6 +55,31 @@ let output_buffers
 
 open Dibrawi
 
+let named_templates: (string * (unit ->  Dibrawi.HTML.Template.html_template)) list = 
+  let default_insertion =
+    fun from ->
+      let buf, _ =
+        Brtx_transform.to_html 
+          ~from:(Opt.default ["NONE"] from) 
+          "{link page:/Main|Main}{~}{link #|Top}{~}{link #pagefoot|Bottom}{br}\n\
+              {link http://bracetax.berlios.de/bracetax_syntax.html|Bracetax Syntax}"
+      in
+      (Buffer.contents buf) in
+  [
+    "three_columns_greenish",
+    (fun () -> Dibrawi.HTML.Template.Full.three_columns_greenish ());
+    "three_columns_greenish-linked",
+    (fun () -> Dibrawi.HTML.Template.Full.three_columns_greenish
+      ~top_right:default_insertion ());
+    "right_pane_redish",
+    (fun () -> Dibrawi.HTML.Template.Full.with_sidepane_redish
+      ~add_section_numbers:false ~side:`right ());
+    "right_pane_redish-linked",
+    (fun () -> Dibrawi.HTML.Template.Full.with_sidepane_redish
+      ~add_section_numbers:false ~side:`right ~insertion:default_insertion ());
+  ]
+
+
 let transform ?(html_template=`none) ?persistence_file data_root build =
 
   let the_source_tree = Data_source.get_file_tree ~data_root () in
@@ -103,30 +128,14 @@ let transform ?(html_template=`none) ?persistence_file data_root build =
 
   let html_templ_fun =
     let module Templating = Dibrawi.HTML.Template in
-    let default_insertion =
-      fun from ->
-        let buf, _ =
-          Brtx_transform.to_html 
-            ~from:(Opt.default ["NONE"] from) 
-            "{link page:/Main|Main}{~}{link #|Top}{~}{link #pagefoot|Bottom}{br}\n\
-              {link http://bracetax.berlios.de/bracetax_syntax.html|Bracetax Syntax}"
-        in
-        (Buffer.contents buf) in
     match html_template with
     | `file f -> Templating.File.load_html (Data_source.get_file f)
-    | `named "three_columns_greenish" ->
-      Dibrawi.HTML.Template.Full.three_columns_greenish ()
-    | `named "three_columns_greenish-linked" ->
-      Dibrawi.HTML.Template.Full.three_columns_greenish ()
-        ~top_right:default_insertion
-    | `named "right_pane_redish" ->
-      Dibrawi.HTML.Template.Full.with_sidepane_redish ()
-        ~add_section_numbers:false ~side:`right
-    | `named "right_pane_redish-linked" ->
-      Dibrawi.HTML.Template.Full.with_sidepane_redish ()
-        ~add_section_numbers:false ~side:`right ~insertion:default_insertion
-    | `named s ->
-      failwith (sprintf "Template \"%s\" not found." s)
+    | `named name ->
+      begin match Ls.find_opt named_templates ~f:(fun (s, _) -> s = name) with
+      | Some (_, t) -> t ()
+      | None ->
+        failwith (sprintf "Template \"%s\" not found." name)
+      end
     | `none -> Templating.html_default
   in
 
