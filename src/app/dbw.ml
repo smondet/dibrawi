@@ -346,6 +346,7 @@ let () =
   let print_version = ref false in
   let html_tmpl = ref `none in
   let persistence = ref "" in
+  let print_named_templates = ref false in
 
   let arg_cmd ~doc key spec = (key, spec, doc) in
   let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
@@ -362,6 +363,10 @@ let () =
       ~doc:"<name>\n\tSet an HTML `internal' template"
       "-named-template"
       (Arg.String (fun s -> html_tmpl := `named s));
+    arg_cmd 
+      ~doc:"\n\tList the available named templates"
+      "-list-templates"
+      (Arg.Set print_named_templates);
     arg_cmd
       ~doc:"<path>\n\tUse a file for build persistence."
       "-persist-with"
@@ -380,16 +385,23 @@ let () =
       Sys.ocaml_version  Pcre.version
       Bracetax.Info.version Sebib.Info.version;
   ) else (
-    begin match anonymous_arguments with
-    | [i; o] ->
+    if !print_named_templates then (
+      printf "Named templates:\n";
+      Ls.iter named_templates ~f:(fun (s, _) ->
+        printf "  %s\n" s;
+      );
+    ) else (
+      begin match anonymous_arguments with
+      | [i; o] ->
         let persistence_file =
           if !persistence =$= "" then None else Some !persistence in
         transform ~html_template:!html_tmpl ?persistence_file i o 
-    | _ -> 
+      | _ -> 
         printf "Wrong number of arguments: %d\n" 
           (Ls.length anonymous_arguments);
         printf "%s\n" usage;
-    end;
+      end;
+    );
   );
   ()
 
