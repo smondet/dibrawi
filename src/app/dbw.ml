@@ -84,13 +84,21 @@ let transform ?(html_template=`none) ?persistence_file data_root build =
 
   let the_source_tree = Data_source.get_file_tree ~data_root () in
   let todo_list = Todo_list.empty () in
-
+  let list_sebibs =
+    File_tree.str_and_path_list ~filter:"\\.sebib$" the_source_tree in
+  let list_abs =
+    File_tree.str_and_path_list ~filter:"\\.abs$" the_source_tree in
+  
 
   let menu_factory =
-    let source_menu =
-      ((File_tree.File ("", "bibliography.brtx"))
-       :: (File_tree.File ("", "address_book.brtx"))
-       :: the_source_tree) in
+    let cons_if c a b = if c then a :: b else b in
+    let bib = 
+      cons_if (Ls.length list_sebibs > 0) 
+        (File_tree.File ("", "bibliography.brtx")) in
+    let adb =
+      cons_if (Ls.length list_abs > 0)
+        (File_tree.File ("", "address_book.brtx")) in
+    let source_menu = bib (adb the_source_tree) in
     HTML_menu.make_menu_factory source_menu
   in
 
@@ -140,8 +148,6 @@ let transform ?(html_template=`none) ?persistence_file data_root build =
   in
 
   let str_trg_ctt_biblio, str_trg_ctt_sebib_list = 
-    let list_sebibs =
-      File_tree.str_and_path_list ~filter:"\\.sebib$" the_source_tree in
     let sebib_targets_and_contents =
       (Ls.map list_sebibs 
          ~f:(fun (str, path) ->
@@ -181,8 +187,6 @@ let transform ?(html_template=`none) ?persistence_file data_root build =
     (html, target_html, content_html), sebib_targets_and_contents in 
   
   let str_trg_ctt_addbook, str_trg_ctt_addbook_list = 
-    let list_abs =
-      File_tree.str_and_path_list ~filter:"\\.abs$" the_source_tree in
     let abs_targets_and_contents =
       (Ls.map list_abs
          ~f:(fun (str, path) ->
