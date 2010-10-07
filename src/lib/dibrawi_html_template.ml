@@ -70,12 +70,13 @@ module Color = struct
     let blackish = "#070707" in
     let light_blue = "#66BBF4" in
     let faded_blue = "#6A96B3" in
-    let light_green = "#358C26" in
-    let middle_green = "#003702"  in
-    let dark_green = "#10360D" in
-    let highlight_orange = "#FBCD6E" in
-    let highlight_slightly = "#ddd" in
+    let light_green = "#308721" in
+    let dark_green = "#07330A" in
     let brownish = "#6F3F27" in
+    let brownish_light = "#EFDFC7" in
+    let highlight_light = brownish_light in
+    let highlight_dark = brownish in
+    let highlight_slightly = "#ddd" in
     let main = 
       theme ()
         ~text:[
@@ -83,7 +84,7 @@ module Color = struct
           color "" ~fg:blackish ~bg:whitish;
           color "a:link"    ~fg:light_green;
           color "a:visited" ~fg:dark_green;
-          color "a:hover"  ~bg:highlight_orange; 
+          color "a:hover"  ~bg:highlight_light; 
           color_list ["tt"; "pre"; "code"]   ~fg:brownish;
           bg ".dbwmixcode" highlight_slightly;
           color_list ["div.figure:after"; "caption.tablefigure:after"] 
@@ -92,20 +93,20 @@ module Color = struct
         ]
         ~borders:[
           ("stdframe",      faded_blue);
-          ("headerframe",   middle_green);
-          ("blockquotebar", middle_green);
-          ("h2border",      middle_green);
+          ("headerframe",   dark_green);
+          ("blockquotebar", dark_green);
+          ("h2border",      dark_green);
         ]
     in
     let second =
       theme ()
         ~text:[
-          color "body" ~fg:whitish ~bg:middle_green;
-          color "" ~fg:whitish ~bg:middle_green;
+          color "body" ~fg:whitish ~bg:dark_green;
+          color "" ~fg:whitish ~bg:dark_green;
           color "a:link"    ~fg:light_blue;
           color "a:visited" ~fg:faded_blue;
-          color "a:hover"   ~bg:light_green; 
-          color_list ["tt"; "pre"; "code"]  ~fg:brownish;
+          color "a:hover"   ~bg:highlight_dark; 
+          color_list ["tt"; "pre"; "code"]  ~fg:brownish_light;
           bg ".dbwmixcode" highlight_slightly;
           color_list ["div.figure:after"; "caption.tablefigure:after"] 
             ~fg:light_blue;
