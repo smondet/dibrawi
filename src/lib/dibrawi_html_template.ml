@@ -314,6 +314,7 @@ let tables_and_figures params =
     \    width: 90%;\n\
     \    margin-left: 5%;\n\
     \    margin-right: 0em;\n\
+    \    clear: both;\n\
     \n\
     }"
 
