@@ -312,7 +312,9 @@ module Bibliography = struct
 
   (* str_list is a list S-Expressions (already loaded in memory) *)
   let load str_list =
-    Sebib.Parsing.parse (Str.concat " " str_list)
+    let cmp = Sebib.Biblio.compare_by_field `id in
+    Sebib.Biblio.sort (Sebib.Biblio.unique ~cmp
+                         (Sebib.Parsing.parse (Str.concat " " str_list)))
   
   let to_brtx biblio =
     let pattern = "
