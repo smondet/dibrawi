@@ -289,7 +289,7 @@ vertical_cell_spacing
 "
 \\lstset{ %%
 language=[Objective]Caml,
-basicstyle=\\ttfamily\\small,
+basicstyle=\\ttfamily\\footnotesize,
 %%numbers=left,  
 numberstyle=\\tiny,
 stepnumber=2,
