@@ -59,6 +59,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
     val brtx :
       ?do_prepro:bool ->
       ?separate_header:(string * string * string) ref ->
+      ?table_caption_after:bool ->
       string -> string
 
   end = struct
@@ -72,7 +73,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
         ~html_cite:(DP.default_html_cite "")
         ~output ~from:["CamlMixedDocument"]
 
-    let brtx ?(do_prepro=false) ?separate_header str =
+    let brtx ?(do_prepro=false) ?separate_header 
+        ?table_caption_after str =
       let doc = false in
       let url_hook =
         Dibrawi.Special_paths.rewrite_url ~from:[ "SomeCamlMix" ] in
@@ -80,7 +82,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
       let res, errors =
         Params.map_output
           ~html:(Bracetax.Transform.str_to_html ?separate_header ~doc ~url_hook brtx)
-          ~latex:(Bracetax.Transform.str_to_latex 
+          ~latex:(Bracetax.Transform.str_to_latex
+                    ?table_caption_after
                     ?separate_header ~doc ~url_hook brtx)
       in
       match errors with
