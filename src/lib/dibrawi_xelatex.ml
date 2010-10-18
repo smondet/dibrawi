@@ -284,12 +284,12 @@ module Template = struct
 (match font_size with `footnote -> "footnotesize" | `small -> "small")
 vertical_cell_spacing
 
-  let listing_style params =
+  let listing_style ?(style="\\ttfamily\\footnotesize") params =
     str $ sprintf
 "
 \\lstset{ %%
 language=[Objective]Caml,
-basicstyle=\\ttfamily\\footnotesize,
+basicstyle=%s,
 %%numbers=left,  
 numberstyle=\\tiny,
 stepnumber=2,
@@ -311,6 +311,7 @@ commentstyle=%s\\it,
 stringstyle=%s\\bfseries,
 }
 "
+      style
       (if params.color_theme = `none then "" else "\\color{red}")
       (if params.color_theme = `none then "" else "\\color[named]{RawSienna}")
       (if params.color_theme = `none then "" else "\\color[named]{NavyBlue}")
