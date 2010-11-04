@@ -221,8 +221,8 @@ module Template = struct
         \\setlength{\\parskip}{0pt}%
         \\setlength{\\partopsep}{0pt}%
         \\setlength{\\itemsep}{1pt}%
-        \\setlength{\\leftmargin}{1.3em}%
-        \\setlength{\\labelwidth}{0.7em}%
+        \\setlength{\\leftmargin}{2em}%
+        \\setlength{\\labelwidth}{0.5em}%
         \\setlength{\\labelsep}{0.5em}%
         \\csname \\the\\@itemdepth\\endcsname}%
     \\fi}
