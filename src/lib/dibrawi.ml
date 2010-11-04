@@ -256,7 +256,7 @@ module Preprocessor = struct
       | "{mix:ignore}" | "{mi}" ->
         begin match mix_output with
         | `wiki -> 
-          "{bypass endfordiv}<div class=\"dbwmixignore\">{endfordiv}\
+          "{bypass endfordiv}<div style=\"display:none\" >{endfordiv}\
           {ignore mixspecialend}"
         | `camlmix -> "##"
         end
