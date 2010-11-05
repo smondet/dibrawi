@@ -173,9 +173,9 @@ module Make (Camlmix_input: CAMLMIX) = struct
                     <hr/>\n\
                     {endbypass}"
             (Dibrawi.Brtx_transform.html_toc document_for_toc))
-        ~latex:("{bypass}\n\\rule[-0.1cm]{\\columnwidth}{0.01cm}\n\
-           \\tableofcontents\n\
-           \\rule[-0.1cm]{\\columnwidth}{0.01cm}{end}")
+        ~latex:("{bypass}\n\\vspace{1em}\\hrule\n\
+                \\tableofcontents\n\
+                \\vspace{1em}\\hrule\n\n{end}")
 
   end
   module Biblio_report = struct
