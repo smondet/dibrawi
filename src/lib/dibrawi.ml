@@ -196,20 +196,19 @@ module Special_paths = struct
 
   let rec rewrite_url ?todo_list ?(output=`html)  ~from url =
     match url with
-    | s when Str.length s < 4 -> s
-    | s when Str.head s 4 =$= "pdf:" ->
+    | s when Str.starts_with s "pdf:" ->
       let pdfpath = 
         compute_path from (Str.tail s 4) ".pdf" in
       pdfpath 
-    | s when Str.head s 5 =$= "page:" ->
-      (compute_path from (Str.tail s 5) ".html")
-    | s when Str.head s 4 =$= "fig:" ->
+    | s when Str.starts_with s "fig:" ->
       let path =
         compute_path from (Str.tail s 4)
           (match output with `html -> ".png" | `pdf -> ".pdf") in
       Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
       path
-    | s when Str.head s 6 =$= "media:" ->
+    | s when Str.starts_with s "page:" ->
+      (compute_path from (Str.tail s 5) ".html")
+    | s when Str.starts_with s "media:" ->
       let path = compute_path from (Str.tail s 6) "" in
       Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
       path
