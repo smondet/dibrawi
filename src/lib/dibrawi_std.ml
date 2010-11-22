@@ -21,6 +21,10 @@ module Opt = struct
   let bind f =
     function Some s -> f s | None -> None
   let may ~f o = may f o
+  let may_apply ~f o a = 
+    match o with
+    | None -> a
+    | Some p -> f p a
 end
 
 module Io = struct
