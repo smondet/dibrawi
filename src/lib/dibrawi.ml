@@ -417,9 +417,10 @@ module HTML_menu = struct
                 (* eprintf "path: %s, name: %s\n" path name; *)
         if not (pcre_matches excl name) then (
           Buffer.add_string buf 
-            (sprintf "{*} %s\n{begin list}\n" name);
+            (sprintf "{*} {bypass}<div class=\"dibrawimenudir\">{end}\
+                       %s\n{begin list}\n" name);
           Ls.iter ~f:to_brtx (presort l);
-          Buffer.add_string buf (sprintf "{end} # %s\n" name);
+          Buffer.add_string buf (sprintf "{end}{bypass}</div>{end} # %s\n" name);
         ) else (
           Buffer.add_string buf
             (sprintf "# ignore: %s %s\n" path name);
