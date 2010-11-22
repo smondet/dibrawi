@@ -278,6 +278,21 @@ let list_geometry ?(style=`compact "2em") ?(debug=false) params =
       (if debug then "/* The debug border: */ border: thin #FF0000 solid;\n"
        else "")
 
+let dibrawi_menu ?(style=`compact "1em") params =
+  match style with
+  | `compact indent ->
+    str $ sprintf 
+      ".dibrawimenudir { display: block; }
+       ul  li.dibrawi_menuli {
+       \  display: inline;
+       } 
+       ul.dibrawi_menuul {
+       \  padding: 0em;
+       \  margin: 0em;
+       \  margin-left: %s;
+       }" indent
+
+
 let dibrawi_cmt params =
   str
     ".dibrawicomment:before { content:  \"[\"; }\n\
@@ -619,6 +634,7 @@ module Full = struct
         blockquote ~style:(`left_bar);
         list_geometry ~style:(`compact "3em") ~debug;
         dibrawi_cmt;
+        dibrawi_menu;
         tables_and_figures;
         footnotes;
         section_numbers;
@@ -644,6 +660,7 @@ module Full = struct
         enable_scrolling;
         blockquote ~style:(`left_bar);
         list_geometry ~style:(`compact "1.8em") ~debug;
+        dibrawi_menu;
         dibrawi_cmt;
         tables_and_figures;
         footnotes;
@@ -668,6 +685,7 @@ module Full = struct
         enable_scrolling;
         blockquote ~style:(`left_bar);
         list_geometry ~style:(`compact "1.8em") ~debug;
+        dibrawi_menu;
         dibrawi_cmt;
         tables_and_figures;
         footnotes;
@@ -694,6 +712,7 @@ module Full = struct
         enable_scrolling;
         blockquote ~style:(`left_bar);
         list_geometry ~style:(`compact "1.8em") ~debug;
+        dibrawi_menu;
         dibrawi_cmt;
         tables_and_figures;
         footnotes;
@@ -721,6 +740,7 @@ module Full = struct
         blockquote ~style:(`left_bar);
         list_geometry ~style:(`compact "1.8em") ~debug;
         dibrawi_cmt;
+        dibrawi_menu;
         tables_and_figures;
         footnotes;
         if add_section_numbers then section_numbers else (fun _ -> empty);
