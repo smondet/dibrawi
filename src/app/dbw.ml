@@ -80,14 +80,19 @@ let named_templates: (string * (unit ->  Dibrawi.HTML.Template.html_template)) l
   ]
 
 
-let transform ?(html_template=`none) ?persistence_file data_root build =
+let transform ?(html_template=`none)
+    ?exclude ?filter ?persistence_file data_root build =
 
-  let the_source_tree = Data_source.get_file_tree ~data_root () in
+  let the_source_tree =
+    Data_source.get_file_tree ~data_root () |>
+        Opt.may_apply exclude ~f:File_tree.exclude_from_tree |>
+        Opt.may_apply filter ~f:File_tree.filter_tree_with_pattern in
+
   let todo_list = Todo_list.empty () in
   let list_sebibs =
-    File_tree.str_and_path_list ~filter:"\\.sebib$" the_source_tree in
+    File_tree.str_and_path_list ~filter:"\\.sebib$"  the_source_tree in
   let list_abs =
-    File_tree.str_and_path_list ~filter:"\\.abs$" the_source_tree in
+    File_tree.str_and_path_list ~filter:"\\.abs$"  the_source_tree in
   
 
   let menu_factory =
@@ -226,7 +231,7 @@ let transform ?(html_template=`none) ?persistence_file data_root build =
 
 
   let list_with_targets =
-    let list_brtxes = File_tree.str_and_path_list the_source_tree in
+    let list_brtxes = File_tree.str_and_path_list  the_source_tree in
     
     let make_target_html (str, path) =
       let filename = build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
@@ -351,6 +356,8 @@ let () =
   let html_tmpl = ref `none in
   let persistence = ref "" in
   let print_named_templates = ref false in
+  let exclude = ref None in
+  let filter = ref None in
 
   let arg_cmd ~doc key spec = (key, spec, doc) in
   let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
@@ -375,6 +382,14 @@ let () =
       ~doc:"<path>\n\tUse a file for build persistence."
       "-persist-with"
       (Arg.Set_string persistence);
+    arg_cmd
+      ~doc:"<regexp>\n\tExclude paths matching <regexp>"
+      "-exclude"
+      (Arg.String (fun s -> exclude := Some s));
+    arg_cmd
+      ~doc:"<regexp>\n\tKeep only paths matching <regexp>"
+      "-filter"
+      (Arg.String (fun s -> filter := Some s));
   ] in 
   let anonymous_arguments =
     let anons = ref [] in
@@ -399,7 +414,8 @@ let () =
       | [i; o] ->
         let persistence_file =
           if !persistence =$= "" then None else Some !persistence in
-        transform ~html_template:!html_tmpl ?persistence_file i o 
+        transform ?exclude:!exclude ?filter:!filter
+          ~html_template:!html_tmpl ?persistence_file i o 
       | _ -> 
         printf "Wrong number of arguments: %d\n" 
           (Ls.length anonymous_arguments);
