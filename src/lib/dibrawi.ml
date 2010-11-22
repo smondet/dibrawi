@@ -48,6 +48,29 @@ module File_tree = struct
         printf "%s%s\n" (Str.make indent ' ') name;)
       0
 
+  (** Filter the file tree. *)
+  let rec filter_tree tree ~f =
+    let new_tree = ref [] in
+    let filter = function
+      | Dir (path, name, subdir) ->
+        if f path name then
+          new_tree := Dir (path, name, filter_tree ~f subdir) :: !new_tree
+      | File (path, name) as file ->
+        if f path name then
+          new_tree := file :: !new_tree
+    in
+    Ls.iter filter tree;
+    Ls.rev !new_tree
+
+  (** Exclude files and directories matching [pattern]. *)
+  let exclude_from_tree pattern tree =
+    let rex = Pcre.regexp pattern in
+    filter_tree tree ~f:(fun path name -> not (pcre_matches rex (path ^ name)))
+
+  (** Keep only the files and directories matching [pattern]. *)
+  let filter_tree_with_pattern pattern tree  =
+    let rex = Pcre.regexp pattern in
+    filter_tree tree ~f:(fun path name -> (pcre_matches rex (path ^ name)))
 
   let string_path_list
       ?(filter="\\.brtx$") ?(exclude=".*\\.svn.*") ?(url_prefix="") tree =
@@ -81,7 +104,6 @@ module File_tree = struct
       (Some prefix) tree;
     (Ls.rev !paths)
   
-
   let str_and_path_list 
       ?(filter="\\.brtx$") ?(exclude=".*\\.svn.*") ?(prefix=("", [])) tree =
     let filt = Pcre.regexp filter in
