@@ -193,8 +193,10 @@ module Special_paths = struct
 
   let parent_directories_path from =
     let depth = Ls.length from - 1 in
-    ("./" ^ (Str.concat "/" (Ls.init depth (fun _ -> ".."))))
-      
+    if depth > 0 then
+      (Str.concat "/" (Ls.init depth (fun _ -> "..")))
+    else
+      "."
 
   let relativize from path =
     try
