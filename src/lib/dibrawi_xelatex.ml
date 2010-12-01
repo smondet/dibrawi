@@ -131,6 +131,8 @@ module Template = struct
     color_theme: color_theme;
     columns: [ `one | `two ];
   }
+  
+  type component = global_parameters -> Dibrawi_std.String_tree.t
 
   let compact_title_box ?with_color params =
     let really_with_color =
