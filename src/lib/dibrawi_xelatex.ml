@@ -355,7 +355,7 @@ let make ?(add=[]) ?(color=`none)
     ?(section_numbers_depth=3)
     ?(document_class=`article 8)
     ?(columns=`two)
-    ?(geometry:(unit -> String_tree.t) option)
+    ?(geometry:component option)
     ?(fontspec:(global_parameters -> String_tree.t) option)
     () =
   let params = {
@@ -391,7 +391,7 @@ let make ?(add=[]) ?(color=`none)
     docclass;
     (match geometry with
     | None -> str "" (* package_geometry ~paper:`A4 () *)
-    | Some f -> f ());
+    | Some f -> f params);
     str "
 \\clubpenalty=10000
 \\widowpenalty=10000

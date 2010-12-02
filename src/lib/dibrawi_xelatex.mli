@@ -23,7 +23,7 @@ val make_full_file :
 module Template : sig
   type color_theme = [ `classy | `none ]
   type global_parameters
-  type component
+  type component = global_parameters -> Dibrawi_std.String_tree.t
       
   val compact_title_box : ?with_color:bool -> component
   val change_height : ?pt:int -> component
@@ -58,7 +58,7 @@ module Template : sig
                     | `letter of int
                     | `none ] ->
     ?columns:[ `one | `two ] ->
-    ?geometry:(unit -> Dibrawi_std.String_tree.t) ->
+    ?geometry:component ->
     ?fontspec:component ->
     unit -> Dibrawi_std.String_tree.t
 end
