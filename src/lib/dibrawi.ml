@@ -387,7 +387,8 @@ module Brtx_transform = struct
     let only_brtx = Preprocessor.brtx2brtx brtx in
     let writer, input_char =
       Bracetax.Transform.string_io only_brtx brtx_buffer err_buffer in
-    Bracetax.Transform.get_TOC ~writer ~input_char ?filename ();
+    Bracetax.Transform.get_TOC
+      ~make_links:`always ~writer ~input_char ?filename ();
     let h, e =
       to_html ~class_hook:"dbwtoc" ~from:[""]
         (Buffer.contents brtx_buffer) in
