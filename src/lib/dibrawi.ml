@@ -377,7 +377,7 @@ module Brtx_transform = struct
     let url_hook =
       Special_paths.rewrite_url ?todo_list ~from in
     Bracetax.Transform.brtx_to_html
-      ~writer ?filename ?class_hook
+      ~writer ?filename ?class_hook ~make_section_links:`always
       ~img_hook:url_hook ~url_hook ~input_char ();
     (html_buffer, err_buffer)
 
