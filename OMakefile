@@ -17,7 +17,7 @@ OCAMLPACKS[] =
    extlib
    pcre
    xml-light
-   sexplib.core
+   sexplib
 
 
 if $(not $(OCAMLFIND_EXISTS))
