@@ -579,7 +579,7 @@ let body style params =
 
 
 
-let make ?(css=`none) ?(body:body_style option) () =
+let make ?(icon:string option) ?(css=`none) ?(body:body_style option) () =
 
   let insert_css css params =
     match css with
@@ -607,6 +607,7 @@ let make ?(css=`none) ?(body:body_style option) () =
         <head>\n\
         <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>";
       insert_css css params;
+      opt_str_map (sprintf "<link rel=\"shortcut icon\" href=\"%s\">") icon;
       opt_str_map (sprintf "<title>%s</title>")  title;
       str "</head>\n<body>";
       begin match body with
