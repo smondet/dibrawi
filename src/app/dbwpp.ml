@@ -12,6 +12,7 @@ let () = (
     let mix_output = ref `wiki in
     let run_mix = ref false in
     let mix_args = ref [] in
+    let magic_args = ref [] in
     let usage = "dbwpp [OPTIONS] file1 file2 ..." in
 
     Arg.parse [
@@ -31,7 +32,10 @@ let () = (
             "<str>\n\tSet the prefix for HTML biblio-links to <str>");
         ("-html",
             Arg.Unit (fun () -> out_format := `html),
-            "\n\tOutput for HTML format");
+            "\n\tOutput for HTML format (default)");
+        ("-latex",
+            Arg.Unit (fun () -> out_format := `pdf),
+            "\n\tOutput for LaTeX format");
         ("-camlmix",
             Arg.Unit (fun () -> mix_output := `camlmix),
             "\n\tOutput mix:*'s for Camlmix");
@@ -53,11 +57,46 @@ let () = (
          "\n\tAdd argument for the mix-ed executable");
         ("-args", Arg.Rest (fun s ->  mix_args := s :: !mix_args),
          "\n\tAdd all following arguments for the mix-ed executable");
-        ("-latex",
-            Arg.Unit (fun () -> out_format := `pdf),
-            "\n\tOutput for LaTeX format");
+        ("-magic", 
+         Arg.Rest (fun s ->
+           magic_args := s :: !magic_args),
+         "\n\tGuess what to do from the remaining arguments …\
+          \n\t* Arguments ending with .brtx will be treated as files \
+              to preprocess\n\t* All the other arguments will be passed to \
+              the executable\n\t  (like with -arg)\n\t* If at least one \
+              argument starts with pdf:, latex:, or tex: \
+              \n\t  or ends with .tex, .pdf, or .ltx, \
+              this will imply -latex ");
 
     ] (fun s -> to_preprocess := s :: !to_preprocess) usage;
+    let () =
+      if !magic_args <> [] then (
+        run_mix := true;
+        mix_output := `camlmix;
+        if !output_file = "" then (
+          output_file := "/tmp/dbwpp_camlmix.mlx";
+        );
+        if !biblio_html_prefix = None then (
+          biblio_html_prefix := Some "";
+        );
+        let is_to_preprocess s =
+          Str.ends_with s ".brtx" in
+        let implies_latex s =
+          Str.ends_with s ".pdf" || Str.starts_with s "pdf:"
+          || Str.ends_with s ".tex" || Str.starts_with s "tex:"
+          || Str.ends_with s ".ltx" || Str.starts_with s "latex:" in 
+        if Ls.exists !magic_args ~f:implies_latex then (
+          out_format := `pdf;
+        );
+        Ls.iter (Ls.rev !magic_args) ~f:(fun s ->
+          if is_to_preprocess s then (
+            to_preprocess := s :: !to_preprocess;
+          ) else (
+            mix_args := s :: !mix_args;
+          )
+        );
+      );
+    in
     let output_citations_chan = 
         if !citations_file =$= "" then None else Some (open_out !citations_file)
     in
@@ -87,7 +126,6 @@ let () = (
     close_out output_chan;
         
     if !run_mix then (
-      eprintf "Camlmixing ...\n";
       Dibrawi.System.run_command 
         (sprintf "camlmix \
                   -insert 'module Mix = Dibrawi_mix.Make(Camlmix) \
