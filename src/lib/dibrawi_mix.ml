@@ -26,6 +26,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
     val dibrawi_output : unit -> [ `html | `pdf ]
     val lazy_map_output : html:(unit -> 'a) -> latex:(unit -> 'a) -> 'a
     val map_output : html:'a -> latex:'a -> 'a
+    val citations : string list ref
   end = struct
     type output =
       | Out_html
@@ -51,6 +52,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
       match !global_output with
       | Out_html -> html
       | Out_latex -> latex
+
+    let citations = ref []
 
   end
 
