@@ -64,8 +64,8 @@ let () = (
           \n\t* Arguments ending with .brtx will be treated as files \
               to preprocess\n\t* All the other arguments will be passed to \
               the executable\n\t  (like with -arg)\n\t* If at least one \
-              argument starts with pdf:, latex:, or tex: \
-              \n\t  or ends with .tex, .pdf, or .ltx, \
+              argument starts with “pdf”, “latex”, or “tex” \
+              \n\t  or ends with “.tex”, “.pdf”, or “.ltx”, \
               this will imply -latex ");
 
     ] (fun s -> to_preprocess := s :: !to_preprocess) usage;
@@ -82,9 +82,9 @@ let () = (
         let is_to_preprocess s =
           Str.ends_with s ".brtx" in
         let implies_latex s =
-          Str.ends_with s ".pdf" || Str.starts_with s "pdf:"
-          || Str.ends_with s ".tex" || Str.starts_with s "tex:"
-          || Str.ends_with s ".ltx" || Str.starts_with s "latex:" in 
+          Str.ends_with s ".pdf" || Str.starts_with s "pdf"
+          || Str.ends_with s ".tex" || Str.starts_with s "tex"
+          || Str.ends_with s ".ltx" || Str.starts_with s "latex" in 
         if Ls.exists !magic_args ~f:implies_latex then (
           out_format := `pdf;
         );
