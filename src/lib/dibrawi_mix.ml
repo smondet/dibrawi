@@ -24,8 +24,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
     val set_output :
       [ `LaTeX | `PDF | `html | `latex | `pdf ] -> unit
     val dibrawi_output : unit -> [ `html | `pdf ]
-    val lazy_map_output : html:(unit -> 'a) -> latex:(unit -> 'a) -> 'a
-    val map_output : html:'a -> latex:'a -> 'a
+    val map_output : html:(unit -> 'a) -> latex:(unit -> 'a) -> 'a
     val citations : string list ref
     val args : string list
   end = struct
@@ -44,15 +43,10 @@ module Make (Camlmix_input: CAMLMIX) = struct
       | Out_html -> `html
       | Out_latex -> `pdf
 
-    let lazy_map_output ~html ~latex =
+    let map_output ~html ~latex =
       match !global_output with
       | Out_html -> html ()
       | Out_latex -> latex ()
-
-    let map_output ~html ~latex =
-      match !global_output with
-      | Out_html -> html
-      | Out_latex -> latex
 
     let citations = ref []
     let args = 
@@ -87,10 +81,12 @@ module Make (Camlmix_input: CAMLMIX) = struct
       let brtx = if do_prepro then prepro str else str in
       let res, errors =
         Params.map_output
-          ~html:(Bracetax.Transform.str_to_html ?separate_header ~doc ~url_hook brtx)
-          ~latex:(Bracetax.Transform.str_to_latex
-                    ?table_caption_after
-                    ?separate_header ~doc ~url_hook brtx)
+          ~html:(fun () ->
+            Bracetax.Transform.str_to_html ?separate_header ~doc ~url_hook brtx)
+          ~latex:(fun () ->
+            Bracetax.Transform.str_to_latex
+              ?table_caption_after
+              ?separate_header ~doc ~url_hook brtx)
       in
       match errors with
       | [] -> res
@@ -124,8 +120,10 @@ module Make (Camlmix_input: CAMLMIX) = struct
 
     let label output =
       Params.map_output
-        ~html:("{bypass endbypass}<a id=\"@{id}\"></a>{endbypass}")
-        ~latex:("{bypass endbypass}\\phantomsection\\label{@{id}}{endbypass}")
+        ~html:(fun () ->
+          "{bypass endbypass}<a id=\"@{id}\"></a>{endbypass}")
+        ~latex:(fun () ->
+          "{bypass endbypass}\\phantomsection\\label{@{id}}{endbypass}")
 
   end
 
@@ -172,14 +170,16 @@ module Make (Camlmix_input: CAMLMIX) = struct
       
     let make document_for_toc =
       Params.map_output
-        ~html:(sprintf  "{bypass endbypass}\n\
+        ~html:(fun ()->
+          sprintf  "{bypass endbypass}\n\
                     <hr/>
                     <b>Table of Contents:</b>\n\
                     %s\n\
                     <hr/>\n\
                     {endbypass}"
             (Dibrawi.Brtx_transform.html_toc document_for_toc))
-        ~latex:("{bypass}\n\\vspace{1em}\\hrule\n\
+        ~latex:(fun () ->
+          "{bypass}\n\\vspace{1em}\\hrule\n\
                 \\tableofcontents\n\
                 \\vspace{1em}\\hrule\n\n{end}")
 
@@ -210,7 +210,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
     let style () =
       match !style_pref with
       | None ->
-        Params.map_output ~latex:Latex ~html:MathML;
+        Params.map_output ~latex:(fun () -> Latex) ~html:(fun () -> MathML);
       | Some p -> p
 
     let set_style s =
@@ -222,6 +222,11 @@ module Make (Camlmix_input: CAMLMIX) = struct
       | Latex -> b
       | MathML -> c
 
+    let either_fun a b c () =
+      match style () with
+      | Text -> a
+      | Latex -> b
+      | MathML -> c
 
   (* http://tlt.its.psu.edu/suggestions/international/bylanguage/mathchart.html *)
   (* http://xahlee.org/emacs/emacs_n_unicode.html
@@ -382,13 +387,13 @@ module Make (Camlmix_input: CAMLMIX) = struct
     let inline f =
       let around =
         Params.map_output
-          ~html:(either 
+          ~html:(either_fun 
                    (sprintf "{t|{text endformula}\n%s\n{endformula}}")
                    (sprintf "{t|{text endformula}%s{endformula}}")
                    (sprintf
                       "{bypass endbypass}\n\
                         <math display='inline'>%s</math>\n{endbypass}"))
-          ~latex:(either 
+          ~latex:(either_fun 
                     (sprintf "{t|{text endformula}\n%s\n{endformula}}")
                     (sprintf "{bypass endbypass}$%s${endbypass}")
                     (sprintf "{t|{text endformula}\n<math display='inline'>\
@@ -398,13 +403,13 @@ module Make (Camlmix_input: CAMLMIX) = struct
     let block f =
       let around =
         Params.map_output
-          ~html:(either 
+          ~html:(either_fun 
                    (sprintf "{code endformula}\n%s\n{endformula}")
                    (sprintf "{code endformula}%s{endformula}")
                    (sprintf
                       "{bypass endbypass}\n\
                         <math display='block'>%s</math>\n{endbypass}"))
-          ~latex:(either 
+          ~latex:(either_fun 
                     (sprintf "{code endformula}\n%s\n{endformula}")
                     (sprintf "{bypass endbypass}$$%s$${endbypass}")
                     (sprintf "{code endformula}\n<math display='block'>\
@@ -451,12 +456,12 @@ module Make (Camlmix_input: CAMLMIX) = struct
     let array a =
       let around =
         Params.map_output
-          ~html:(either 
+          ~html:(either_fun 
                    (sprintf "{code endformula}\n%s\n{endformula}")
                    (sprintf "{code endformula}%s{endformula}")
                    (sprintf
                       "{bypass endbypass}%s{endbypass}"))
-          ~latex:(either 
+          ~latex:(either_fun 
                     (sprintf "{code endformula}\n%s\n{endformula}")
                     (sprintf "{bypass endbypass}%s{endbypass}")
                     (sprintf "{code endformula}%s{endformula}}"))      in
@@ -476,7 +481,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
     let default_svg_inkscape_path = ref "/NOT_SET"
 
     let dot_fig ?(label="") ?(size="100%") ?(caption="") ?dest_dir contents =
-      let out_format = Params.map_output ~latex:"pdf" ~html:"png" in
+      let out_format = 
+        Params.map_output ~latex:(fun () -> "pdf") ~html:(fun () -> "png") in
       let tmpfile =
         Filename.temp_file "notesgraphviz" (sprintf ".%s" out_format) in
       let cmd = sprintf "dot -Kdot -T%s -o%s" out_format tmpfile in
@@ -498,8 +504,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
       if Sys.file_exists svg then (
         let outcmd, outname = 
           Params.map_output
-            ~latex:("inkscape -z -A", fullname ^ ".pdf")
-            ~html:("inkscape -z -e", fullname ^ ".png") in
+            ~latex:(fun () -> "inkscape -z -A", fullname ^ ".pdf")
+            ~html:(fun () -> "inkscape -z -e", fullname ^ ".png") in
         if not (Sys.file_exists outname) || System.is_newer svg outname then (
           System.run_command 
             (sprintf "%s %s %s"  outcmd outname svg);
@@ -574,16 +580,20 @@ module Make (Camlmix_input: CAMLMIX) = struct
     let ascii_art_fig ?(label="") ?(size="100%") ?(caption="") contents =
       let start id =
         Params.map_output
-        ~html:(sprintf "{bypass endbypass}<div class=\"figure\" id=\"%s\" >\
+        ~html:(fun () -> 
+          sprintf "{bypass endbypass}<div class=\"figure\" id=\"%s\" >\
                         <div style=\"text-align: left;\">{endbypass}" id)
-        ~latex:(sprintf "{bypass endbypass}\\begin{figure}[htbp]\n\
+        ~latex:(fun () ->
+          sprintf "{bypass endbypass}\\begin{figure}[htbp]\n\
                          \\begin{minipage}{\\columnwidth}{endbypass}\n")
       in
       let stop id caption =
         Params.map_output
-          ~html:(sprintf "{bypass endbypass}</div>%s</div>{endbypass}" 
+          ~html:(fun () ->
+            sprintf "{bypass endbypass}</div>%s</div>{endbypass}" 
                    (Dbw.brtx caption))
-          ~latex:(sprintf "{bypass endbypass}\\caption{%s}\\label{%s}\n\
+          ~latex:(fun () ->
+            sprintf "{bypass endbypass}\\caption{%s}\\label{%s}\n\
                            \\end{minipage}\\end{figure}{endbypass}"
                     (Dbw.brtx caption) id)
       in
@@ -699,8 +709,10 @@ module Make (Camlmix_input: CAMLMIX) = struct
         (fun s ->
           let to_print =
             Params.map_output
-            ~html:(html_figure ?id ?caption language s)
-            ~latex:(latex_figure ?id ?caption ?latex_options language s)
+            ~html:(fun () ->
+              html_figure ?id ?caption language s)
+            ~latex:(fun () -> 
+              latex_figure ?id ?caption ?latex_options language s)
           in
           saved_printer to_print;
           Camlmix_input.printer := saved_printer)
