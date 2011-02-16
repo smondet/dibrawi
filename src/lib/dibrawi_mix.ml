@@ -27,6 +27,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
     val lazy_map_output : html:(unit -> 'a) -> latex:(unit -> 'a) -> 'a
     val map_output : html:'a -> latex:'a -> 'a
     val citations : string list ref
+    val args : string list
   end = struct
     type output =
       | Out_html
@@ -54,6 +55,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
       | Out_latex -> latex
 
     let citations = ref []
+    let args = 
+      Array.to_list (Array.sub Sys.argv 1 (Array.length Sys.argv - 1))
 
   end
 
