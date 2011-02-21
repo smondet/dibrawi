@@ -21,7 +21,7 @@ let copy src dest =
       Io.with_file_out dest
         (fun o ->
           try while true do Io.write_byte o (Io.read_byte i) done;
-          with End_of_file -> ()))
+          with Io.No_more_input -> ()))
 
 let read_command_output f s =
   let ic = Unix.open_process_in s in
