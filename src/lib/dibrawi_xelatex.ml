@@ -55,9 +55,9 @@ let build ?(with_bibtex=false) path =
   let commands =
     let latex = (sprintf "%s %s > /dev/null" pdflatex target) in
     if with_bibtex then
-      [ latex; (sprintf "bibtex %s > /dev/null"  target); latex; latex ]
+      [ latex; (sprintf "bibtex %s > /dev/null"  target); latex; latex; latex ]
     else
-      [ latex; latex ] in
+      [ latex; latex; latex ] in
   begin 
     try
       List.iter run_command commands
