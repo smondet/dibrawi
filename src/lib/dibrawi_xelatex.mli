@@ -33,6 +33,8 @@ module Template : sig
   val make_things_smaller :
     ?baselinestretch:float -> ?parskip:string -> ?parindent:string ->
     ?compact_sections:bool -> component
+  val paragraphs :
+    ?baselinestretch:float -> ?parskip:string -> ?parindent:string -> component
   val small_itemize : component
   val verbatim_style :
     ?font_size:[ `footnote | `small ] -> component

@@ -201,6 +201,14 @@ module Template = struct
       omd (sprintf "\\setlength{\\parskip}{%s}\n") parskip
     ]
 
+  let paragraphs ?baselinestretch ?parskip ?parindent params =
+    let omd f o = Opt.map_default f "" o in
+    str_cat [
+      omd (sprintf "\\renewcommand{\\baselinestretch}{%.2f}\n") baselinestretch;
+      omd (sprintf "\\setlength{\\parindent}{%s}\n") parindent;
+      omd (sprintf "\\setlength{\\parskip}{%s}\n") parskip
+    ]
+
   let small_itemize params = str
 "
 \\makeatletter  % makes '@' an ordinary character
