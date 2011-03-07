@@ -48,12 +48,11 @@ module Template : sig
   val package_fancyhdr : component
   val hyphenations : string list -> component
   val fontspec : component
-    
+  val section_numbers : ?section_numbers_depth:int -> ?toc_depth:int -> component
   val make :
     ?add:component list ->
     ?color:color_theme ->
     ?language:string ->
-    ?section_numbers_depth:int ->
     ?document_class:[ `article of int
                     | `book of int
                     | `french_letter of int

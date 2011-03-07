@@ -356,11 +356,15 @@ stringstyle=%s\\bfseries,
 \\setmonofont[Scale=0.8]{DejaVu Sans Mono}
 \\setsansfont[Scale=MatchLowercase]{DejaVu Sans}
 "
-
+  let section_numbers ?section_numbers_depth ?toc_depth params =
+    let omd f o = Opt.map_default f "" o in
+    str_cat [
+      omd (sprintf "\\setcounter{secnumdepth}{%d}") section_numbers_depth;
+      omd (sprintf "\\setcounter{tocdepth}{%d}") toc_depth;
+    ]
 
 let make ?(add=[]) ?(color=`none)
     ?(language="english") 
-    ?(section_numbers_depth=3)
     ?(document_class=`article 8)
     ?(columns=`two)
     ?(geometry:component option)
@@ -453,7 +457,6 @@ pdfproducer = {}}
 \\frenchspacing
 \\newcommand\\dbwcmt[1]{\\textbf{\\textcolor{red}{[#1]}}}
 ";
-    str $ sprintf "\\setcounter{secnumdepth}{%d}" section_numbers_depth;
     (cat (Ls.map (fun x -> x params) add))
   ]
 end
