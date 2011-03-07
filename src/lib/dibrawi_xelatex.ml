@@ -369,6 +369,7 @@ let make ?(add=[]) ?(color=`none)
     ?(columns=`two)
     ?(geometry:component option)
     ?(fontspec:(global_parameters -> String_tree.t) option)
+    ?(two_sides=true)
     () =
   let params = {
     color_theme = color;
@@ -380,14 +381,14 @@ let make ?(add=[]) ?(color=`none)
       (match document_class with
       | `article pt ->
         sprintf 
-          "\\documentclass[%dpt%s]{extarticle}\n\
+          "\\documentclass[%dpt%s%s]{extarticle}\n\
            \\newcommand\\chapter[1]{{\\LARGE{\\textbf{Chapter: #1}}}\
               \\setcounter{section}{0} \\par}"
-          pt col
+          pt col (if two_sides then ",twoside" else "")
       | `book pt ->
         sprintf 
-          "\\documentclass[%dpt,twoside%s]{extbook}\n"
-          pt col
+          "\\documentclass[%dpt%s%s]{extbook}\n"
+          pt col (if two_sides then ",twoside" else "")
       | `french_letter pt ->
         sprintf "
 \\documentclass[%dpt]{lettre}

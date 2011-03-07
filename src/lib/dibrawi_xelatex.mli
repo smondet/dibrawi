@@ -61,5 +61,6 @@ module Template : sig
     ?columns:[ `one | `two ] ->
     ?geometry:component ->
     ?fontspec:component ->
+    ?two_sides:bool ->
     unit -> Dibrawi_std.String_tree.t
 end
