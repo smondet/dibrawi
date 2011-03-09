@@ -109,24 +109,6 @@ module Make (Camlmix_input: CAMLMIX) = struct
   end
 
 
-  module Sebibrtx = struct
-    let url_pdf_doi = 
-     "@{if (or (has url) (has pdfurl) (has doi))} \
-      [@{if (has url)}{t|{link @{url}|URL}}\
-      @{if (or (has pdfurl) (has doi))}, @{endif}@{endif}\
-      @{if (has pdfurl)}{t|{link @{pdfurl}|PDF}}\
-      @{if (has doi)}, @{endif}@{endif}\
-      @{if (has doi)}{t|{link @{doi}|DOI}}@{endif}]@{endif}"
-
-    let label output =
-      Params.map_output
-        ~html:(fun () ->
-          "{bypass endbypass}<a id=\"@{id}\"></a>{endbypass}")
-        ~latex:(fun () ->
-          "{bypass endbypass}\\phantomsection\\label{@{id}}{endbypass}")
-
-  end
-
 
   module Recorder = struct
 
@@ -200,6 +182,24 @@ module Make (Camlmix_input: CAMLMIX) = struct
       Buffer.contents buf
 
   end
+  module Sebibrtx = struct
+    let url_pdf_doi = 
+     "@{if (or (has url) (has pdfurl) (has doi))} \
+      [@{if (has url)}{t|{link @{url}|URL}}\
+      @{if (or (has pdfurl) (has doi))}, @{endif}@{endif}\
+      @{if (has pdfurl)}{t|{link @{pdfurl}|PDF}}\
+      @{if (has doi)}, @{endif}@{endif}\
+      @{if (has doi)}{t|{link @{doi}|DOI}}@{endif}]@{endif}"
+
+    let label output =
+      Params.map_output
+        ~html:(fun () ->
+          "{bypass endbypass}<a id=\"@{id}\"></a>{endbypass}")
+        ~latex:(fun () ->
+          "{bypass endbypass}\\phantomsection\\label{@{id}}{endbypass}")
+
+  end
+
 
 
   module Math = struct
