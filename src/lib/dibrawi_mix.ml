@@ -222,7 +222,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
       let print () =
         let pattern_fun = 
           (match pattern with Some f -> f | None ->
-            sprintf "[%d] @{authors}{~}; {i|@{title-punct}} @{how}, @{year}. {br}") in
+            sprintf "[%d] @{authors}; {i|@{title-punct}} @{how}, @{year}. {br}") in
         Ls.iter (Ls.rev !local_cites) ~f:(fun (i, s) ->
           let subset = Sebib.Request.exec (`ids [s]) biblio in
           if Ls.length subset <> 1 then
