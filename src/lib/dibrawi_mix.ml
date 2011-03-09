@@ -145,6 +145,9 @@ module Make (Camlmix_input: CAMLMIX) = struct
 
     let all_record_names () =
       Ls.of_enum (Hashtbl.keys records)
+    
+    let current () = !current_recorder
+    let record_opt = function None -> () | Some (_, s, _) -> record_to s
   end 
 
 
