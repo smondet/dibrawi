@@ -2,9 +2,9 @@ Dibrawi: The Distributed Bracetax Wiki
 
 
 Status: Still Under Heavy Development
-- only command line access
+- only command line access (no web editing)
 - anything is subject to change at some point
-
+- there is extremely little documentation
 
 Installation:
 
@@ -47,7 +47,7 @@ Basic Usage:
   template.
   
   The file _build/dbw_persistance stores information, if you run the
-  same command again, only the files that have actually changed with
+  same command again, only the files that have actually changed will
   be `recompiled'.
 
 
