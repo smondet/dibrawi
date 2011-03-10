@@ -1,0 +1,60 @@
+Dibrawi: The Distributed Bracetax Wiki
+
+
+Status: Still Under Heavy Development
+- only command line access
+- anything is subject to change at some point
+
+
+Installation:
+
+  * Dibrawi is written in OCaml, and is built with OCamlfind and
+    OMake. It uses the following libraries:
+      sebib
+      bracetax
+      unix
+      extlib
+      pcre
+      xml-light
+      sexplib
+    And full usage of it will require at run-time:
+      TeXLive
+      Camlmix
+      Inkscape
+      Graphviz
+  
+  * To build, just run omake, the binaries are linked to
+      _build/app/dbwpp
+      _build/app/dbw
+    and to install the `dibrawi' library with ocamlfind, just run:
+      omake reinstall_library
+    (depending on your setup this might require root priviledges),
+    to uninstall the library, you may have guessed:
+      omake uninstall_library
+
+
+
+
+Basic Usage:
+
+  If you have a directory tree `data/...' with a bunch of .brtx files,
+  you may run:
+      dbw  -persist-with _build/dbw_persistance \
+          -named-template three_columns_greenish-linked \
+          data/ _build/
+  
+  In _build/ you'll have a nice bunch of HTML files with a pretty
+  template.
+  
+  The file _build/dbw_persistance stores information, if you run the
+  same command again, only the files that have actually changed with
+  be `recompiled'.
+
+
+
+
+Contact:
+  Any comments, questions, or whatever: seb <at> mondet.org.
+
+
+
