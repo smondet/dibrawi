@@ -60,6 +60,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
       ?do_prepro:bool ->
       ?separate_header:(string * string * string) ref ->
       ?table_caption_after:bool ->
+      ?make_section_links:[ `never | `when_labeled | `always ] ->
       string -> string
 
   end = struct
@@ -74,7 +75,9 @@ module Make (Camlmix_input: CAMLMIX) = struct
         ~output ~from:["CamlMixedDocument"]
 
     let brtx ?(do_prepro=false) ?separate_header 
-        ?table_caption_after str =
+        ?table_caption_after 
+        ?(make_section_links=`always)
+        str =
       let doc = false in
       let url_hook =
         Dibrawi.Special_paths.rewrite_url ~from:[ "SomeCamlMix" ] in
@@ -82,7 +85,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
       let res, errors =
         Params.map_output
           ~html:(fun () ->
-            Bracetax.Transform.str_to_html ?separate_header ~doc ~url_hook brtx)
+            Bracetax.Transform.str_to_html
+              ~make_section_links ?separate_header ~doc ~url_hook brtx)
           ~latex:(fun () ->
             Bracetax.Transform.str_to_latex
               ?table_caption_after
