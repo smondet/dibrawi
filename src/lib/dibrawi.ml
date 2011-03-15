@@ -310,6 +310,8 @@ module Preprocessor = struct
       let read_char_opt =
         let cpt = ref (-1) in
         (fun () -> try Some (incr cpt; str.[!cpt]) with e -> None) in
+      Buffer.clear buf; (* `clear' keeps the internal string, `reset'
+                           deallocates it. *)
       Bracetax.Parser.do_transformation ~deny_bypass:false brtx_printer 
         read_char_opt filename;
       Buffer.contents buf in
