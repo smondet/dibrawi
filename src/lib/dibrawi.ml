@@ -300,7 +300,12 @@ module Preprocessor = struct
           pr (sprintf "{%s%s}" cmd
                 (Str.concat "" (Ls.map (fun s -> 
                   sprintf " %s" (sanitize_brtx_command s)) args))));
-        print_raw = (fun loc line -> pr line);
+        print_raw = 
+          (fun loc line -> 
+            if mix_output = `camlmix then 
+              pr (Str.replace_all line ~sub:"##" ~by:"###")
+            else
+              pr line);
         leave_raw = (fun loc -> pr (sprintf "{%s}" !current_raw_end));
         error = (function
           | `undefined s -> eprintf "%s\n" s;
@@ -320,7 +325,7 @@ module Preprocessor = struct
         
   let prepro_regexp = 
     Pcre.regexp
-      "(\\#\\#|\\{(cite|cmt|mix:ignore|mix:code|mix:end|mi|mc|me)\\s*[^\\}]*\\})"
+      "(\\{(cite|cmt|mix:ignore|mix:code|mix:end|mi|mc|me)\\s*[^\\}]*\\})"
 
 
   let brtx2brtx ?todo_list 
@@ -343,11 +348,6 @@ module Preprocessor = struct
         (* Shell.catch_break true; *)
       let endtag = "dibrawipreprocessorendtag" in
       match s with
-      | "##" -> 
-        begin match mix_output with
-        | `wiki -> "##"
-        | `camlmix -> "### "
-        end
       | "{mix:ignore}" | "{mi}" ->
         begin match mix_output with
         | `wiki -> 
