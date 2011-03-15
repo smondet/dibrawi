@@ -71,6 +71,38 @@ module Str = struct
   let tail str pos =
     sub str pos (length str - pos)
 
+  let replace_all str ~sub ~by =
+    let len = length str in
+    let sublen = length sub in
+    if sublen = 0 || len < sublen then str else
+      let buf = Buffer.create len in
+      (* let found = ref [] in *)
+      let found = ref false in
+      let i = ref 0 in
+      while !i <= len - sublen do
+        let j = ref 0 in
+        found := false;
+        while !j < sublen && get str (!i + !j) = get sub !j do
+          incr j;
+          if !j = sublen then (
+            (* found := !i :: !found; *)
+            found := true;
+            j := sublen;
+          );
+        done;
+        if !found then (
+          Buffer.add_string buf by;
+          i := !i + sublen;
+        ) else (
+          Buffer.add_char buf str.[!i];
+          incr i;
+        );
+      done;
+      Buffer.add_substring buf str !i (sublen - 1);
+      (Buffer.contents buf)
+          
+  let multi_replace ~sub ~by str =
+    str
 
 end
 
