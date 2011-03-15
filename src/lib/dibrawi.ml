@@ -265,9 +265,10 @@ module Preprocessor = struct
       ?(output=`html) ?(mix_output=`wiki) () =
     let buf = Buffer.create 42 in
     let pr = Buffer.add_string buf in
-    let ploc l = 
-      pr (sprintf "\n#line %d %S\n" 
-             l.Bracetax.Error.l_line l.Bracetax.Error.l_file) in
+    let ploc l str =
+      snd (Str.replace ~str ~sub:" " 
+             ~by:(sprintf "\n#line %d %S\n" 
+                    l.Bracetax.Error.l_line l.Bracetax.Error.l_file)) in
     let default_raw_end = Bracetax.Commands.Raw.default_raw_end () in
     let current_raw_end = ref default_raw_end in
     let is_old_pp_raw_2 s = Ls.exists ((=) s) ["mc"; "mi"; "me"] in
@@ -277,7 +278,7 @@ module Preprocessor = struct
     let brtx_printer = 
       { Bracetax.Signatures.
         print_comment = (fun _ _ -> ());
-        print_text = (fun loc s -> pr s; ploc loc);
+        print_text = (fun loc s -> pr (ploc loc s));
         enter_cmd = (fun loc cmd args ->
           pr (sprintf "{%s%s|" cmd
                 (Str.concat "" (Ls.map (fun s -> 
@@ -291,7 +292,6 @@ module Preprocessor = struct
           | s when is_old_pp_raw_2 s -> "me"
           | s -> "mix:end");
         enter_raw = (fun loc cmd args -> 
-          ploc loc;
           current_raw_end := 
             if is_old_pp_raw cmd then "mix:end" else
               (match args with
