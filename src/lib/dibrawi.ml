@@ -242,10 +242,6 @@ end
 
 module Preprocessor = struct
 
-  let prepro_regexp = 
-    Pcre.regexp
-      "(\\#\\#|\\{(cite|cmt|mix:ignore|mix:code|mix:end|mi|mc|me)\\s*[^\\}]*\\})"
-
   let default_html_biblio_page = "page:/bibliography"
 
   let default_html_cite =
@@ -255,9 +251,84 @@ module Preprocessor = struct
                  sprintf "{link %s#%s|%s}"
                    html_biblio_page cite cite))) ^ "]"
 
+  let sanitize_brtx_command s =
+    Str.replace_chars (function
+      | '\\' -> "\\\\" 
+      | ' ' -> "\\ "
+      | '|' -> "\\|" 
+      | '{' -> "\\{"
+      | '}' -> "\\}"
+      | c -> Str.of_char c) s
+
+  let make
+      ?(html_cite=default_html_cite default_html_biblio_page)
+      ?(output=`html) ?(mix_output=`wiki) () =
+    let buf = Buffer.create 42 in
+    let pr = Buffer.add_string buf in
+    let ploc l = 
+      pr (sprintf "#line %d %S\n" 
+             l.Bracetax.Error.l_line l.Bracetax.Error.l_file) in
+    let default_raw_end = Bracetax.Commands.Raw.default_raw_end () in
+    let current_raw_end = ref default_raw_end in
+    let is_old_pp_raw_2 s = Ls.exists ((=) s) ["mc"; "mi"; "me"] in
+    let is_old_pp_raw_n s =
+      Ls.exists ((=) s) ["mix:code"; "mix:ignore"; "mix:end"] in
+    let is_old_pp_raw s = is_old_pp_raw_2 s || is_old_pp_raw_n s in
+    let brtx_printer = 
+      { Bracetax.Signatures.
+        print_comment = (fun _ _ -> ());
+        print_text = (fun loc s -> pr s; ploc loc);
+        enter_cmd = (fun loc cmd args ->
+          ploc loc;
+          pr (sprintf "{%s%s|" cmd
+                (Str.concat "" (Ls.map (fun s -> 
+                  sprintf " %s" (sanitize_brtx_command s)) args))));
+        leave_cmd = (fun loc -> ploc loc; pr "}");
+        terminate = (fun loc -> ());
+        is_raw = (fun s -> 
+          (Bracetax.Commands.Raw.is_raw_cmd s) || (is_old_pp_raw s));
+        default_raw_end = (function
+          | s when Bracetax.Commands.Raw.is_raw_cmd s -> "end"
+          | s when is_old_pp_raw_2 s -> "me"
+          | s -> "mix:end");
+        enter_raw = (fun loc cmd args -> 
+          ploc loc;
+          current_raw_end := 
+            if is_old_pp_raw cmd then "mix:end" else
+              (match args with
+              | [] -> default_raw_end
+              | e :: _ -> e);
+          pr (sprintf "{%s%s}" cmd
+                (Str.concat "" (Ls.map (fun s -> 
+                  sprintf " %s" (sanitize_brtx_command s)) args))));
+        print_raw = (fun loc line -> pr line);
+        leave_raw = (fun loc -> pr (sprintf "{%s}" !current_raw_end));
+        error = (function
+          | `undefined s -> eprintf "%s\n" s;
+          | `message ((_, gravity, _) as msg) -> 
+            eprintf "%s\n" (Bracetax.Error.to_string msg));} in
+    let do_prepro filename str =
+      let read_char_opt =
+        let cpt = ref (-1) in
+        (fun () -> try Some (incr cpt; str.[!cpt]) with e -> None) in
+      Bracetax.Parser.do_transformation ~deny_bypass:false brtx_printer 
+        read_char_opt filename;
+      Buffer.contents buf in
+    do_prepro
+
+        
+  let prepro_regexp = 
+    Pcre.regexp
+      "(\\#\\#|\\{(cite|cmt|mix:ignore|mix:code|mix:end|mi|mc|me)\\s*[^\\}]*\\})"
+
+
   let brtx2brtx ?todo_list 
       ?(html_cite=default_html_cite default_html_biblio_page)
       ?(output=`html) ?(mix_output=`wiki) ?from brtx = 
+    (* Testing *)
+    let future = make ~html_cite ~output ~mix_output () in
+    let brtx = future (Str.concat "/" (Ls.rev (Opt.default ["--"] from))) brtx in
+    (* /Testing *)
     let clean_cite s =
       let ls = Str.explode s in
       let filtered_ls =
