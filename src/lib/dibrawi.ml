@@ -266,7 +266,7 @@ module Preprocessor = struct
     let buf = Buffer.create 42 in
     let pr = Buffer.add_string buf in
     let ploc l = 
-      pr (sprintf "#line %d %S\n" 
+      pr (sprintf "\n#line %d %S\n" 
              l.Bracetax.Error.l_line l.Bracetax.Error.l_file) in
     let default_raw_end = Bracetax.Commands.Raw.default_raw_end () in
     let current_raw_end = ref default_raw_end in
@@ -279,11 +279,10 @@ module Preprocessor = struct
         print_comment = (fun _ _ -> ());
         print_text = (fun loc s -> pr s; ploc loc);
         enter_cmd = (fun loc cmd args ->
-          ploc loc;
           pr (sprintf "{%s%s|" cmd
                 (Str.concat "" (Ls.map (fun s -> 
                   sprintf " %s" (sanitize_brtx_command s)) args))));
-        leave_cmd = (fun loc -> ploc loc; pr "}");
+        leave_cmd = (fun loc -> pr "}");
         terminate = (fun loc -> ());
         is_raw = (fun s -> 
           (Bracetax.Commands.Raw.is_raw_cmd s) || (is_old_pp_raw s));
