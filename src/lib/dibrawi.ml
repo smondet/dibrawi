@@ -287,6 +287,12 @@ module Preprocessor = struct
       let endtag = "dibrawipreprocessorendtag" in
       (sprintf "{bypass %s}%s{%s}" endtag s endtag) in
     let html_or_latex h l = match output with `html -> h | `pdf -> l in
+    let clean_cite s =
+      Str.replace_chars (function
+        | 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9'
+        | ':' | '.' | '-' | '_' as ok -> Str.of_char ok
+        | _ -> "") s in
+    let split_cites s = Str.nsplit s "," in
     let brtx_printer = 
       { Bracetax.Signatures.
         print_comment = (fun _ _ -> ());
@@ -299,6 +305,7 @@ module Preprocessor = struct
                   (html_or_latex
                      "<span class=\"dibrawicomment\">" "\\dbwcmt{"));
             pr (Str.concat " " (Ls.map sanitize_brtx_content args))
+          | "cite" -> ()
           | _ ->
             pr (sprintf "{%s%s|" cmd
                   (Str.concat "" (Ls.map (fun s -> 
@@ -306,6 +313,12 @@ module Preprocessor = struct
         leave_cmd = (fun loc ->
           match Stack.pop cmd_stack with
           | ("cmt", _) -> pr (bypass (html_or_latex "</span>" "}"))
+          | ("cite", args) ->
+            let cites =
+              Ls.map ~f:clean_cite
+                (Ls.flatten (Ls.map args ~f:split_cites)) in
+            pr (html_or_latex (html_cite cites)
+                  (bypass (sprintf "\\cite{%s}" (Str.concat "," cites))))
           | _ -> pr "}");
         terminate = (fun loc -> ());
         is_raw = (fun s -> 
@@ -348,7 +361,7 @@ module Preprocessor = struct
         
   let prepro_regexp = 
     Pcre.regexp
-      "(\\{(cite|mix:ignore|mix:code|mix:end|mi|mc|me)\\s*[^\\}]*\\})"
+      "(\\{(mix:ignore|mix:code|mix:end|mi|mc|me)\\})"
 
 
   let brtx2brtx ?todo_list 
@@ -358,18 +371,8 @@ module Preprocessor = struct
     let future = make ~html_cite ~output ~mix_output () in
     let brtx = future (Str.concat "/" (Ls.rev (Opt.default ["--"] from))) brtx in
     (* /Testing *)
-    let clean_cite s =
-      let ls = Str.explode s in
-      let filtered_ls =
-        Ls.filter
-          (function
-          'a' .. 'z' | 'A' .. 'Z' | '0' .. '9'
-            | ':' | '.' | '-' | '_' -> true 
-            | _ -> false) ls in
-      Str.implode filtered_ls in
     let subst s = 
         (* Shell.catch_break true; *)
-      let endtag = "dibrawipreprocessorendtag" in
       match s with
       | "{mix:ignore}" | "{mi}" ->
         begin match mix_output with
@@ -389,17 +392,6 @@ module Preprocessor = struct
         begin match mix_output with
         | `wiki -> "{mixspecialend}{bypass endfordiv}</div>{endfordiv}"
         | `camlmix -> "##"
-        end
-      | cite when Str.head cite 5 =$= "{cite" ->
-        let cites =
-          Ls.map
-            (Str.nsplit (Str.sub s 6 (String.length s - 7)) ",")
-            ~f:clean_cite in
-        begin match output with
-        | `html -> html_cite cites
-        | `pdf -> 
-          sprintf "{bypass %s}\\cite{%s}{%s}"
-            endtag (Str.concat "," cites) endtag
         end
       | s -> s
     in
