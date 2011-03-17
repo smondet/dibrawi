@@ -260,6 +260,13 @@ module Preprocessor = struct
       | '}' -> "\\}"
       | c -> Str.of_char c) s
 
+  let sanitize_brtx_content s =
+    Str.replace_chars (function
+      | '#' -> "{#}" 
+      | '{' -> "{{}"
+      | '}' -> "{}}"
+      | c -> Str.of_char c) s
+
   let make
       ?(html_cite=default_html_cite default_html_biblio_page)
       ?(output=`html) ?(mix_output=`wiki) () =
@@ -275,15 +282,31 @@ module Preprocessor = struct
     let is_old_pp_raw_n s =
       Ls.exists ((=) s) ["mix:code"; "mix:ignore"; "mix:end"] in
     let is_old_pp_raw s = is_old_pp_raw_2 s || is_old_pp_raw_n s in
+    let cmd_stack = Stack.create () in
+    let bypass s = 
+      let endtag = "dibrawipreprocessorendtag" in
+      (sprintf "{bypass %s}%s{%s}" endtag s endtag) in
+    let html_or_latex h l = match output with `html -> h | `pdf -> l in
     let brtx_printer = 
       { Bracetax.Signatures.
         print_comment = (fun _ _ -> ());
         print_text = (fun loc s -> pr (ploc loc s));
         enter_cmd = (fun loc cmd args ->
-          pr (sprintf "{%s%s|" cmd
-                (Str.concat "" (Ls.map (fun s -> 
-                  sprintf " %s" (sanitize_brtx_command s)) args))));
-        leave_cmd = (fun loc -> pr "}");
+          Stack.push (cmd, args) cmd_stack;
+          match cmd with
+          | "cmt" ->
+            pr (bypass 
+                  (html_or_latex
+                     "<span class=\"dibrawicomment\">" "\\dbwcmt{"));
+            pr (Str.concat " " (Ls.map sanitize_brtx_content args))
+          | _ ->
+            pr (sprintf "{%s%s|" cmd
+                  (Str.concat "" (Ls.map (fun s -> 
+                    sprintf " %s" (sanitize_brtx_command s)) args))));
+        leave_cmd = (fun loc ->
+          match Stack.pop cmd_stack with
+          | ("cmt", _) -> pr (bypass (html_or_latex "</span>" "}"))
+          | _ -> pr "}");
         terminate = (fun loc -> ());
         is_raw = (fun s -> 
           (Bracetax.Commands.Raw.is_raw_cmd s) || (is_old_pp_raw s));
@@ -325,7 +348,7 @@ module Preprocessor = struct
         
   let prepro_regexp = 
     Pcre.regexp
-      "(\\{(cite|cmt|mix:ignore|mix:code|mix:end|mi|mc|me)\\s*[^\\}]*\\})"
+      "(\\{(cite|mix:ignore|mix:code|mix:end|mi|mc|me)\\s*[^\\}]*\\})"
 
 
   let brtx2brtx ?todo_list 
@@ -377,24 +400,6 @@ module Preprocessor = struct
         | `pdf -> 
           sprintf "{bypass %s}\\cite{%s}{%s}"
             endtag (Str.concat "," cites) endtag
-        end
-      | cmt when Str.head cmt 4 =$= "{cmt" ->
-        let comment_text =
-          Str.map 
-            (function
-              | '{' | '<' | '>' | '&' | '\\' | '$' | '%' -> ' '
-              | c -> c)
-            (Str.sub s 5 (Str.length s - 6)) in
-        begin match output with
-        | `html -> 
-          sprintf
-            "{bypass %s}<span class=\"dibrawicomment\">%s</span>{%s}"
-            endtag comment_text endtag
-        | `pdf -> 
-          sprintf "{bypass %s}\\ifx\\dbwcmt\\undefined\
-                             \\textbf{[%s]}\
-                             \\else\\dbwcmt{%s}\\fi{%s}"
-            endtag comment_text comment_text endtag
         end
       | s -> s
     in
