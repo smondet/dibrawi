@@ -277,7 +277,6 @@ module Preprocessor = struct
              ~by:(sprintf "\n#line %d %S\n" 
                     l.Bracetax.Error.l_line l.Bracetax.Error.l_file)) in
     let default_raw_end = Bracetax.Commands.Raw.default_raw_end () in
-    let current_raw_end = ref default_raw_end in
     let is_old_pp_raw_2 s = Ls.exists ((=) s) ["mc"; "mi"; "me"] in
     let is_old_pp_raw_n s =
       Ls.exists ((=) s) ["mix:code"; "mix:ignore"; "mix:end"] in
@@ -328,21 +327,46 @@ module Preprocessor = struct
           | s when is_old_pp_raw_2 s -> "me"
           | s -> "mix:end");
         enter_raw = (fun loc cmd args -> 
-          current_raw_end := 
-            if is_old_pp_raw cmd then "mix:end" else
-              (match args with
-              | [] -> default_raw_end
-              | e :: _ -> e);
-          pr (sprintf "{%s%s}" cmd
-                (Str.concat "" (Ls.map (fun s -> 
-                  sprintf " %s" (sanitize_brtx_command s)) args))));
+          Stack.push (cmd, args) cmd_stack;
+          match cmd with
+          | "mix:ignore" | "mi" ->
+            begin match mix_output with
+            | `wiki -> pr "{ignore mixspecialend}"
+            | `camlmix -> pr "##"
+            end
+          | "mix:code" | "mc" ->
+            begin match mix_output with
+            | `wiki ->
+              pr "{bypass endfordiv}<div class=\"dbwmixcode\">{endfordiv}\
+                  {code mixspecialend}"
+            | `camlmix -> pr "##"
+            end
+          | s ->
+            pr (sprintf "{%s%s}" cmd
+                  (Str.concat "" (Ls.map (fun s -> 
+                    sprintf " %s" (sanitize_brtx_command s)) args))));
         print_raw = 
           (fun loc line -> 
             if mix_output = `camlmix then 
               pr (Str.replace_all line ~sub:"##" ~by:"###")
             else
               pr line);
-        leave_raw = (fun loc -> pr (sprintf "{%s}" !current_raw_end));
+        leave_raw = (fun loc -> 
+          match Stack.pop cmd_stack with
+          | ("mix:ignore", _) | ("mi", _) ->
+            begin match mix_output with
+            | `wiki -> pr "{mixspecialend}"
+            | `camlmix -> pr "##"
+            end
+          | ("mix:code", _) | ("mc", _) ->
+            begin match mix_output with
+            | `wiki -> 
+              pr "{mixspecialend}";
+              pr "{bypass endfordiv}</div>{endfordiv}";
+            | `camlmix -> pr "##"
+            end
+          | (s, []) -> pr (sprintf "{%s}" default_raw_end)
+          | (s, endtag :: _) -> pr (sprintf "{%s}" endtag));
         error = (function
           | `undefined s -> eprintf "%s\n" s;
           | `message ((_, gravity, _) as msg) -> 
@@ -359,43 +383,15 @@ module Preprocessor = struct
     do_prepro
 
         
-  let prepro_regexp = 
-    Pcre.regexp
-      "(\\{(mix:ignore|mix:code|mix:end|mi|mc|me)\\})"
-
 
   let brtx2brtx ?todo_list 
       ?(html_cite=default_html_cite default_html_biblio_page)
       ?(output=`html) ?(mix_output=`wiki) ?from brtx = 
-    (* Testing *)
     let future = make ~html_cite ~output ~mix_output () in
-    let brtx = future (Str.concat "/" (Ls.rev (Opt.default ["--"] from))) brtx in
-    (* /Testing *)
-    let subst s = 
-        (* Shell.catch_break true; *)
-      match s with
-      | "{mix:ignore}" | "{mi}" ->
-        begin match mix_output with
-        | `wiki -> 
-          "{bypass endfordiv}<div style=\"display:none\" >{endfordiv}\
-          {ignore mixspecialend}"
-        | `camlmix -> "##"
-        end
-      | "{mix:code}" | "{mc}" ->
-        begin match mix_output with
-        | `wiki ->
-          "{bypass endfordiv}<div class=\"dbwmixcode\">{endfordiv}\
-          {code mixspecialend}"
-        | `camlmix -> "##"
-        end
-      | "{mix:end}" | "{me}" ->
-        begin match mix_output with
-        | `wiki -> "{mixspecialend}{bypass endfordiv}</div>{endfordiv}"
-        | `camlmix -> "##"
-        end
-      | s -> s
-    in
-    (Pcre.substitute ~rex:prepro_regexp brtx ~subst)
+    let brtx =
+      future (Str.concat "/" (Ls.rev (Opt.default ["?NoFile?"] from))) brtx in
+    brtx
+
       
 end
 
