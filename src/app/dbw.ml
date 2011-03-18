@@ -152,6 +152,8 @@ let transform ?(html_template=`none)
     | `none -> Templating.html_default
   in
 
+  let dbw_prepro = Preprocessor.make () in
+
   let str_trg_ctt_biblio, str_trg_ctt_sebib_list = 
     let sebib_targets_and_contents =
       (Ls.map list_sebibs 
@@ -168,7 +170,8 @@ let transform ?(html_template=`none)
                    Data_source.get_page (data_root ^ "/" ^ str)))
       in
       let menu = HTML_menu.get_menu ~from:["bibliography"] menu_factory in
-      let brtx = Bibliography.to_brtx bib in
+      let brtx = 
+        dbw_prepro ~filename:"Bibliography" (Bibliography.to_brtx bib) in
       let toc = Brtx_transform.html_toc ~filename:"Bibliography" brtx in
       let from =  ["bibliography.html"] in
       let html_buffer, err_buffer = 
@@ -206,7 +209,8 @@ let transform ?(html_template=`none)
                                  Data_source.get_page (data_root ^ "/" ^ str)))
       in
       let menu = HTML_menu.get_menu ~from:["address_book"] menu_factory in
-      let brtx = Address_book.to_brtx ab in
+      let brtx =
+        dbw_prepro ~filename:"Address Book" (Address_book.to_brtx ab) in
       let toc = Brtx_transform.html_toc ~filename:"address_book" brtx in
       let from =  ["address_book.html"] in
       let html_buffer, err_buffer = 
@@ -241,7 +245,7 @@ let transform ?(html_template=`none)
         let title = Filename.chop_extension str in
         let from = path in
         let menu = HTML_menu.get_menu ~from menu_factory in
-        let page = Data_source.get_page brtx in
+        let page = dbw_prepro ~filename:str (Data_source.get_page brtx) in
         let toc = Brtx_transform.html_toc ~filename:str page in
         let html_buffer, err_buffer = 
           Brtx_transform.to_html ~todo_list ~filename:str ~from page in

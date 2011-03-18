@@ -166,7 +166,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
                     %s\n\
                     <hr/>\n\
                     {endbypass}"
-            (Dibrawi.Brtx_transform.html_toc document_for_toc))
+            (Dibrawi.Brtx_transform.html_toc 
+               (Dibrawi.Preprocessor.brtx2brtx document_for_toc)))
         ~latex:(fun () ->
           "{bypass}\n\\vspace{1em}\\hrule\n\
                 \\tableofcontents\n\

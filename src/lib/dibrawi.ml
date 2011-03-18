@@ -371,10 +371,11 @@ module Preprocessor = struct
           | `undefined s -> eprintf "%s\n" s;
           | `message ((_, gravity, _) as msg) -> 
             eprintf "%s\n" (Bracetax.Error.to_string msg));} in
-    let do_prepro filename str =
+    let do_prepro ~filename str =
       let read_char_opt =
         let cpt = ref (-1) in
         (fun () -> try Some (incr cpt; str.[!cpt]) with e -> None) in
+      Stack.clear cmd_stack;
       Buffer.clear buf; (* `clear' keeps the internal string, `reset'
                            deallocates it. *)
       Bracetax.Parser.do_transformation ~deny_bypass:false brtx_printer 
@@ -433,12 +434,10 @@ module Brtx_transform = struct
 
     (* TODO handle errors better *)
   let to_html ?todo_list ?class_hook ?filename ~from brtx =
-    let brtx_page =
-      Preprocessor.brtx2brtx ?todo_list ~from brtx in
     let html_buffer = Buffer.create 1024 in
     let err_buffer = Buffer.create 512 in
     let writer, input_char =
-      Bracetax.Transform.string_io brtx_page html_buffer err_buffer in
+      Bracetax.Transform.string_io brtx html_buffer err_buffer in
     let url_hook =
       Special_paths.rewrite_url ?todo_list ~from in
     Bracetax.Transform.brtx_to_html
@@ -449,9 +448,8 @@ module Brtx_transform = struct
   let html_toc ?filename brtx =
     let brtx_buffer = Buffer.create 1024 in
     let err_buffer = Buffer.create 512 in
-    let only_brtx = Preprocessor.brtx2brtx brtx in
     let writer, input_char =
-      Bracetax.Transform.string_io only_brtx brtx_buffer err_buffer in
+      Bracetax.Transform.string_io brtx brtx_buffer err_buffer in
     Bracetax.Transform.get_TOC
       ~make_links:`always ~writer ~input_char ?filename ();
     let h, e =
@@ -516,7 +514,7 @@ module HTML_menu = struct
     let brtx =
       brtx_menu ~url_prefix ~filter ~exclude_dir ~replace ~chop_filter tree in
     let buf, err =
-      Brtx_transform.to_html
+      Brtx_transform.to_html (* Should not need preprocessing. *)
         ~filename:"BRTX MENU" ~class_hook:"dibrawi_menu" ~from brtx in
     if (Buffer.contents err <$> "") then (
       eprintf "Errors in the bracetax: \n%s\n------------%s\n"
