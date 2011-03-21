@@ -401,7 +401,6 @@ let transform_wiki name argv =
   ()
 
 let run_mix name argv =
-  let citations_file = ref "" in
   let biblio_html_prefix = ref None in
   let to_preprocess = ref [] in
   let output_file = ref "" in
@@ -483,9 +482,6 @@ let run_mix name argv =
       );
     );
   in
-  let output_citations_chan = 
-    if !citations_file =$= "" then None else Some (open_out !citations_file)
-  in
   let output_chan =
     if !output_file =$= "" then stdout else (open_out !output_file) in
   let citations = ref [] in
@@ -505,11 +501,8 @@ let run_mix name argv =
         ~html_cite ~output:!out_format ~from:["cmdline"] page in
     fprintf output_chan "%s\n" preprocessed;
   );
-  let cites = Ls.flatten !citations in
-  Opt.may output_citations_chan ~f:(fun o ->
-    fprintf o "%s\n" (Str.concat " " (Ls.rev cites));
-  );
   close_out output_chan;
+  let cites = Ls.flatten !citations in
   
   if !run_mix then (
     Dibrawi.System.run_command 
