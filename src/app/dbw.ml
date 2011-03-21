@@ -400,7 +400,7 @@ let transform_wiki name argv =
   );
   ()
 
-let prepro name argv =
+let run_mix name argv =
   let citations_file = ref "" in
   let biblio_html_prefix = ref None in
   let to_preprocess = ref [] in
@@ -416,12 +416,6 @@ let prepro name argv =
     ("-version",
      Arg.Unit (print_version),
      "\n\tprint version");
-    ("-citations",
-     Arg.Set_string citations_file,
-     "<file> \n\tOutput citations to <file>");
-    ("-output",
-     Arg.Set_string output_file,
-     "<file>\n\tOutput to file <file>");
     ("-biblio-html-prefix",
      Arg.String (fun s -> biblio_html_prefix := Some s),
      "<str>\n\tSet the prefix for HTML biblio-links to <str>");
@@ -431,9 +425,6 @@ let prepro name argv =
     ("-latex",
      Arg.Unit (fun () -> out_format := `pdf),
      "\n\tOutput for LaTeX format");
-    ("-camlmix",
-     Arg.Unit (fun () -> mix_output := `camlmix),
-     "\n\tOutput mix:*'s for Camlmix");
     ("-run", 
      Arg.Unit (fun () ->
        run_mix := true;
@@ -445,9 +436,9 @@ let prepro name argv =
          biblio_html_prefix := Some "";
        );
      ),
-     "\n\tRun camlmix (implies -camlmix, and sets default values, for \
-              \n\t-output, and -biblio-html-prefix which can be \
-              overwritten by setting\n\tthem “after” -run)");
+     "\n\tRun camlmix (implies -camlmix, and sets a default value, for \
+              \n\t-biblio-html-prefix which can be \
+              overwritten by setting\n\tit “after” -run)");
     ("-arg", Arg.String (fun s -> mix_args := s :: !mix_args),
      "\n\tAdd argument for the mix-ed executable");
     ("-args", Arg.Rest (fun s ->  mix_args := s :: !mix_args),
@@ -541,6 +532,68 @@ let prepro name argv =
   );
   ()
 
+let prepro name argv =
+  let citations_file = ref "" in
+  let biblio_html_prefix = ref None in
+  let to_preprocess = ref [] in
+  let output_file = ref "" in
+  let out_format = ref `html in
+  let mix_output = ref `wiki in
+  let usage = sprintf "dbw %s [OPTIONS] file1 file2 ..." name in
+
+  Arg.parse_argv argv [
+    ("-version",
+     Arg.Unit (print_version),
+     "\n\tprint version");
+    ("-citations",
+     Arg.Set_string citations_file,
+     "<file> \n\tOutput citations to <file>");
+    ("-output",
+     Arg.Set_string output_file,
+     "<file>\n\tOutput to file <file>");
+    ("-biblio-html-prefix",
+     Arg.String (fun s -> biblio_html_prefix := Some s),
+     "<str>\n\tSet the prefix for HTML biblio-links to <str>");
+    ("-html",
+     Arg.Unit (fun () -> out_format := `html),
+     "\n\tOutput for HTML format (default)");
+    ("-latex",
+     Arg.Unit (fun () -> out_format := `pdf),
+     "\n\tOutput for LaTeX format");
+    ("-camlmix",
+     Arg.Unit (fun () -> mix_output := `camlmix),
+     "\n\tOutput mix:*'s for Camlmix");
+
+  ] (fun s -> to_preprocess := s :: !to_preprocess) usage;
+  let output_citations_chan = 
+    if !citations_file =$= "" then None else Some (open_out !citations_file)
+  in
+  let output_chan =
+    if !output_file =$= "" then stdout else (open_out !output_file) in
+  let citations = ref [] in
+  let html_cite =
+    let prefix = 
+      Opt.default 
+        Dibrawi.Preprocessor.default_html_biblio_page
+        !biblio_html_prefix in
+    fun cites ->
+      citations := cites :: !citations;
+      Dibrawi.Preprocessor.default_html_cite prefix cites
+  in
+  Ls.iter (Ls.rev !to_preprocess) ~f:(fun filename ->
+    let page = Dibrawi.Data_source.get_file filename in
+    let preprocessed =
+      Dibrawi.Preprocessor.brtx2brtx ~mix_output:!mix_output
+        ~html_cite ~output:!out_format ~from:["cmdline"] page in
+    fprintf output_chan "%s\n" preprocessed;
+  );
+  let cites = Ls.flatten !citations in
+  Opt.may output_citations_chan ~f:(fun o ->
+    fprintf o "%s\n" (Str.concat " " (Ls.rev cites));
+  );
+  close_out output_chan;
+  ()
+
 
 let usage = "Usage: dbw {<command>, help} [OPTIONS | -help]"
 let () =
@@ -553,12 +606,14 @@ let () =
       | "wiki" | "w" -> transform_wiki Sys.argv.(1) argv
       | "prepro" | "pp" | "p" -> prepro Sys.argv.(1) argv
       | "version" | "-v" | "-version" | "--version" -> print_version ()
+      | "run" | "mix" -> run_mix Sys.argv.(1) argv
       | "help" | "h" | "-help" | "-h" | "--help" ->
         eprintf "%s\n" usage;
         eprintf "Available commands:\n\
               \  * wiki | w: Build the whole wiki.\n\
               \  * prepro | pp | p: Run the preprocessor.\n\
               \  * version | -v | -version | --version: Print version.\n\
+              \  * run | mix: Preprocess files and run camlmix.\n\
               \  * help | h | -help | -h | --help: Show this help.\n\
                Try also: dbw <command> -help\n"
       | s -> 
