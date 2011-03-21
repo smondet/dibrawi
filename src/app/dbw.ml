@@ -319,7 +319,7 @@ let transform ?(html_template=`none)
   ()
 
 
-let () =
+let transform_wiki name argv =
   let print_version = ref false in
   let html_tmpl = ref `none in
   let persistence = ref "" in
@@ -327,8 +327,10 @@ let () =
   let exclude = ref None in
   let filter = ref None in
 
+  let usage = 
+    sprintf "Usage: dbw %s [OPTIONS] <input-dir> <output-dir>" name in 
+
   let arg_cmd ~doc key spec = (key, spec, doc) in
-  let usage = "usage: dbw [OPTIONS] <input-dir> <output-dir>" in
   let commands = [
     arg_cmd
       ~doc:"\n\tPrint version informations and exit"
@@ -362,7 +364,7 @@ let () =
   let anonymous_arguments =
     let anons = ref [] in
     let anon_fun s = anons := s :: !anons in
-    Arg.parse commands anon_fun usage;
+    Arg.parse_argv argv commands anon_fun usage;
     Ls.rev !anons   in
 
   if !print_version then (
@@ -393,4 +395,20 @@ let () =
   );
   ()
 
-
+let usage = "Usage: dbw {<command>, help} [OPTIONS | -help]"
+let () =
+  if Array.length Sys.argv = 1 then (
+    printf "%s\n" usage;
+  ) else (
+    let argv = (Array.sub Sys.argv 1 (Array.length Sys.argv - 1)) in
+    match Sys.argv.(1) with
+    | "wiki" -> transform_wiki Sys.argv.(1) argv
+    | "help" | "h" | "-help" | "-h" | "--help" ->
+      eprintf "%s\n" usage;
+      eprintf "Available commands:\n\
+              \  * wiki : Build the whole wiki.\n";
+      eprintf "Try : dbw <command> -help\n"
+    | s -> 
+      eprintf "Unknown command: \"%s\"\n" s;
+      exit 1
+  )
