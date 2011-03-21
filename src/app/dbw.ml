@@ -548,16 +548,24 @@ let () =
     printf "%s\n" usage;
   ) else (
     let argv = (Array.sub Sys.argv 1 (Array.length Sys.argv - 1)) in
-    match Sys.argv.(1) with
-    | "wiki" -> transform_wiki Sys.argv.(1) argv
-    | "prepro" -> prepro Sys.argv.(1) argv
-    | "version" | "-v" | "-version" | "--version" -> print_version ()
-    | "help" | "h" | "-help" | "-h" | "--help" ->
-      eprintf "%s\n" usage;
-      eprintf "Available commands:\n\
-              \  * wiki : Build the whole wiki.\n";
-      eprintf "Try : dbw <command> -help\n"
-    | s -> 
-      eprintf "Unknown command: \"%s\"\n" s;
-      exit 1
+    try 
+      begin match Sys.argv.(1) with
+      | "wiki" | "w" -> transform_wiki Sys.argv.(1) argv
+      | "prepro" | "pp" | "p" -> prepro Sys.argv.(1) argv
+      | "version" | "-v" | "-version" | "--version" -> print_version ()
+      | "help" | "h" | "-help" | "-h" | "--help" ->
+        eprintf "%s\n" usage;
+        eprintf "Available commands:\n\
+              \  * wiki | w: Build the whole wiki.\n\
+              \  * prepro | pp | p: Run the preprocessor.\n\
+              \  * version | -v | -version | --version: Print version.\n\
+              \  * help | h | -help | -h | --help: Show this help.\n\
+               Try also: dbw <command> -help\n"
+      | s -> 
+        eprintf "Unknown command: \"%s\"\n" s;
+        exit 1
+      end
+    with 
+    | Arg.Help msg | Arg.Bad msg -> eprintf "%s" msg
+    | exn -> eprintf "dbw ends with an exception:\n%s\n" (Printexc.to_string exn)
   )
