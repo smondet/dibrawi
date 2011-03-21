@@ -304,7 +304,7 @@ module Preprocessor = struct
                   (html_or_latex
                      "<span class=\"dibrawicomment\">" "\\dbwcmt{"));
             pr (Str.concat " " (Ls.map sanitize_brtx_content args))
-          | "cite" -> ()
+          | "cite" | "=" | "@" -> ()
           | _ ->
             pr (sprintf "{%s%s|" cmd
                   (Str.concat "" (Ls.map (fun s -> 
@@ -318,6 +318,20 @@ module Preprocessor = struct
                 (Ls.flatten (Ls.map args ~f:split_cites)) in
             pr (html_or_latex (html_cite cites)
                   (bypass (sprintf "\\cite{%s}" (Str.concat "," cites))))
+          | (cmd, args) when cmd = "=" || cmd = "@" ->
+            begin match mix_output with
+            | `wiki ->
+              pr "{bypass endfordiv}<span class=\"dbwmixcode\">{endfordiv}";
+              pr (sprintf "{t|{utf 0x22b2}%s {text mixspecialend}" cmd);
+              pr (Str.concat " " args);
+              pr "{mixspecialend}{utf 0x22b3}}";
+              pr "{bypass endfordiv}</span>{endfordiv}";
+            | `camlmix -> 
+              pr "##";
+              pr (if cmd = "=" then "= " else " ");
+              pr (Str.concat " " args);
+              pr " ##";
+            end
           | _ -> pr "}");
         terminate = (fun loc -> ());
         is_raw = (fun s -> 
