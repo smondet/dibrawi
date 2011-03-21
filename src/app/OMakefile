@@ -5,4 +5,4 @@ OCAMLINCLUDES += ../lib/
 
 test_dbw:  $(OCamlProgram test_dbw, test_dbw)
 
-.DEFAULT: $(OCamlProgram dbw, dbw) $(OCamlProgram dbwpp, dbwpp)
+.DEFAULT: $(OCamlProgram dbw, dbw)
