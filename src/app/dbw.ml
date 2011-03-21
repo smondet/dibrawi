@@ -318,9 +318,18 @@ let transform ?(html_template=`none)
 
   ()
 
+let print_version () =
+  printf "dbw v. 0 (%s)\n" Dibrawi.Info.version_string;
+  printf
+    "OCaml: %s, PCRE: %s, Bracetax: %s, SeBib: %s\n"
+    Sys.ocaml_version  Pcre.version
+    Bracetax.Info.version Sebib.Info.version;
+  ()
+
+
 
 let transform_wiki name argv =
-  let print_version = ref false in
+  let print_v = ref false in
   let html_tmpl = ref `none in
   let persistence = ref "" in
   let print_named_templates = ref false in
@@ -335,7 +344,7 @@ let transform_wiki name argv =
     arg_cmd
       ~doc:"\n\tPrint version informations and exit"
       "-version"
-      (Arg.Set print_version);
+      (Arg.Set print_v);
     arg_cmd
       ~doc:"<path>\n\tSet an HTML template file"
       "-template-file"
@@ -367,12 +376,8 @@ let transform_wiki name argv =
     Arg.parse_argv argv commands anon_fun usage;
     Ls.rev !anons   in
 
-  if !print_version then (
-    printf "dbw v. 0 (%s)\n" Dibrawi.Info.version_string;
-    printf
-      "OCaml: %s, PCRE: %s, Bracetax: %s, SeBib: %s\n"
-      Sys.ocaml_version  Pcre.version
-      Bracetax.Info.version Sebib.Info.version;
+  if !print_v then (
+    print_version ()
   ) else (
     if !print_named_templates then (
       printf "Named templates:\n";
@@ -409,9 +414,7 @@ let prepro name argv =
 
   Arg.parse_argv argv [
     ("-version",
-     Arg.Unit (fun () ->
-       printf "Dibrawi Preprocessor, for %s\n%!"
-         Dibrawi.Info.version_string),
+     Arg.Unit (print_version),
      "\n\tprint version");
     ("-citations",
      Arg.Set_string citations_file,
@@ -548,6 +551,7 @@ let () =
     match Sys.argv.(1) with
     | "wiki" -> transform_wiki Sys.argv.(1) argv
     | "prepro" -> prepro Sys.argv.(1) argv
+    | "version" | "-v" | "-version" | "--version" -> print_version ()
     | "help" | "h" | "-help" | "-h" | "--help" ->
       eprintf "%s\n" usage;
       eprintf "Available commands:\n\
