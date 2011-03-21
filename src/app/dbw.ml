@@ -4,42 +4,6 @@ open Dibrawi_std
 
 module Dbw_sys = Dibrawi.System
 
-module Persistence = struct
-
-  type build_persistence = {
-    mutable file_hashes: (string * Dibrawi.Make.MD5.file_content) list;
-    menu_hash: string;
-  }
-
-  let empty ?(menu_hash="") () = { file_hashes = []; menu_hash = menu_hash }
-
-  let from_file pf =
-    try 
-      let i = open_in pf in
-      let str_contents = (Marshal.from_channel i : build_persistence) in
-      close_in i;
-      Some str_contents 
-    with _ -> None (* when the file does not exist, or Marshal fails *)
-
-  let find_file_opt bp str =
-    match Ls.find_opt bp.file_hashes ~f:(fun (s, _) -> s =$= str) with
-    | None -> None
-    | Some (_, c) -> Some c
-
-  let save (str_contents: build_persistence) pf =
-    let o = open_out pf in
-    Marshal.to_channel o str_contents [];
-    close_out o;
-    ()
-
-  let menu_hash bp = bp.menu_hash
-
-  let filter_files ~f bp = Ls.filter ~f bp.file_hashes
-
-  let set_files bp files = bp.file_hashes <- files
-
-end
-
 
 let output_buffers
     ~(output_content:'a Io.output -> unit) file_name err_buffer =
