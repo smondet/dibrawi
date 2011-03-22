@@ -756,6 +756,22 @@ module Make (Camlmix_input: CAMLMIX) = struct
     let stop = ()
   end
 
+  module List_menu = struct
+
+    let make entries 
+        ?(current_entry= (fun n l -> sprintf "{b|%s}" n))
+        ?(other_entries= (fun n l -> sprintf "{link %s|%s}" l n)) =
+      let instance key =
+        "{begin list}\n {*} " ^
+        (Str.concat "\n {*} "
+           (Ls.map entries ~f:(fun (k, n, l) -> 
+            if k = key then current_entry n l else other_entries n l))) ^
+          "\n{end}\n"
+      in
+      instance
+
+  end
+
   module LaTeX = struct
 
     let make_letter ~src ~dest ?date ?sign ?opening ?closing content =
