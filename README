@@ -39,7 +39,7 @@ Basic Usage:
 
   If you have a directory tree `data/...' with a bunch of .brtx files,
   you may run:
-      dbw  -persist-with _build/dbw_persistance \
+      dbw wiki -persist-with _build/dbw_persistance \
           -named-template three_columns_greenish-linked \
           data/ _build/
   
@@ -51,6 +51,8 @@ Basic Usage:
   be `recompiled'.
 
 
+  Try also:
+      dbw help
 
 
 Contact:
