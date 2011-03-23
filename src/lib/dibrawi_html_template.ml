@@ -338,8 +338,8 @@ let footnotes params =
   str 
     "small.notebegin { counter-increment: footnote; }\n\
     small.noteend:before {  content: counter(footnote) }\n\
-    small.note:before {  content: counter(footnote) \": \" }\n\
-    body { counter-reset: footnote; }\n\
+    small.note:before { content: counter(footnote) \": \" }\n\
+    body { counter-reset: section subsection subsubsection footnote; }\n\
     \n\
     small.note {\n\
     \    font-size: 70%;\n\
@@ -354,15 +354,12 @@ let footnotes params =
 
 let section_numbers params =
   str
-    "h1 { \n\
-    \    counter-reset: section;\n\
-    \    counter-reset:footnote;\n\
-    }\n\
+    "h1 { counter-reset: section subsection subsubsection footnote; }\n\
+    body { counter-reset: section subsection subsubsection footnote; }\n\
     h2:before { content: counter(section) \". \"; }\n\
     h2 {\n\
-    \    counter-reset: subsubsection;\n\
+    \    counter-reset: subsection subsubsection;\n\
     \    counter-increment: section;\n\
-    \    counter-reset: subsection;\n\
     }\n\
     h3:before {\n\
         content: counter(section) \".\" counter(subsection) \". \" ;\n\
