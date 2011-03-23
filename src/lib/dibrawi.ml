@@ -142,12 +142,18 @@ module Data_source = struct
       let rec explore path name =
         let next_path = path ^ "/" ^ name in
         let real_path = data_root ^ "/" ^ next_path in
-        if Sys.is_directory real_path then
-          FT.Dir (path, name, Ls.map (explore next_path)  (ls real_path))
-        else
-          FT.File (path, name) 
+        try 
+          if Sys.is_directory real_path then
+            Some (FT.Dir (path, name, 
+                          Ls.filter_map (explore next_path) (ls real_path)))
+          else
+            Some (FT.File (path, name))
+        with
+          Sys_error msg ->
+            eprintf "Warning: Ignoring path %s\n" real_path;
+            None
       in
-      Ls.map (explore ".")  (ls data_root)
+      Ls.filter_map (explore ".")  (ls data_root)
     ) else (
       invalid_arg (sprintf "%s is not a directory" data_root)
     )
