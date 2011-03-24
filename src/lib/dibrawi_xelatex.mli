@@ -10,12 +10,23 @@ val make_french_letter :
   string -> string
 
 exception Build_error of Unix.process_status * string
-val build : ?with_bibtex:bool -> ?raises:bool -> string -> string
+
+type print_error_style = 
+  [ `no | `simple of out_channel | `complex of out_channel ]
+
+val build : 
+  ?with_bibtex:bool -> ?raises:bool -> ?print_errors:print_error_style -> 
+  string -> string
 
 val do_clean : string -> unit
-val build_string : ?with_bibtex:bool -> ?raises:bool -> string -> string
+val build_string :
+  ?with_bibtex:bool -> ?raises:bool -> ?print_errors:print_error_style -> 
+  string -> string
+
 val build_string_tree :
-  ?with_bibtex:bool -> ?raises:bool -> Dibrawi_std.String_tree.t -> string
+  ?with_bibtex:bool -> ?raises:bool -> ?print_errors:print_error_style -> 
+  Dibrawi_std.String_tree.t -> string
+
 val make_full_file :
   ?pdf_title:string -> ?pdf_authors:string -> ?pdf_subject:string ->
   latex_template:Dibrawi_std.String_tree.t ->
