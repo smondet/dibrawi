@@ -44,9 +44,6 @@ module Template : sig
   val package_geometry :
     ?paper:[< `A0 | `A1 | `A2 | `A3 | `A4 | `A5 | `A6 > `A4 ] ->
     ?raw_options:string -> component
-  val make_things_smaller :
-    ?baselinestretch:float -> ?parskip:string -> ?parindent:string ->
-    ?compact_sections:bool -> component
   val paragraphs :
     ?baselinestretch:float -> ?parskip:string -> ?parindent:string -> component
   val small_itemize : component

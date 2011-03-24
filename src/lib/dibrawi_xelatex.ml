@@ -211,20 +211,6 @@ module Template = struct
       str_cat ["\n\\usepackage["; paper_str; raw_options; "]{geometry}\n" ] in
     usepackage
 
-  let make_things_smaller
-      ?(baselinestretch=0.9) ?parskip
-      ?parindent ?(compact_sections=true) params =
-    let omd f o = Opt.map_default f "" o in
-    str_cat [
-      sprintf "\\renewcommand{\\baselinestretch}{%.2f}\n" baselinestretch;
-      omd (sprintf "\\setlength{\\parindent}{%s}\n") parindent;
-      if compact_sections then
-        "\\usepackage[small,compact]{titlesec}\n"
-      else
-        "";
-      omd (sprintf "\\setlength{\\parskip}{%s}\n") parskip
-    ]
-
   let paragraphs ?baselinestretch ?parskip ?parindent params =
     let omd f o = Opt.map_default f "" o in
     str_cat [
