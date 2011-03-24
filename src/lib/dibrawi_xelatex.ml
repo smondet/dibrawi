@@ -52,8 +52,8 @@ let show_errors ?(out=stderr) err log =
 type print_error_style = 
   [ `no | `simple of out_channel | `complex of out_channel ]
 
-let build ?(with_bibtex=false) ?(raises=false)
-    ?(print_errors:print_error_style=`simple stderr) path = 
+let build ?(with_bibtex=false) ?(raises=true)
+    ?(print_errors:print_error_style=`complex stderr) path = 
   let pwd = Sys.getcwd () in
   let cd = Filename.dirname path in
   Sys.chdir cd;
