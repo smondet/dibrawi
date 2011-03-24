@@ -596,7 +596,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
         None
       )
 
-    let svg_layers file ?heightno layers = 
+    let svg_layers srcpath dstpath file ?heightno layers = 
       
       let load filename = 
         let xml_channel = open_in filename in
@@ -643,54 +643,28 @@ module Make (Camlmix_input: CAMLMIX) = struct
           else
             Xml.Element (tagname, attributes, List.map (filter layers) children)
       in
+      let infile = sprintf "%s/%s" srcpath file in
       let outfile =
-        sprintf "%s_%s" file (String.concat "-" (Ls.map string_of_int layers)) in
-      save (filter layers (load (file ^ ".svg"))) (outfile ^ ".svg");
-      outfile
+        sprintf "%s/%s_%s" dstpath file
+          (String.concat "-" (Ls.map string_of_int layers)) in
+      save (filter layers (load (infile ^ ".svg"))) (outfile ^ ".svg");
+      (Filename.basename outfile)
 
-    type figure =
-      | Inkscape of string
-      | Layered_inkscape of string * (int option) * (int list)
-
-    let inkscape ?height ?layers ?path name =
-      let full_name =
-        match path with
-        | None -> !default_svg_inkscape_path ^ name
-        | Some p -> p ^ name in
-      match layers with
-      | Some l -> Layered_inkscape (full_name, height, l)
-      | None -> Inkscape full_name
-
-    let start ?label ?size ?caption ?dest_dir what =
-      let saved_printer = !Camlmix_input.printer in
-      Camlmix_input.printer :=
-        (fun s -> 
-          let o = 
-            match what with
-            | Inkscape name -> inkscape_fig ?label ?size ?caption ?dest_dir name
-            | Layered_inkscape (name, heightno, layers) ->
-              if Sys.file_exists (name ^ ".svg") then
-                inkscape_fig ?label ?size ?caption ?dest_dir
-                  (svg_layers name ?heightno layers)
-              else (
-                printf "Layer source does not exist: %s\n" (name ^ ".svg");
-                None
-              )
-          in
-          begin match o with
-          | Some image -> saved_printer image;
-          | None -> saved_printer s;
-          end;
-          Camlmix_input.printer := saved_printer)
+    type svg_transformation = [
+    | `select_layers of int list
+    | `select_layers_and_altheight_nb of int list * int
+    ]
 
     let start_inkscape 
         ?(label="") ?(size="100%") ?(caption="")
         ?(tmp_dir="/tmp/") ?(dest_dir="/tmp/") ?link_dir ?path
+        ?(transform:svg_transformation option)
         filename
         =
       let saved_printer = !Camlmix_input.printer in
       Camlmix_input.printer :=
         (fun s ->
+          (* If SVGZ then decompress *)
           let the_path, the_file =
             let actual_path = Opt.default !default_svg_inkscape_path path in
             let chopped = Filename.chop_extension filename in
@@ -702,6 +676,16 @@ module Make (Camlmix_input: CAMLMIX) = struct
               (tmp_dir, chopped)
             else
               (actual_path, chopped) in
+          (* Do transformations *)
+          let the_path, the_file = 
+            match transform with
+            | Some (`select_layers_and_altheight_nb (layers, heightno)) ->
+              (tmp_dir, svg_layers the_path tmp_dir the_file ~heightno layers)
+            | Some (`select_layers layers) ->
+              (tmp_dir, svg_layers the_path tmp_dir the_file layers)
+            | None ->
+              (the_path, the_file) in
+          (* Do the compilation *)
           let outcmd, outname, outfmt = 
             let dest = sprintf "%s/%s" dest_dir the_file in
             Params.map_output
