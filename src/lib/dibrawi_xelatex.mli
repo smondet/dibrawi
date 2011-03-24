@@ -8,11 +8,14 @@ val make_french_letter :
   ?subject:string -> ?date:string -> ?sign:string ->
   ?opening:string -> ?closing:string -> 
   string -> string
-val build : ?with_bibtex:bool -> string -> string
+
+exception Build_error of Unix.process_status * string
+val build : ?with_bibtex:bool -> ?raises:bool -> string -> string
+
 val do_clean : string -> unit
-val build_string : ?with_bibtex:bool -> string -> string
+val build_string : ?with_bibtex:bool -> ?raises:bool -> string -> string
 val build_string_tree :
-  ?with_bibtex:bool -> Dibrawi_std.String_tree.t -> string
+  ?with_bibtex:bool -> ?raises:bool -> Dibrawi_std.String_tree.t -> string
 val make_full_file :
   ?pdf_title:string -> ?pdf_authors:string -> ?pdf_subject:string ->
   latex_template:Dibrawi_std.String_tree.t ->

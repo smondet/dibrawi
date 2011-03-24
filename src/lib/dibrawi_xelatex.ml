@@ -33,7 +33,9 @@ let make_french_letter
     "\\end{letter}\n";
   ]
         
-let build ?(with_bibtex=false) path = 
+exception Build_error of Unix.process_status * string
+    
+let build ?(with_bibtex=false) ?(raises=false) path = 
   let pwd = Sys.getcwd () in
   let cd = Filename.dirname path in
   Sys.chdir cd;
@@ -43,17 +45,12 @@ let build ?(with_bibtex=false) path =
   let run_command c =
     match Unix.system c with
     | Unix.WEXITED 0 -> ()
-    | Unix.WEXITED n ->
-      eprintf "XeLaTeX: Compilation of %s failed with error code: %d\n\
-                see %s/%s.log\n" target n cd target;
-      failwith "xelatex"
-    | _ ->
-      eprintf "XeLaTeX: Compilation of %s got killed (?)\n\
-                see %s/%s.log\n" target cd target;
-      failwith "xelatex"
+    | err ->
+      let log = sprintf "%s/%s.log" cd target in
+      raise (Build_error (err, log))
   in
   let commands =
-    let latex = (sprintf "%s %s > /dev/null" pdflatex target) in
+    let latex = (sprintf "%s %s > /dev/null 2>&1" pdflatex target) in
     if with_bibtex then
       [ latex; (sprintf "bibtex %s > /dev/null"  target); latex; latex; latex ]
     else
@@ -61,7 +58,15 @@ let build ?(with_bibtex=false) path =
   begin 
     try
       List.iter run_command commands
-    with _ -> ()
+    with
+    | Build_error (Unix.WEXITED n, log) as e -> 
+      if raises then raise e else 
+        (eprintf "\nXeLaTeX: Compilation of %s failed with error code: %d\n\
+                  see %s\n" target n log)
+    | Build_error (_, log) as e -> 
+      if raises then raise e else 
+        (eprintf "\nXeLaTeX: Compilation of %s got killed (?)\nsee %s\n"
+           target log)
   end;
   Sys.chdir pwd;
   (sprintf "%s/%s.pdf" cd target)
@@ -72,21 +77,21 @@ let do_clean basename =
     "rm -f " ^ (Str.concat " " (Ls.map exts ~f:((^) basename))) in
   ignore (Unix.system cmd)
 
-let build_string ?(with_bibtex=false) str =
+let build_string ?with_bibtex ?raises str =
   let name = "/tmp/buildpdfstring.tex" in
   let o = open_out name in
   output_string o str;
   close_out o;
-  let result = build ~with_bibtex name in
+  let result = build ?with_bibtex ?raises name in
   do_clean "/tmp/buildpdfstring";
   result
 
-let build_string_tree ?(with_bibtex=false) stree =
+let build_string_tree ?with_bibtex ?raises stree =
   let name = "/tmp/xelatexbuildstringtree.tex" in
   Io.with_file_out name (fun out ->
     String_tree.print ~out stree;
   );
-  let result = build ~with_bibtex name in
+  let result = build ?with_bibtex ?raises name in
   do_clean "/tmp/xelatexbuildstringtree";
   result
 
