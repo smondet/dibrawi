@@ -53,7 +53,8 @@ module Template : sig
   val verbatim_style :
     ?font_size:[ `footnote | `small ] -> component
   val package_caption : component
-  val compact_sections : component
+  val compact_sections :
+    ?how:[`with_titlesec | `homemade ] -> component
   val tabular_style :
     ?font_size:[ `footnote | `small ] ->
     ?vertical_cell_spacing:float -> component

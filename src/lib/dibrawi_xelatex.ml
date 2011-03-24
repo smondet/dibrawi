@@ -281,7 +281,13 @@ module Template = struct
 \\usepackage[margin=10pt,font=small,labelfont=bf,labelsep=endash,nooneline]{caption}
 "
 
-  let compact_sections params = str
+  let compact_sections
+      ?(how:[`with_titlesec | `homemade ]= `with_titlesec) params = 
+    match how with
+    | `with_titlesec ->
+      str "\\usepackage[small,compact]{titlesec}\n"
+    | `homemade ->
+      str
 "
 \\makeatletter  % makes '@' an ordinary character
 \\renewcommand{\\paragraph}{\\@startsection{paragraph}{4}{\\z@}%
