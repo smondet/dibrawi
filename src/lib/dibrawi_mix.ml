@@ -516,24 +516,31 @@ module Make (Camlmix_input: CAMLMIX) = struct
 
     let default_svg_inkscape_path = ref "/NOT_SET"
 
-    let dot_fig ?(label="") ?(size="100%") ?(caption="") ?dest_dir contents =
-      let out_format = 
-        Params.map_output ~latex:(fun () -> "pdf") ~html:(fun () -> "png") in
-      let tmpfile =
-        Filename.temp_file "notesgraphviz" (sprintf ".%s" out_format) in
-      let cmd = sprintf "dot -Kdot -T%s -o%s" out_format tmpfile in
-      let output = System.feed ~cmd ~input:contents in
-    (* !Camlmix_input.printer  *)
-      Opt.may (fun d ->
-        System.run_command
-          (sprintf "mkdir -p %s; cp %s %s/" d tmpfile d)) dest_dir;
-      let path =
-        match dest_dir with
-        | None -> tmpfile
-        | Some d -> d ^ "/" ^ (Filename.basename tmpfile) in
-      Some (sprintf "{ignore}Output of 'dot':\n%s\n{end}\n\
-                {image %s %s %s|%s}" output path size label caption)
-  (* Camlmix_input.print_with ignore *)
+    let hash_fun = Hashtbl.hash
+
+    let start_dot
+        ?(label="") ?(size="100%") ?(caption="") 
+        ?(basename="dbwgraphvizdot") ?(dest_dir="/tmp/") ?link_dir
+        contents =
+      let saved_printer = !Camlmix_input.printer in
+      Camlmix_input.printer :=
+        (fun alternate -> 
+          let hash = hash_fun [basename; contents] in
+          let out_format = 
+            Params.map_output ~latex:(fun () -> "pdf") ~html:(fun () -> "png")
+          in
+          let tmpfile =
+            sprintf "%s/%s%d.%s" dest_dir basename hash out_format in
+          let cmd = sprintf "dot -Kdot -T%s -o%s" out_format tmpfile in
+          let output = System.feed ~cmd ~input:contents in
+          let path =
+            match link_dir with
+            | None -> tmpfile
+            | Some d -> d ^ "/" ^ (Filename.basename tmpfile) in
+          saved_printer (sprintf "{ignore}Output of 'dot':\n%s\n{end}\n\
+                          {image %s %s %s|%s}" output path size label caption);
+          Camlmix_input.printer := saved_printer)
+        
 
     let inkscape_fig ?(label="") ?(size="100%") ?(caption="") ?dest_dir fullname =
       let svg = fullname ^ ".svg" in
@@ -636,7 +643,6 @@ module Make (Camlmix_input: CAMLMIX) = struct
       Some ((start label) ^ contents ^ (stop label caption))
 
     type figure =
-      | Dot of string
       | Inkscape of string
       | Layered_inkscape of string * (int option) * (int list)
       | Ascii_art 
@@ -651,8 +657,6 @@ module Make (Camlmix_input: CAMLMIX) = struct
       match layers with
       | Some l -> Layered_inkscape (full_name, height, l)
       | None -> Inkscape full_name
-
-    let dot contents = Dot contents
 
     let start ?label ?size ?caption ?dest_dir what =
       let saved_printer = !Camlmix_input.printer in
@@ -669,8 +673,6 @@ module Make (Camlmix_input: CAMLMIX) = struct
                 printf "Layer source does not exist: %s\n" (name ^ ".svg");
                 None
               )
-            | Dot content ->
-              dot_fig ?label ?size ?caption ?dest_dir content
             | Ascii_art ->
               ascii_art_fig  ?label ?size ?caption s
           in
