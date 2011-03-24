@@ -524,7 +524,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
         contents =
       let saved_printer = !Camlmix_input.printer in
       Camlmix_input.printer :=
-        (fun alternate -> 
+        (fun alt -> 
           let hash = hash_fun [basename; contents] in
           let out_format = 
             Params.map_output ~latex:(fun () -> "pdf") ~html:(fun () -> "png")
@@ -539,6 +539,34 @@ module Make (Camlmix_input: CAMLMIX) = struct
             | Some d -> d ^ "/" ^ (Filename.basename tmpfile) in
           saved_printer (sprintf "{ignore}Output of 'dot':\n%s\n{end}\n\
                           {image %s %s %s|%s}" output path size label caption);
+          Camlmix_input.printer := saved_printer)
+
+
+    let start_ascii_art ?(label="") ~caption =
+      let saved_printer = !Camlmix_input.printer in
+      Camlmix_input.printer :=
+        (fun contents -> 
+          let start id =
+            Params.map_output
+              ~html:(fun () -> 
+                sprintf "{bypass endbypass}<div class=\"figure\" id=\"%s\" >\
+                        <div style=\"text-align: left;\">{endbypass}" id)
+              ~latex:(fun () ->
+                sprintf "{bypass endbypass}\\begin{figure}[htbp]\n\
+                         \\begin{minipage}{\\columnwidth}{endbypass}\n")
+          in
+          let stop id caption =
+            Params.map_output
+              ~html:(fun () ->
+                sprintf "{bypass endbypass}</div>%s</div>{endbypass}" 
+                  (Dbw.brtx caption))
+              ~latex:(fun () ->
+                sprintf "{bypass endbypass}\\caption{%s\\label{%s}}\n\
+                           \\end{minipage}\\end{figure}{endbypass}"
+                  (Dbw.brtx caption)
+                  (Bracetax.LatexPrinter.sanitize_nontext id))
+          in
+          saved_printer ((start label) ^ contents ^ (stop label caption));
           Camlmix_input.printer := saved_printer)
         
 
@@ -620,34 +648,9 @@ module Make (Camlmix_input: CAMLMIX) = struct
       save (filter layers (load (file ^ ".svg"))) (outfile ^ ".svg");
       outfile
 
-    let ascii_art_fig ?(label="") ?(size="100%") ?(caption="") contents =
-      let start id =
-        Params.map_output
-        ~html:(fun () -> 
-          sprintf "{bypass endbypass}<div class=\"figure\" id=\"%s\" >\
-                        <div style=\"text-align: left;\">{endbypass}" id)
-        ~latex:(fun () ->
-          sprintf "{bypass endbypass}\\begin{figure}[htbp]\n\
-                         \\begin{minipage}{\\columnwidth}{endbypass}\n")
-      in
-      let stop id caption =
-        Params.map_output
-          ~html:(fun () ->
-            sprintf "{bypass endbypass}</div>%s</div>{endbypass}" 
-                   (Dbw.brtx caption))
-          ~latex:(fun () ->
-            sprintf "{bypass endbypass}\\caption{%s}\\label{%s}\n\
-                           \\end{minipage}\\end{figure}{endbypass}"
-                    (Dbw.brtx caption) id)
-      in
-      Some ((start label) ^ contents ^ (stop label caption))
-
     type figure =
       | Inkscape of string
       | Layered_inkscape of string * (int option) * (int list)
-      | Ascii_art 
-
-    let ascii_art = Ascii_art
 
     let inkscape ?height ?layers ?path name =
       let full_name =
@@ -673,8 +676,6 @@ module Make (Camlmix_input: CAMLMIX) = struct
                 printf "Layer source does not exist: %s\n" (name ^ ".svg");
                 None
               )
-            | Ascii_art ->
-              ascii_art_fig  ?label ?size ?caption s
           in
           begin match o with
           | Some image -> saved_printer image;
