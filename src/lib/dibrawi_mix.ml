@@ -683,6 +683,43 @@ module Make (Camlmix_input: CAMLMIX) = struct
           end;
           Camlmix_input.printer := saved_printer)
 
+    let start_inkscape 
+        ?(label="") ?(size="100%") ?(caption="")
+        ?(tmp_dir="/tmp/") ?(dest_dir="/tmp/") ?link_dir ?path
+        filename
+        =
+      let saved_printer = !Camlmix_input.printer in
+      Camlmix_input.printer :=
+        (fun s ->
+          let the_path, the_file =
+            let actual_path = Opt.default !default_svg_inkscape_path path in
+            let chopped = Filename.chop_extension filename in
+            if Filename.check_suffix filename ".svgz" then
+              let cmd = 
+                sprintf "gunzip -c %s/%s > %s/%s.svg" 
+                  actual_path filename tmp_dir chopped in
+              System.run_command cmd;
+              (tmp_dir, chopped)
+            else
+              (actual_path, chopped) in
+          let outcmd, outname, outfmt = 
+            let dest = sprintf "%s/%s" dest_dir the_file in
+            Params.map_output
+              ~latex:(fun () -> "inkscape -z -A", dest, ".pdf")
+              ~html:(fun () -> "inkscape -z -e",  dest, ".png") in
+          let svg = sprintf "%s/%s.svg" the_path the_file in
+          if not (Sys.file_exists outname) || System.is_newer svg outname then (
+            System.run_command
+              (sprintf "%s %s%s %s > /dev/null"  outcmd outname outfmt svg);
+          ) else (
+            eprintf "Alt_fig.Inkscape: The .svg is older than %s%s\n"
+              outname outfmt;
+          );
+          let link = 
+            sprintf "%s/%s%s" (Opt.default dest_dir link_dir) the_file outfmt in
+          saved_printer (sprintf "{image %s %s %s|%s}" link size label caption);
+          Camlmix_input.printer := saved_printer)
+
     let stop = ()
 
   end
