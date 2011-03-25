@@ -675,6 +675,15 @@ module Make (Camlmix_input: CAMLMIX) = struct
 
   module Code = struct
 
+
+    let get_code s =
+      try
+        let first = Str.find s "{code}" + 6 in
+        let last = Str.find s "{end}" in
+        Str.slice ~first ~last s
+      with _ -> failwith "Mix.Code.get_code failed to get the code"
+
+
     let lstlisting_language = function
       | `OCaml | `ocaml | `caml -> "Caml" (* "[Objective]Caml" *)
       | `C | `c -> "C"
@@ -689,10 +698,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
           \\end{minipage}\\end{figure}"
           (Dbw.brtx caption) id
           in*)
-      let content = 
-        (Pcre.substitute 
-           ~pat:"(\\{code\\}|\\{ignore\\}|\\{text\\}|\\{end\\})\\s+"
-           ~subst:(fun s -> "") code) in
+      let content = get_code code in
       sprintf 
         "{bypass endbypass42}\
        \\begin{lstlisting}[%slanguage=%s%s]\
