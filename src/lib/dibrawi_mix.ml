@@ -512,35 +512,30 @@ module Make (Camlmix_input: CAMLMIX) = struct
   end
 
 
-  module Alt_fig = struct
+  module Fig = struct
 
     let default_svg_inkscape_path = ref "/NOT_SET"
 
     let hash_fun = Hashtbl.hash
 
-    let start_dot
+    let dot
         ?(label="") ?(size="100%") ?(caption="") 
         ?(basename="dbwgraphvizdot") ?(dest_dir="/tmp/") ?link_dir
         contents =
-      let saved_printer = !Camlmix_input.printer in
-      Camlmix_input.printer :=
-        (fun alt -> 
-          let hash = hash_fun [basename; contents] in
-          let out_format = 
-            Params.map_output ~latex:(fun () -> "pdf") ~html:(fun () -> "png")
-          in
-          let tmpfile =
-            sprintf "%s/%s%d.%s" dest_dir basename hash out_format in
-          let cmd = sprintf "dot -Kdot -T%s -o%s" out_format tmpfile in
-          let output = System.feed ~cmd ~input:contents in
-          let path =
-            match link_dir with
-            | None -> tmpfile
-            | Some d -> d ^ "/" ^ (Filename.basename tmpfile) in
-          saved_printer (sprintf "{ignore}Output of 'dot':\n%s\n{end}\n\
-                          {image %s %s %s|%s}" output path size label caption);
-          Camlmix_input.printer := saved_printer)
-
+      let hash = hash_fun [basename; contents] in
+      let out_format = 
+        Params.map_output ~latex:(fun () -> "pdf") ~html:(fun () -> "png")
+      in
+      let tmpfile =
+        sprintf "%s/%s%d.%s" dest_dir basename hash out_format in
+      let cmd = sprintf "dot -Kdot -T%s -o%s" out_format tmpfile in
+      let output = System.feed ~cmd ~input:contents in
+      let path =
+        match link_dir with
+        | None -> tmpfile
+        | Some d -> d ^ "/" ^ (Filename.basename tmpfile) in
+      (sprintf "{ignore}Output of 'dot':\n%s\n{end}\n\
+                          {image %s %s %s|%s}" output path size label caption)
 
     let start_ascii_art ?(label="") ~caption =
       let saved_printer = !Camlmix_input.printer in
@@ -568,33 +563,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
           in
           saved_printer ((start label) ^ contents ^ (stop label caption));
           Camlmix_input.printer := saved_printer)
+    let stop = ()
         
-
-    let inkscape_fig ?(label="") ?(size="100%") ?(caption="") ?dest_dir fullname =
-      let svg = fullname ^ ".svg" in
-      if Sys.file_exists svg then (
-        let outcmd, outname = 
-          Params.map_output
-            ~latex:(fun () -> "inkscape -z -A", fullname ^ ".pdf")
-            ~html:(fun () -> "inkscape -z -e", fullname ^ ".png") in
-        if not (Sys.file_exists outname) || System.is_newer svg outname then (
-          System.run_command 
-            (sprintf "%s %s %s"  outcmd outname svg);
-          Opt.may (fun d ->
-            System.run_command
-              (sprintf "mkdir -p %s; cp %s %s/" d outname d)) dest_dir;
-        ) else (
-          printf "The .svg is older than %s\n" outname;
-        );
-        let path =
-          match dest_dir with
-          | None -> outname
-          | Some d -> d ^ "/" ^ (Filename.basename outname) in
-        Some (sprintf "{image %s %s %s|%s}" path size label caption)
-      ) else (
-        printf "File %s does not exist.\n" svg;
-        None
-      )
 
     let svg_layers srcpath dstpath file ?heightno layers = 
       
@@ -655,56 +625,49 @@ module Make (Camlmix_input: CAMLMIX) = struct
     | `select_layers_and_altheight_nb of int list * int
     ]
 
-    let start_inkscape 
+    let inkscape_svg 
         ?(label="") ?(size="100%") ?(caption="")
         ?(tmp_dir="/tmp/") ?(dest_dir="/tmp/") ?link_dir ?path
-        ?(transform:svg_transformation option)
-        filename
-        =
-      let saved_printer = !Camlmix_input.printer in
-      Camlmix_input.printer :=
-        (fun s ->
-          (* If SVGZ then decompress *)
-          let the_path, the_file =
-            let actual_path = Opt.default !default_svg_inkscape_path path in
-            let chopped = Filename.chop_extension filename in
-            if Filename.check_suffix filename ".svgz" then
-              let cmd = 
-                sprintf "gunzip -c %s/%s > %s/%s.svg" 
-                  actual_path filename tmp_dir chopped in
-              System.run_command cmd;
-              (tmp_dir, chopped)
-            else
-              (actual_path, chopped) in
-          (* Do transformations *)
-          let the_path, the_file = 
-            match transform with
-            | Some (`select_layers_and_altheight_nb (layers, heightno)) ->
-              (tmp_dir, svg_layers the_path tmp_dir the_file ~heightno layers)
-            | Some (`select_layers layers) ->
-              (tmp_dir, svg_layers the_path tmp_dir the_file layers)
-            | None ->
-              (the_path, the_file) in
+        ?(transform:svg_transformation option) filename =
+      (* If SVGZ then decompress *)
+      let the_path, the_file =
+        let actual_path = Opt.default !default_svg_inkscape_path path in
+        let chopped = Filename.chop_extension filename in
+        if Filename.check_suffix filename ".svgz" then
+          let cmd = 
+            sprintf "gunzip -c %s/%s > %s/%s.svg" 
+              actual_path filename tmp_dir chopped in
+          System.run_command cmd;
+          (tmp_dir, chopped)
+        else
+          (actual_path, chopped) in
+      (* Do transformations *)
+      let the_path, the_file = 
+        match transform with
+        | Some (`select_layers_and_altheight_nb (layers, heightno)) ->
+          (tmp_dir, svg_layers the_path tmp_dir the_file ~heightno layers)
+        | Some (`select_layers layers) ->
+          (tmp_dir, svg_layers the_path tmp_dir the_file layers)
+        | None ->
+          (the_path, the_file) in
           (* Do the compilation *)
-          let outcmd, outname, outfmt = 
-            let dest = sprintf "%s/%s" dest_dir the_file in
-            Params.map_output
-              ~latex:(fun () -> "inkscape -z -A", dest, ".pdf")
-              ~html:(fun () -> "inkscape -z -e",  dest, ".png") in
-          let svg = sprintf "%s/%s.svg" the_path the_file in
-          if not (Sys.file_exists outname) || System.is_newer svg outname then (
-            System.run_command
-              (sprintf "%s %s%s %s > /dev/null"  outcmd outname outfmt svg);
-          ) else (
-            eprintf "Alt_fig.Inkscape: The .svg is older than %s%s\n"
-              outname outfmt;
-          );
-          let link = 
-            sprintf "%s/%s%s" (Opt.default dest_dir link_dir) the_file outfmt in
-          saved_printer (sprintf "{image %s %s %s|%s}" link size label caption);
-          Camlmix_input.printer := saved_printer)
-
-    let stop = ()
+      let outcmd, outname, outfmt = 
+        let dest = sprintf "%s/%s" dest_dir the_file in
+        Params.map_output
+          ~latex:(fun () -> "inkscape -z -A", dest, ".pdf")
+          ~html:(fun () -> "inkscape -z -e",  dest, ".png") in
+      let svg = sprintf "%s/%s.svg" the_path the_file in
+      if not (Sys.file_exists outname) || System.is_newer svg outname then (
+        System.run_command
+          (sprintf "%s %s%s %s > /dev/null"  outcmd outname outfmt svg);
+      ) else (
+        eprintf "Alt_fig.Inkscape: The .svg is older than %s%s\n"
+          outname outfmt;
+      );
+      let link = 
+        sprintf "%s/%s%s" (Opt.default dest_dir link_dir) the_file outfmt in
+      (sprintf "{image %s %s %s|%s}" link size label caption)
+      
 
   end
 
