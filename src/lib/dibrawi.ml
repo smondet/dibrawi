@@ -278,9 +278,13 @@ module Preprocessor = struct
       ?(output=`html) ?(mix_output=`wiki) () =
     let buf = Buffer.create 42 in
     let pr = Buffer.add_string buf in
-    let ploc l str =
+    let brtx_ploc l str =
       snd (Str.replace ~str ~sub:" " 
              ~by:(sprintf "\n#line %d %S\n" 
+                    l.Bracetax.Error.l_line l.Bracetax.Error.l_file)) in
+    let caml_ploc l str =
+      snd (Str.replace ~str ~sub:" " 
+             ~by:(sprintf "\n# %d %S ;;\n" 
                     l.Bracetax.Error.l_line l.Bracetax.Error.l_file)) in
     let default_raw_end = Bracetax.Commands.Raw.default_raw_end () in
     let is_old_pp_raw_2 s = Ls.exists ((=) s) ["mc"; "mi"; "me"] in
@@ -301,7 +305,7 @@ module Preprocessor = struct
     let brtx_printer = 
       { Bracetax.Signatures.
         print_comment = (fun _ _ -> ());
-        print_text = (fun loc s -> pr (ploc loc s));
+        print_text = (fun loc s -> pr (brtx_ploc loc s));
         enter_cmd = (fun loc cmd args ->
           Stack.push (cmd, args) cmd_stack;
           match cmd with
@@ -352,14 +356,14 @@ module Preprocessor = struct
           | "mix:ignore" | "mi" ->
             begin match mix_output with
             | `wiki -> pr "{ignore mixspecialend}"
-            | `camlmix -> pr "##"
+            | `camlmix -> pr (caml_ploc loc "## ")
             end
           | "mix:code" | "mc" ->
             begin match mix_output with
             | `wiki ->
               pr "{bypass endfordiv}<div class=\"dbwmixcode\">{endfordiv}\
                   {code mixspecialend}"
-            | `camlmix -> pr "##"
+            | `camlmix -> pr (caml_ploc loc "## ")
             end
           | s ->
             pr (sprintf "{%s%s}" cmd
