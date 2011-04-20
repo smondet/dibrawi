@@ -417,7 +417,7 @@ let do_the_running mix_output output biblio_html_prefix to_preprocess mix_args =
     let page = Dibrawi.Data_source.get_file filename in
     let preprocessed =
       Dibrawi.Preprocessor.brtx2brtx ~mix_output
-        ~html_cite ~output ~from:["cmdline"] page in
+        ~html_cite ~output ~from:[filename] page in
     fprintf output_chan "%s\n" preprocessed;
   );
   close_out output_chan;
@@ -550,7 +550,7 @@ let prepro name argv =
     let page = Dibrawi.Data_source.get_file filename in
     let preprocessed =
       Dibrawi.Preprocessor.brtx2brtx ~mix_output:!mix_output
-        ~html_cite ~output:!out_format ~from:["cmdline"] page in
+        ~html_cite ~output:!out_format ~from:[filename] page in
     fprintf output_chan "%s\n" preprocessed;
   );
   let cites = Ls.flatten !citations in
