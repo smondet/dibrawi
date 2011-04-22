@@ -765,6 +765,88 @@ module Make (Camlmix_input: CAMLMIX) = struct
 
   end
 
+  module Blog = struct
+
+    type post = { title: string; date: string; tags: string list; key: string }
+    class blog = object (self)
+      val mutable blog_posts_stack = []
+      method new_post ~title ~tags ~date key =
+        blog_posts_stack <- {title; date; tags; key} :: blog_posts_stack;
+        Recorder.record_to key
+      method end_post = Recorder.stop ()
+      method get_posts (what:[`all | `tag of string]) =
+        let rec f = function
+          | `all -> Ls.rev blog_posts_stack
+          | `tag s ->
+            Ls.filter (f `all)
+              ~f:(fun post -> Ls.exists ~f:((=) s) post.tags) in
+        (f what)
+      method all_tags =
+        Ls.unique (Ls.flatten (Ls.map (fun i -> i.tags) (self#get_posts `all)))
+
+    end
+
+    let rss 
+        ~title ~description ~link ~last_build_date ~pub_date
+        ~describe ~make_link pl =
+      let head =
+        sprintf 
+          "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n\
+          <rss version=\"2.0\">\n\
+          <channel>\n\
+          \    <title>%s</title>\n\
+          \    <description>%s</description>\n\
+          \    <link>%s</link>\n\
+          \    <lastBuildDate>%s</lastBuildDate>\n\
+          \    <pubDate>%s</pubDate>\n"
+          title description link last_build_date pub_date in
+      let foot = "</channel>\n</rss>\n" in
+      let items =
+        let f = 
+          fun item ->
+            let {title; date; tags; key} = item in
+            sprintf
+              "    <item>\n\
+             \         <title>%s</title>\n\
+             \         <description>%s</description>\n\
+             \         <link>%s</link>\n\
+             \         <guid>%s</guid>\n\
+             \         <pubDate>%s</pubDate>\n\
+             \     </item>\n" title (describe item) (make_link item) key date 
+        in 
+        Str.concat "\n\n" (Ls.map ~f pl) in
+      (head ^ items ^ foot)
+
+    let disqus short_name discus_id url =
+      sprintf
+        "<div id=\"disqus_thread\"></div>\n\
+        \  <script type=\"text/javascript\">\n\
+        \      var disqus_shortname = '%s'; \n\
+        \      // required: replace example with your forum shortname\n\
+        \  \n\
+        \      // The following are highly recommended additional\n\
+        \      // parameters. Remove the slashes in front to use.\n\
+        \      var disqus_identifier = '%s';\n\
+        \      var disqus_url = '%s';\n\
+        \  \n\
+        \      /* * * DON'T EDIT BELOW THIS LINE * * */\n\
+        \      (function() {\n\
+        \          var dsq = document.createElement('script');\n\
+        \          dsq.type = 'text/javascript'; dsq.async = true;\n\
+        \          dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';\n\
+        \          (document.getElementsByTagName('head')[0] ||\n\
+        \             document.getElementsByTagName('body')[0]).appendChild(dsq);\n\
+        \      })();\n\
+        \  </script>\n\
+        \  <noscript>Please enable JavaScript to view the\n\
+        \  <a href=\"http://disqus.com/?ref_noscript\">comments powered\n\
+        \  by Disqus.</a></noscript>\n\
+        \  <a href=\"http://disqus.com\" class=\"dsq-brlink\">blog\n\
+        \  comments powered by <span class=\"logo-disqus\">Disqus</span></a>"
+        short_name discus_id url
+
+
+  end
 
 end
 
