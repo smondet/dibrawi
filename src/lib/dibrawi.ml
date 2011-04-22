@@ -292,6 +292,11 @@ module Preprocessor = struct
       Ls.exists ((=) s) ["mix:code"; "mix:ignore"; "mix:end"] in
     let is_old_pp_raw s = is_old_pp_raw_2 s || is_old_pp_raw_n s in
     let cmd_stack = Stack.create () in
+    let pop_loc stack loc =
+      try Stack.pop stack with Stack.Empty ->
+        eprintf "[[%s:%d]] Trying to close a non-existing command.\n"
+          loc.Bracetax.Error.l_file loc.Bracetax.Error.l_line;
+        failwith "Preprocessor Error" in
     let bypass s = 
       let endtag = "dibrawipreprocessorendtag" in
       (sprintf "{bypass %s}%s{%s}" endtag s endtag) in
@@ -320,7 +325,7 @@ module Preprocessor = struct
                   (Str.concat "" (Ls.map (fun s -> 
                     sprintf " %s" (sanitize_brtx_command s)) args))));
         leave_cmd = (fun loc ->
-          match Stack.pop cmd_stack with
+          match pop_loc cmd_stack loc with
           | ("cmt", _) -> pr (bypass (html_or_latex "</span>" "}"))
           | ("cite", args) ->
             let cites =
@@ -376,7 +381,7 @@ module Preprocessor = struct
             else
               pr line);
         leave_raw = (fun loc -> 
-          match Stack.pop cmd_stack with
+          match pop_loc cmd_stack loc with
           | ("mix:ignore", _) | ("mi", _) ->
             begin match mix_output with
             | `wiki -> pr "{mixspecialend}"
