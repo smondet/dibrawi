@@ -140,6 +140,16 @@ module String_tree = struct
     | Cat l -> Ls.iter (print ~out) l
     | Empty -> ()
 
+  let to_string st =
+    let rec output out = function
+      | Str s -> Io.nwrite out s
+      | Cat l -> Ls.iter (output out) l
+      | Empty -> ()
+    in
+    let o = Io.output_string () in
+    output o st;
+    Io.close_out o
+
 end
 
 module Substitute = struct
