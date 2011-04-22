@@ -793,7 +793,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
       describe:(post -> string) ->
       make_link:(post -> string) -> post list -> string
       
-    val disqus : string -> string -> string -> string
+    val disqus :
+      short_name:string -> discus_id:string -> url:string -> string
   
   end = struct
       
@@ -847,7 +848,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
         Str.concat "\n\n" (Ls.map ~f pl) in
       (head ^ items ^ foot)
 
-    let disqus short_name discus_id url =
+    let disqus ~short_name ~discus_id ~url =
       sprintf
         "<div id=\"disqus_thread\"></div>\n\
         \  <script type=\"text/javascript\">\n\
