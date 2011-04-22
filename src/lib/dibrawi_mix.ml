@@ -781,6 +781,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
       method new_post :
         title:string ->
           tags:string list -> date:string -> string -> unit
+      method post_contents : string -> string
     end
 
     val rss :
@@ -812,7 +813,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
         (f what)
       method all_tags =
         Ls.unique (Ls.flatten (Ls.map (fun i -> i.tags) (self#get_posts `all)))
-
+      method post_contents key = Recorder.get key
     end
 
     let rss 
