@@ -687,6 +687,12 @@ module Make (Camlmix_input: CAMLMIX) = struct
     let lstlisting_language = function
       | `OCaml | `ocaml | `caml -> "Caml" (* "[Objective]Caml" *)
       | `C | `c -> "C"
+      | `none -> "NONE"
+    let sourcehighlight_language = function
+      | `OCaml | `ocaml | `caml -> "caml" (* "[Objective]Caml" *)
+      | `C | `c -> "c"
+      | `none -> "NONE"
+       
 
     let latex_figure ?id ?(caption="") ?latex_options language code =
     (*    let start id =
@@ -721,14 +727,24 @@ module Make (Camlmix_input: CAMLMIX) = struct
         sprintf "{bypass endbypass}</div>%s</div>{endbypass}" 
           (Dbw.brtx caption)
       in
-    (*    let content = 
-          (Pcre.substitute 
-          ~pat:"(\\{code\\}|\\{ignore\\}|\\{text\\}|\\{end\\})\\s+"
-          ~subst:(fun s -> "") code) in *)
+      let the_code =
+        match language with
+        | `none -> code
+        | _ ->
+          let input = get_code code in
+          let cmd = 
+            sprintf "source-highlight -s %s -f xhtml"
+              (sourcehighlight_language language) in
+          try
+            "{bypass endofthecodehtml}" ^ (System.feed ~cmd ~input)
+            ^ "{endofthecodehtml}"
+          with
+            e -> code
+      in
       sprintf 
         "%s\n%s\n%s\n"
         (Opt.map_default start "" id)
-        code
+        the_code
         (Opt.map_default (stop caption) "" id)
 
 
