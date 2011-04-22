@@ -765,8 +765,37 @@ module Make (Camlmix_input: CAMLMIX) = struct
 
   end
 
-  module Blog = struct
+  module Blog :
+  sig
+    type post = {
+      title : string;
+      date : string;
+      tags : string list;
+      key : string;
+    }
+    class blog :
+    object
+      method all_tags : string list
+      method end_post : unit
+      method get_posts : [ `all | `tag of string ] -> post list
+      method new_post :
+        title:string ->
+          tags:string list -> date:string -> string -> unit
+    end
 
+    val rss :
+      title:string ->
+      description:string ->
+      link:string ->
+      last_build_date:string ->
+      pub_date:string ->
+      describe:(post -> string) ->
+      make_link:(post -> string) -> post list -> string
+      
+    val disqus : string -> string -> string -> string
+  
+  end = struct
+      
     type post = { title: string; date: string; tags: string list; key: string }
     class blog = object (self)
       val mutable blog_posts_stack = []
@@ -849,5 +878,4 @@ module Make (Camlmix_input: CAMLMIX) = struct
   end
 
 end
-
 
