@@ -576,7 +576,9 @@ let body style params =
 
 
 
-let make ?(icon:string option) ?(css=`none) ?(body:body_style option) () =
+let make
+    ?(rss: string option) ?(atom: string option)
+    ?(icon:string option) ?(css=`none) ?(body:body_style option) () =
 
   let insert_css css params =
     match css with
@@ -605,6 +607,12 @@ let make ?(icon:string option) ?(css=`none) ?(body:body_style option) () =
         <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>";
       insert_css css params;
       opt_str_map (sprintf "<link rel=\"shortcut icon\" href=\"%s\">") icon;
+      opt_str_map 
+        (sprintf "<link rel=\"alternate\" type=\"application/rss+xml\" \
+                 title=\"RSS\" href=\"%s\">") rss;
+      opt_str_map 
+        (sprintf "<link rel=\"alternate\" type=\"application/atom+xml\" \
+                 title=\"Atom\" href=\"%s\">") atom;
       opt_str_map (sprintf "<title>%s</title>")  title;
       str "</head>\n<body>";
       begin match body with
