@@ -6,7 +6,9 @@
 #OCAMLINCLUDES += $(BRACETAX_PATH) $(SEBIB_PATH)
 #OCAML_LIBS +=  $(BRACETAX_PATH)/ocamlbracetax $(SEBIB_PATH)/sebib
 
-.PHONY: clean update_yaboons test_dbw install_library reinstall_library uninstall_library
+.PHONY: clean update_yaboons test_dbw \
+   install_library reinstall_library uninstall_library \
+   website
 
 USE_OCAMLFIND = true
 
@@ -43,6 +45,9 @@ clean:
 update_yaboons: # Go for the last version
     svn export http\://yaboon.googlecode.com/svn/trunk/PolyComp/PolyComp.ml src/lib/dibrawi_Yaboon_PolyComp.ml
 
+website:
+  dbw wiki doc wiki -named-template three_columns_greenish
+  dbw magic doc/examples/Blog.brtx 
 
 if $(not $(file-exists _build/))
     mkdir -p _build/lib _build/app
