@@ -2,9 +2,9 @@
 <rss version="2.0">
 <channel>
     <title>Dibrawi's Test Blog; RSS feed for all posts</title>
-    <description></description>
+    <description>All the posts of Dibrawi's blog</description>
     <link>http://www.example.com/blog/</link>
-    <lastBuildDate>Mon, 25 Apr 2011  13:29:44  +0200</lastBuildDate>
+    <lastBuildDate>Mon, 25 Apr 2011  16:04:28  +0200</lastBuildDate>
     <pubDate>Wed, 20 Apr 2011 00:09:35 +0200</pubDate>
     <item>
          <title>First Post</title>
