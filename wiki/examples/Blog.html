@@ -1,0 +1,451 @@
+<!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!-- Generated with Dibrawi, BraceTax, Sebib, and some more hacks -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<style type="text/css">
+.content body {
+   color: #070707;
+   background-color: #f8f8f8;
+}
+.content  {
+   color: #070707;
+   background-color: #f8f8f8;
+}
+.content a:link {
+   color: #308721;
+}
+.content a:visited {
+   color: #07330A;
+}
+.content a:hover {
+   background-color: #EFDFC7;
+}
+.content tt {
+   color: #6F3F27;
+}.content pre {
+   color: #6F3F27;
+}.content code {
+   color: #6F3F27;
+}
+.content .dbwmixcode {
+   background-color: #ddd;
+}
+.content div.figure:after {
+   color: #308721;
+}.content caption.tablefigure:after {
+   color: #308721;
+}
+body {
+   color: #f8f8f8;
+   background-color: #07330A;
+}
+ {
+   color: #f8f8f8;
+   background-color: #07330A;
+}
+a:link {
+   color: #66BBF4;
+}
+a:visited {
+   color: #6A96B3;
+}
+a:hover {
+   background-color: #6F3F27;
+}
+tt {
+   color: #EFDFC7;
+}pre {
+   color: #EFDFC7;
+}code {
+   color: #EFDFC7;
+}
+.dbwmixcode {
+   background-color: #ddd;
+}
+div.figure:after {
+   color: #66BBF4;
+}caption.tablefigure:after {
+   color: #66BBF4;
+}
+body {
+   font-family: sans-serif;
+   text-align: none;
+   font-size: 70%;
+
+}
+ {
+   font-family: sans-serif;
+   text-align: none;
+   font-size: 70%;
+
+}
+div.header {
+   text-align: center;
+
+}
+h1 {
+   font-size: 200%;
+   font-variant: small-caps;
+
+}
+div.authors {
+   font-size: 110%;
+
+}
+div.subtitle {
+   font-size: 110%;
+   font-style: italic;
+}
+h2 {
+   font-size: 180%;
+
+}
+h3 {
+   font-size: 150%;
+
+}
+h4 {
+   font-size: 130%;
+
+}
+h5 {
+   font-size: 108%;
+
+}
+a {
+   text-decoration: underline thin;
+}
+tt,code,pre {
+   font-family: monospace;
+
+}
+div.figure,div.tablefigure {
+   font-size: 90%;
+
+}
+.content body {
+   font-family: serif;
+   text-align: justify;
+   font-size: 120%;
+
+}
+.content  {
+   font-family: serif;
+   text-align: justify;
+   font-size: 120%;
+
+}
+.content div.header {
+   text-align: center;
+
+}
+.content h1 {
+   font-size: 200%;
+   font-variant: small-caps;
+
+}
+.content div.authors {
+   font-size: 110%;
+
+}
+.content div.subtitle {
+   font-size: 110%;
+   font-style: italic;
+}
+.content h2 {
+   font-size: 180%;
+
+}
+.content h3 {
+   font-size: 150%;
+
+}
+.content h4 {
+   font-size: 130%;
+
+}
+.content h5 {
+   font-size: 108%;
+
+}
+.content a {
+   text-decoration: underline thin;
+}
+.content tt,code,pre {
+   font-family: monospace;
+
+}
+.content div.figure,div.tablefigure {
+   font-size: 90%;
+
+}
+div.header {
+    text-align: center;
+    border:  #07330A solid 7px;
+    padding-top:    2.1em;
+    padding-bottom: 2.05em;
+    margin-bottom: 3em;
+}
+div.p {
+    padding-bottom: 0em;
+}
+div.p + div.p { padding-top: 0.5em; }
+body {overflow: auto;}
+code,pre {overflow: auto}
+blockquote {
+    border-left: 2px solid #07330A;
+    padding-left: 1em;
+}
+ul, ol {
+    padding-top: 0em;
+    padding-bottom: 0em;
+    padding-left:  1.8em;
+    margin-top: 0em;
+    margin-bottom: 0em;
+}
+.dibrawimenudir { display: block; }
+       ul  li.dibrawi_menuli {
+         display: inline;
+       } 
+       ul.dibrawi_menuul {
+         padding: 0em;
+         margin: 0em;
+         margin-left: 1em;
+       }
+.dibrawicomment:before { content:  "["; }
+.dibrawicomment:after { content: "]"; }
+.dibrawicomment {
+    background-color: yellow;
+    color: red;
+}
+table.tablefigure {
+    margin-right:auto;
+    margin-left: auto;
+    border-collapse: collapse;
+    min-width: 80%;
+    margin-bottom: 1em;
+}
+caption.tablefigure {
+    caption-side:bottom;
+}
+div.figure:after, caption.tablefigure:after { content: " [" attr(id) "]"; }
+td, th {
+    padding: 0.4em;
+}
+img {
+    border: none;
+    padding-bottom: 0.5em;
+}div.figure, div.tablefigure {
+    text-align: center;
+    font-size:90%;
+    border: thin #959595 solid;
+    padding: 1ex;
+    margin: 1em;
+    width: 90%;
+    margin-left: 5%;
+    margin-right: 0em;
+    clear: both;
+
+}
+small.notebegin { counter-increment: footnote; }
+small.noteend:before {  content: counter(footnote) }
+small.note:before { content: counter(footnote) ": " }
+body { counter-reset: section subsection subsubsection footnote; }
+
+small.note {
+    font-size: 70%;
+    clear: right;
+    width: 40%;
+    border: thin #959595 solid;
+    float: right;
+    margin: 0.5em;
+    margin-right: 0em;
+    padding: 0.5em;
+}
+h2 { border: #07330A solid 2px; padding: 0.2em; }
+h3 { text-decoration: underline;}
+pre {
+    position: relative; left: 5%; width: 90%; clear: left;
+}
+div.leftside {
+  left:  0.400000%; width: 18.000000%; padding: 0.900000%;
+  border: #6A96B3 ridge 3px;
+    top: 2px;
+    position:fixed;
+    overflow: auto;
+    bottom: 2px;
+}
+div.rightside {
+  right: 0.400000%; width: 18.000000%; padding: 0.900000%;
+  border: #6A96B3 ridge 3px;
+    top: 2px;
+    position:fixed;
+    overflow: auto;
+    bottom: 2px;
+}
+div.content {
+  left: 21.000000%; right: 21.000000%; padding: 0.900000%;
+  border: #6A96B3 ridge 3px;
+    top: 2px;
+    position: absolute;
+    text-align: justify;
+}
+</style>
+<title>./examples/Blog</title>
+</head>
+<body>
+<div class="leftside">
+<b>Page:</b> ./examples/Blog <br/>
+<hr/><b>Menu: </b><div class="p dibrawi_menup">
+<ul class="dibrawi_menuul">
+ <li class="dibrawi_menuli"> <div class="dibrawimenudir">examples 
+<ul class="dibrawi_menuul">
+ <li class="dibrawi_menuli"> <a href=".././examples/Blog.html" class="dibrawi_menua">Blog</a> </li>
+</ul>
+</div> </li>
+</ul>
+ </div>
+
+</div>
+<div class="rightside">
+<!-- Right Side Insertion -->
+<hr/><b>Table of contents:</b><br/><div class="p dbwtocp">
+<ol class="dbwtocol">
+   <li class="dbwtocli">  <a href="#The_Posts" class="dbwtoca">The Posts</a>   </li>
+<li class="dbwtocli">  <a href="#The_Generation_of_The_Blog" class="dbwtoca">The Generation of The Blog</a> </li>
+</ol>
+</div>
+<br/>
+</div>
+<div class="content">
+
+<div class="header">
+
+  <h1>The Blog Example</h1>
+</div> <!-- END HEADER -->
+<div class="p">
+   This is an example of usage of usage of the <tt>Blog</tt> module. Just run <pre>
+dbw run doc/examples/Blog.brtx
+</pre> to get a <tt>./blog/</tt> directory.  </div>
+<h2 id="The_Posts">The Posts</h2>
+<div class="p">  Here is the first post: <div class="dbwmixcode"><pre>
+blog#new_post 
+  ~title:"First Post"
+  ~date:"Tue, 19 Apr 2011 21:26:42 +0200" 
+  ~tags:[ "tag1"; "tag2"; "dibrawi" ] 
+  "unique-id-of-the-first-post" 
+</pre></div>    <i>Hello</i> <b>World!!</b>   <div class="dbwmixcode"><pre> blog#end_post </pre></div> </div>
+<div class="p">   Here is the second post: <div class="dbwmixcode"><pre>
+blog#new_post 
+  ~title:"Second Post"
+  ~date:"Tue, 22 Apr 2011 11:23:42 +0200" 
+  ~tags:[ "tag1"; "dibrawi" ] 
+  "unique-id-of-the-second-post" 
+</pre></div>    <i>Hello</i> <b>World</b> Again !!   <div class="dbwmixcode"><pre> blog#end_post </pre></div>   </div>
+<h2 id="The_Generation_of_The_Blog">The Generation of The Blog</h2>
+<div class="p">  <div class="dbwmixcode"><pre>
+let tag_link from tag =
+  sprintf "{link %s/feed/%s.rss|{t|%s}}" from tag tag
+
+let () =
+  let module S = String_tree in
+
+  let base_url = "http://www.example.com" in
+
+  let template =
+    Dibrawi.HTML.Template.Full.with_sidepane_greenish
+      ~add_section_numbers:false ~side:`left in
+
+  let page ~from =
+    let rss = sprintf "%s/blog/feed/all_posts.rss" base_url in
+    template ~rss () in
+
+  Dibrawi.System.mkdir_p "./blog/post/";
+  Dibrawi.System.mkdir_p "./blog/feed/";
+
+  Ls.iter blog#all_tags ~f:(fun tag -&gt;
+    let feed =
+      let pl = blog#get_posts (`tag tag) in
+      let title = (sprintf "Dibrawi's Test Blog; RSS feed for tag: %s" tag) in
+      let description = "" in
+      let link = sprintf "%s/blog/" base_url in
+      let last_build_date = Dibrawi.System.Date.rfc_822 () in
+      let pub_date = "Wed, 20 Apr 2011 00:09:35 +0200" in
+      let describe i = i.Blog.title in
+      let make_link i = sprintf "%spost/%s.html" link i.Blog.key in
+      Blog.rss ~title ~description ~link ~last_build_date ~pub_date 
+        ~describe ~make_link pl
+    in
+    Io.with_file_out (sprintf "./blog/feed/%s.rss" tag)
+      (fun out -&gt; Io.nwrite out feed)
+      
+  );
+  let feed =
+    let pl = blog#get_posts (`all) in
+    let title = "Dibrawi's Test Blog; RSS feed for all posts" in
+    let description = "" in
+    let link = sprintf "%s/blog/" base_url in
+    let last_build_date = Dibrawi.System.Date.rfc_822 () in
+    let pub_date = "Wed, 20 Apr 2011 00:09:35 +0200" in
+    let describe i = i.Blog.title in
+    let make_link i = sprintf "%spost/%s.html" link i.Blog.key in
+    Blog.rss ~title ~description ~link ~last_build_date ~pub_date 
+      ~describe ~make_link pl
+  in
+  Io.with_file_out "./blog/feed/all_posts.rss" (fun out -&gt; Io.nwrite out feed);
+
+  Ls.iter (blog#get_posts `all) ~f:(fun {Blog.title; date; tags; key} -&gt;
+    let filename = (sprintf "./blog/post/%s.html" key) in
+    Io.with_file_out filename (fun out -&gt;
+      let blog_post =
+        sprintf "{section|%s}\n\
+            {bypass}&lt;small&gt;{end}\n\
+            ➲{~}{~}{b|Date:} {i|%s}; {b|Tags:} {t|[%s]}.\n\
+            {bypass}&lt;/small&gt;{end}{br}{br}
+            {p}%s{p}%s"
+          title date (Str.concat "; " (Ls.map (tag_link "..") tags))
+          (blog#post_contents key)
+          (sprintf "{bypass}%s{end}" 
+               (Blog.disqus "dibrawiexampleblog" key 
+                  (sprintf "%s/%s" base_url filename)))
+      in
+      String_tree.print ~out 
+        (page ~title:(sprintf "Dibrawi's Blog: %s" title) ~from:"../.."
+           (Dbw.brtx (blog_post)));
+    );
+  );
+
+
+  let blog_page =
+    let f {Blog. title; date; tags; key} =
+        Str.concat "\n" [
+          (sprintf "{b|{link ./post/%s.html|%s}}{br}" key title);
+          (sprintf "➣{~}Date: {i|%s}; Tags: [%s].{p}"
+             date (Str.concat "; " (Ls.map (tag_link ".") tags)));
+        ] in
+    Str.concat "\n" [
+      "{header|{title|Seb's Blog}}";
+      (sprintf "{section 1|Blog Posts}\n");
+      Str.concat "\n" (Ls.rev_map (blog#get_posts `all) ~f);
+      "{section|Feeds}\nRSS 2.0: \n\
+        {list|{*} {link ./feed/all_posts.rss|all posts}";
+      Str.concat "\n" 
+        (Ls.map (fun tag -&gt; sprintf "{*} Tag {link ./feed/%s.rss|{t|%s}}" tag tag)
+           blog#all_tags);
+      "}";
+    ] in
+
+  Io.with_file_out "./blog/index.html" (fun out -&gt;
+    String_tree.print ~out 
+      (page ~from:".." ~title:"Dibrawi's Example Blog" (Dbw.brtx (blog_page)));
+  );
+  ()
+    
+</pre></div>  </div>
+
+<div id="pagefoot" />
+</div>
+</body></html>
