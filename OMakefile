@@ -46,8 +46,11 @@ update_yaboons: # Go for the last version
     svn export http\://yaboon.googlecode.com/svn/trunk/PolyComp/PolyComp.ml src/lib/dibrawi_Yaboon_PolyComp.ml
 
 website:
-  dbw wiki doc wiki -named-template three_columns_greenish
+  rm -fr website
+  mkdir -p website
+  dbw wiki doc website/wiki -named-template three_columns_greenish
   dbw magic doc/examples/Blog.brtx 
+  mv blog website/
 
 if $(not $(file-exists _build/))
     mkdir -p _build/lib _build/app
