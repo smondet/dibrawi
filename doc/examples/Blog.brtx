@@ -1,0 +1,153 @@
+{mix:ignore}
+open Mix    (* This is src/lib/dibrawi_mix.ml (a functor) *) 
+let () = 
+  Camlmix.printer := ignore; (* This tells camlmix not to output  
+                                    anything by itself. *) 
+  printf "OCaml begins!\n" (* This is a stupid display of joy. *) 
+ 
+let blog = new Blog.blog  (* This creates the blog object. *) 
+{mix:end}
+
+{header|{title|The Blog Example}}
+
+
+This is an example of usage of usage of the {t|Blog} module.
+Just run
+{code}
+dbw run doc/examples/Blog.brtx
+{end}
+to get a {t|./blog/} directory.
+
+{section|The Posts}
+
+Here is the first post:
+{mix:code}
+blog#new_post 
+  ~title:"First Post"
+  ~date:"Tue, 19 Apr 2011 21:26:42 +0200" 
+  ~tags:[ "tag1"; "tag2"; "dibrawi" ] 
+  "unique-id-of-the-first-post" 
+{mix:end} 
+ 
+{i|Hello} {b|World!!}
+ 
+{mix:code} blog#end_post {mix:end}
+{p}
+
+
+Here is the second post:
+{mix:code}
+blog#new_post 
+  ~title:"Second Post"
+  ~date:"Tue, 22 Apr 2011 11:23:42 +0200" 
+  ~tags:[ "tag1"; "dibrawi" ] 
+  "unique-id-of-the-second-post" 
+{mix:end} 
+ 
+{i|Hello} {b|World} Again !!
+ 
+{mix:code} blog#end_post {mix:end}
+
+
+{section|The Generation of The Blog}
+
+{mix:code}
+let tag_link from tag =
+  sprintf "{link %s/feed/%s.rss|{t|%s}}" from tag tag
+
+let () =
+  let module S = String_tree in
+
+  let base_url = "http://www.example.com" in
+
+  let template =
+    Dibrawi.HTML.Template.Full.with_sidepane_greenish
+      ~add_section_numbers:false ~side:`left in
+
+  let page ~from =
+    let rss = sprintf "%s/blog/feed/all_posts.rss" base_url in
+    template ~rss () in
+
+  Dibrawi.System.mkdir_p "./blog/post/";
+  Dibrawi.System.mkdir_p "./blog/feed/";
+
+  Ls.iter blog#all_tags ~f:(fun tag ->
+    let feed =
+      let pl = blog#get_posts (`tag tag) in
+      let title = (sprintf "Dibrawi's Test Blog; RSS feed for tag: %s" tag) in
+      let description = "" in
+      let link = sprintf "%s/blog/" base_url in
+      let last_build_date = Dibrawi.System.Date.rfc_822 () in
+      let pub_date = "Wed, 20 Apr 2011 00:09:35 +0200" in
+      let describe i = i.Blog.title in
+      let make_link i = sprintf "%spost/%s.html" link i.Blog.key in
+      Blog.rss ~title ~description ~link ~last_build_date ~pub_date 
+        ~describe ~make_link pl
+    in
+    Io.with_file_out (sprintf "./blog/feed/%s.rss" tag)
+      (fun out -> Io.nwrite out feed)
+      
+  );
+  let feed =
+    let pl = blog#get_posts (`all) in
+    let title = "Dibrawi's Test Blog; RSS feed for all posts" in
+    let description = "" in
+    let link = sprintf "%s/blog/" base_url in
+    let last_build_date = Dibrawi.System.Date.rfc_822 () in
+    let pub_date = "Wed, 20 Apr 2011 00:09:35 +0200" in
+    let describe i = i.Blog.title in
+    let make_link i = sprintf "%spost/%s.html" link i.Blog.key in
+    Blog.rss ~title ~description ~link ~last_build_date ~pub_date 
+      ~describe ~make_link pl
+  in
+  Io.with_file_out "./blog/feed/all_posts.rss" (fun out -> Io.nwrite out feed);
+
+  Ls.iter (blog#get_posts `all) ~f:(fun {Blog.title; date; tags; key} ->
+    let filename = (sprintf "./blog/post/%s.html" key) in
+    Io.with_file_out filename (fun out ->
+      let blog_post =
+        sprintf "{section|%s}\n\
+            {bypass}<small>{end}\n\
+            ➲{~}{~}{b|Date:} {i|%s}; {b|Tags:} {t|[%s]}.\n\
+            {bypass}</small>{end}{br}{br}
+            {p}%s{p}%s"
+          title date (Str.concat "; " (Ls.map (tag_link "..") tags))
+          (blog#post_contents key)
+          (sprintf "{bypass}%s{end}" 
+               (Blog.disqus "dibrawiexampleblog" key 
+                  (sprintf "%s/%s" base_url filename)))
+      in
+      String_tree.print ~out 
+        (page ~title:(sprintf "Dibrawi's Blog: %s" title) ~from:"../.."
+           (Dbw.brtx (blog_post)));
+    );
+  );
+
+
+  let blog_page =
+    let f {Blog. title; date; tags; key} =
+        Str.concat "\n" [
+          (sprintf "{b|{link ./post/%s.html|%s}}{br}" key title);
+          (sprintf "➣{~}Date: {i|%s}; Tags: [%s].{p}"
+             date (Str.concat "; " (Ls.map (tag_link ".") tags)));
+        ] in
+    Str.concat "\n" [
+      "{header|{title|Seb's Blog}}";
+      (sprintf "{section 1|Blog Posts}\n");
+      Str.concat "\n" (Ls.rev_map (blog#get_posts `all) ~f);
+      "{section|Feeds}\nRSS 2.0: \n\
+        {list|{*} {link ./feed/all_posts.rss|all posts}";
+      Str.concat "\n" 
+        (Ls.map (fun tag -> sprintf "{*} Tag {link ./feed/%s.rss|{t|%s}}" tag tag)
+           blog#all_tags);
+      "}";
+    ] in
+
+  Io.with_file_out "./blog/index.html" (fun out ->
+    String_tree.print ~out 
+      (page ~from:".." ~title:"Dibrawi's Example Blog" (Dbw.brtx (blog_page)));
+  );
+  ()
+    
+{mix:end}
+
