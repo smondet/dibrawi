@@ -273,7 +273,7 @@ module Preprocessor = struct
       | '}' -> "{}}"
       | c -> Str.of_char c) s
 
-  let make
+  let rec make
       ?(html_cite=default_html_cite default_html_biblio_page)
       ?(output=`html) ?(mix_output=`wiki) () =
     let buf = Buffer.create 42 in
@@ -319,7 +319,7 @@ module Preprocessor = struct
                   (html_or_latex
                      "<span class=\"dibrawicomment\">" "\\dbwcmt{"));
             pr (Str.concat " " (Ls.map sanitize_brtx_content args))
-          | "cite" | "=" | "@" -> ()
+          | "cite" | "=" | "@" | "mix:include" -> ()
           | _ ->
             pr (sprintf "{%s%s|" cmd
                   (Str.concat "" (Ls.map (fun s -> 
@@ -333,6 +333,27 @@ module Preprocessor = struct
                 (Ls.flatten (Ls.map args ~f:split_cites)) in
             pr (html_or_latex (html_cite cites)
                   (bypass (sprintf "\\cite{%s}" (Str.concat "," cites))))
+          | ("mix:include", args) ->
+            begin match mix_output with
+            | `wiki ->
+              pr "{bypass endfordiv}<span class=\"dbwmixcode\">{endfordiv}";
+              pr (sprintf "{t|{utf 0x22b2}mix:include {text mixspecialend}");
+              pr (Str.concat " " args);
+              pr "{mixspecialend}{utf 0x22b3}}";
+              pr "{bypass endfordiv}</span>{endfordiv}";
+            | `camlmix ->
+              let filename = 
+                try Ls.hd args with
+                  e ->
+                    eprintf "[[%s:%d]] {mix:include} has no argument.\n"
+                      loc.Bracetax.Error.l_file loc.Bracetax.Error.l_line;
+                    failwith "Preprocessor Error" in
+              let contents = 
+                Data_source.get_file filename in
+              pr (sprintf "# Inserting %s\n" filename);
+              let future_prepro = make ~html_cite ~output ~mix_output () in
+              pr (future_prepro ~filename contents);
+            end
           | (cmd, args) when cmd = "=" || cmd = "@" ->
             begin match mix_output with
             | `wiki ->
