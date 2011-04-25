@@ -628,9 +628,11 @@ let make
 module Full = struct
 
   let three_columns_dummy
-      ?(debug=false) 
+      ?(debug=false) ?(rss: string option) ?(atom: string option)
+      ?(icon:string option)      
       ?(top_right=(fun _ -> "<!-- Right Side Insertion -->")) () =
     make ()
+      ?rss ?atom ?icon
       ~css:(css ~color_theme:Color.dummy_theme [
         install_color_theme;
         install_font_theme Font.dummy_theme;
@@ -651,9 +653,11 @@ module Full = struct
 
   let three_columns_greenish
       ?(add_section_numbers=false)
-      ?(debug=false) 
+      ?(debug=false)  ?(rss: string option) ?(atom: string option)
+      ?(icon:string option)
       ?(top_right=(fun _ -> "<!-- Right Side Insertion -->")) () =
     make ()
+      ?rss ?atom ?icon
       ~css:(css ~color_theme:Color.greenish_main_theme [
         install_color_theme ~for_class:".content" ~theme:Color.greenish_main_theme;
         install_color_theme ~theme:Color.greenish_secondary_theme;
@@ -678,10 +682,12 @@ module Full = struct
       ~body:(body (`three_columns top_right))
 
   let simple_page_greenish
-      ?(add_section_numbers=true)
+      ?(add_section_numbers=true) ?(rss: string option) ?(atom: string option)
+      ?(icon:string option)
       ?(base_font_size="90%") ?(text_width="40em") ?(left_margin="4em")
       ?(debug=false) () =
     make ()
+      ?rss ?atom ?icon
       ~css:(css ~color_theme:Color.greenish_main_theme [
         install_color_theme ~theme:Color.greenish_main_theme;
         install_font_theme 
@@ -703,9 +709,11 @@ module Full = struct
 
   let with_sidepane_greenish 
       ?(add_section_numbers=true) ?(side=`right)
-      ?(debug=false) 
+      ?(debug=false)  ?(rss: string option) ?(atom: string option)
+      ?(icon:string option)
       ?(insertion=(fun _ -> "<!-- Side Insertion -->")) () =
     make ()
+      ?rss ?atom ?icon
       ~css:(css ~color_theme:Color.greenish_main_theme [
         install_color_theme ~for_class:".content" ~theme:Color.greenish_main_theme;
         install_color_theme ~theme:Color.greenish_secondary_theme;
