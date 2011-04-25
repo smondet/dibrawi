@@ -60,17 +60,18 @@ let () =
 
   let base_url = "http://www.example.com" in
 
-  let template =
-    Dibrawi.HTML.Template.Full.with_sidepane_greenish
-      ~add_section_numbers:false ~side:`left in
-
+  (* A function to put the HTML in a `standard' template. *)
   let page ~from =
+    let template =
+      Dibrawi.HTML.Template.Full.with_sidepane_greenish
+        ~add_section_numbers:false ~side:`left in
     let rss = sprintf "%s/blog/feed/all_posts.rss" base_url in
     template ~rss () in
 
   Dibrawi.System.mkdir_p "./blog/post/";
   Dibrawi.System.mkdir_p "./blog/feed/";
 
+  (* Generate one RSS feed for each tag: *)
   Ls.iter blog#all_tags ~f:(fun tag ->
     let feed =
       let pl = blog#get_posts (`tag tag) in
@@ -88,10 +89,12 @@ let () =
       (fun out -> Io.nwrite out feed)
       
   );
+
+  (* And now the RSS feed for all the posts: *)
   let feed =
     let pl = blog#get_posts (`all) in
     let title = "Dibrawi's Test Blog; RSS feed for all posts" in
-    let description = "" in
+    let description = "All the posts of Dibrawi's blog" in
     let link = sprintf "%s/blog/" base_url in
     let last_build_date = Dibrawi.System.Date.rfc_822 () in
     let pub_date = "Wed, 20 Apr 2011 00:09:35 +0200" in
@@ -102,6 +105,7 @@ let () =
   in
   Io.with_file_out "./blog/feed/all_posts.rss" (fun out -> Io.nwrite out feed);
 
+  (* For each post we make a page  <unique-id>.html *)
   Ls.iter (blog#get_posts `all) ~f:(fun {Blog.title; date; tags; key} ->
     let filename = (sprintf "./blog/post/%s.html" key) in
     Io.with_file_out filename (fun out ->
@@ -123,27 +127,33 @@ let () =
     );
   );
 
-
+  (* The blog's `index' page *)
   let blog_page =
+    (* A function rendering a post's title as a link,
+       followed by date and tags *)
     let f {Blog. title; date; tags; key} =
         Str.concat "\n" [
           (sprintf "{b|{link ./post/%s.html|%s}}{br}" key title);
           (sprintf "➣{~}Date: {i|%s}; Tags: [%s].{p}"
              date (Str.concat "; " (Ls.map (tag_link ".") tags)));
         ] in
+    (* The whole page in one String.concat: *)
     Str.concat "\n" [
-      "{header|{title|Seb's Blog}}";
+      "{header|{title|Dibrawi's Test Blog}}";
       (sprintf "{section 1|Blog Posts}\n");
       Str.concat "\n" (Ls.rev_map (blog#get_posts `all) ~f);
       "{section|Feeds}\nRSS 2.0: \n\
         {list|{*} {link ./feed/all_posts.rss|all posts}";
       Str.concat "\n" 
-        (Ls.map (fun tag -> sprintf "{*} Tag {link ./feed/%s.rss|{t|%s}}" tag tag)
+        (Ls.map (fun tag ->
+                   sprintf "{*} Tag {link ./feed/%s.rss|{t|%s}}" tag tag)
            blog#all_tags);
       "}";
     ] in
 
   Io.with_file_out "./blog/index.html" (fun out ->
+    (* we output the index page to a file after calling,
+       Bracetax on it and putting the HTML in the template: *)
     String_tree.print ~out 
       (page ~from:".." ~title:"Dibrawi's Example Blog" (Dbw.brtx (blog_page)));
   );
