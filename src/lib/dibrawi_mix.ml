@@ -859,7 +859,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
              \         <link>%s</link>\n\
              \         <guid>%s</guid>\n\
              \         <pubDate>%s</pubDate>\n\
-             \     </item>\n" title (describe item) (make_link item) key date 
+             \     </item>\n" title (describe item)
+              (make_link item)  (make_link item) date 
         in 
         Str.concat "\n\n" (Ls.map ~f pl) in
       (head ^ items ^ foot)
