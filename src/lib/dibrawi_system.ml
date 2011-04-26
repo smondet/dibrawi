@@ -148,7 +148,7 @@ module Date = struct
     in
     let s =
       Printf.sprintf
-        "%s, %d %s %d  %d:%02d:%02d  %s"
+        "%s, %d %s %d %02d:%02d:%02d %s"
         dday mday mmon (1900 + year) hour min sec sdiff in
       (* yday  *)
       (* isdst *)
