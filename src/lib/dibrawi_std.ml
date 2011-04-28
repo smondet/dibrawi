@@ -101,9 +101,6 @@ module Str = struct
       Buffer.add_substring buf str !i (sublen - 1);
       (Buffer.contents buf)
           
-  let multi_replace ~sub ~by str =
-    str
-
 end
 
 module String_tree = struct
