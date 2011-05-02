@@ -336,13 +336,15 @@ let tables_and_figures params =
 
 let footnotes params =
   str 
-    "small.notebegin { counter-increment: footnote; }\n\
+    "small.notebegin { font-size: 70%; vertical-align: super; \
+                       counter-increment: footnote; }\n\
+    small.noteend { font-size: 70%; vertical-align: super; }\n\
     small.noteend:before {  content: counter(footnote) }\n\
     small.note:before { content: counter(footnote) \": \" }\n\
     body { counter-reset: section subsection subsubsection footnote; }\n\
     \n\
     small.note {\n\
-    \    font-size: 70%;\n\
+    \    font-size: 76%;\n\
     \    clear: right;\n\
     \    width: 40%;\n\
     \    border: thin #959595 solid;\n\
