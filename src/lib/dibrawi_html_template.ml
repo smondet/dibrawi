@@ -384,7 +384,7 @@ let section_decoration params =
     h3 { text-decoration: underline;}"
     (Opt.default "black" (Color.border params.color_theme "h2border"))
 
-let code_blocks ?(with_border=`dashed) params =
+let code_blocks ?(with_border=`dashed) ?(rigid_width=true) params =
   cat ~sep:new_line [
     str "pre {";
     begin match with_border with
@@ -392,7 +392,9 @@ let code_blocks ?(with_border=`dashed) params =
     | `dashed ->
       str "    border: dashed thin black; padding: 1ex;"
     end;
-    str "    position: relative; left: 5%; width: 90%; clear: left;";
+    str $ sprintf
+      "    position: relative; left: 5%%; %swidth: 90%%; clear: left;"
+      (if rigid_width then "" else "max-");
     str "}";
   ]
 
