@@ -334,25 +334,26 @@ let tables_and_figures params =
     \n\
     }"
 
-let footnotes params =
-  str 
+let footnotes ?(width="40%") params =
+  cat [ 
+    str
     "small.notebegin { font-size: 70%; vertical-align: super; \
-                       counter-increment: footnote; }\n\
-    small.noteend { font-size: 70%; vertical-align: super; }\n\
-    small.noteend:before {  content: counter(footnote) }\n\
-    small.note:before { content: counter(footnote) \": \" }\n\
-    body { counter-reset: section subsection subsubsection footnote; }\n\
-    \n\
-    small.note {\n\
-    \    font-size: 76%;\n\
-    \    clear: right;\n\
-    \    width: 40%;\n\
-    \    border: thin #959595 solid;\n\
-    \    float: right;\n\
-    \    margin: 0.5em;\n\
-    \    margin-right: 0em;\n\
-    \    padding: 0.5em;\n\
-    }"
+                         counter-increment: footnote; }\n\
+      small.noteend { font-size: 70%; vertical-align: super; }\n\
+      small.noteend:before {  content: counter(footnote) }\n\
+      small.note:before { content: counter(footnote) \": \" }\n\
+      body { counter-reset: section subsection subsubsection footnote; }\n\
+      \n\
+      small.note {\n\
+      \    font-size: 76%;\n\
+      \    clear: right;\n";
+    str $ sprintf "    width: %s;\n" width;
+    str "    border: thin #959595 solid;\n\
+      \    float: right;\n\
+      \    margin: 0.5em;\n\
+      \    margin-right: 0em;\n\
+      \    padding: 0.5em;\n\
+      }" ]
 
 let section_numbers params =
   str
