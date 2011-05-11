@@ -4,9 +4,6 @@ open Dibrawi_std
 module Make = Dibrawi_make
 
 module System = Dibrawi_system
-  
-module Xelatex = Dibrawi_xelatex
-module Formula = Dibrawi_formula
 
 module HTML = struct
   module Template = Dibrawi_html_template

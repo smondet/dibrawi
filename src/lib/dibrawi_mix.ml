@@ -13,6 +13,8 @@ module type CAMLMIX =
 module Make (Camlmix_input: CAMLMIX) = struct
 
   include Dibrawi_std
+  module System = Dibrawi_system
+  module Xelatex = Dibrawi_xelatex
 
   let pr s = !Camlmix_input.printer s
   let print_if = Camlmix_input.print_if
@@ -100,8 +102,6 @@ module Make (Camlmix_input: CAMLMIX) = struct
         failwith ("brtx compilation errors: " ^ (Str.concat "\n" (Ls.map ~f l)))
 
   end
-
-  module System = Dibrawi_system
 
   module Alt = struct
     let start text =
@@ -239,7 +239,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
   end
   
   module Math = struct
-    open Dibrawi
+    module Formula = Dibrawi_formula
+
     include Formula.Library
     include Formula.Constructors
     (* include Formula.Render *)
