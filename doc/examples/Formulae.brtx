@@ -15,9 +15,14 @@ The idea is to use the module {t|Mix.Math} which uses the operators and construc
 of {t|Dibrawi_formula}.
 {p}
 
-{cmt|TODO: throw current signatures of Formula.Library and
- Formula.Constructors
-}
+{link ../../api/Dibrawi_formula.Library.html
+|{t|Formula.Library}}
+{p}
+{link ../../api/Dibrawi_formula.Constructors.html
+|{t|Formula.Constructors}}
+
+
+{cmt|TODO: {i|explain a bit}}
 
 {section|Example}
 
@@ -208,7 +213,7 @@ let html () =
         footnotes;
         section_decoration;
         code_blocks ~with_border:`no;
-        layout (`simple ("4em", "45em"));
+        layout (`simple ("4em", "65em"));
       ])
       ~body:(body `simple)
   in
