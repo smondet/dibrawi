@@ -8,7 +8,7 @@
 
 .PHONY: clean update_yaboons test_dbw \
    install_library reinstall_library uninstall_library \
-   website
+   website doc_library doc_wiki doc_mixes
 
 USE_OCAMLFIND = true
 
@@ -45,14 +45,21 @@ clean:
 update_yaboons: # Go for the last version
     svn export http\://yaboon.googlecode.com/svn/trunk/PolyComp/PolyComp.ml src/lib/dibrawi_Yaboon_PolyComp.ml
 
-website:
-  rm -fr website
+
+doc_wiki:
   mkdir -p website
   dbw wiki doc website/wiki -named-template three_columns_greenish
-  dbw magic doc/examples/Blog.brtx 
+
+doc_mixes: doc_wiki
+  dbw magic doc/examples/Blog.brtx
+  rm -fr website/blog
   mv blog website/
   dbw magic doc/examples/Formulae.brtx html
   dbw magic doc/examples/Formulae.brtx pdf
+
+website: doc_mixes doc_library
+  mkdir -p website/api
+  cp _build/lib/*.html _build/lib/*.css website/api/ 
 
 if $(not $(file-exists _build/))
     mkdir -p _build/lib _build/app
