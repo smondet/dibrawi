@@ -237,33 +237,60 @@ module Make (Camlmix_input: CAMLMIX) = struct
       (cite, cites, print)
 
   end
-
+  
   module Math = struct
-
-    type style = Latex | Text | MathML
-
+    open Dibrawi
+    include Formula.Library
+    include Formula.Constructors
+    (* include Formula.Render *)
+  
+    let latex = Formula.Latex
+    let text = Formula.Text
+    let mathml = Formula.MathML
+  
+    let bypass = sprintf "{bypass endmathbypass}%s{endmathbypass}"
+    let ttext = sprintf "{t|{text endmathtext}%s{endmathtext}}"
+    let code = sprintf "{code endmathcode}%s{endmathcode}"
+  
     let style_pref = ref None
     let style () =
       match !style_pref with
       | None ->
-        Params.map_output ~latex:(fun () -> Latex) ~html:(fun () -> MathML);
+        Params.map_output ~latex:(fun () -> latex) ~html:(fun () -> mathml);
       | Some p -> p
-
+        
     let set_style s =
       style_pref := Some s
-
-    let either a b c =
-      match style () with
-      | Text -> a
-      | Latex -> b
-      | MathML -> c
-
+  
     let either_fun a b c () =
       match style () with
-      | Text -> a
-      | Latex -> b
-      | MathML -> c
-
+      | Formula.Text -> a
+      | Formula.Latex -> b
+      | Formula.MathML -> c
+  
+    let inline f =
+      Params.map_output (Formula.Render.inline (style ()) f)
+        ~html:(either_fun ttext ttext bypass)
+        ~latex:(either_fun ttext bypass ttext)
+  
+    let block f =
+      Params.map_output (Formula.Render.block (style ()) f)
+        ~html:(either_fun code code bypass)
+        ~latex:(either_fun code bypass code)
+  
+    let array f =
+      Params.map_output (Formula.Render.array (style ()) f)
+        ~html:(either_fun code code bypass)
+        ~latex:(either_fun code bypass code)
+  
+    let with_MathJax () =
+      if Params.dibrawi_output () = `html then
+        pr "{bypass}\
+        <script type=\"text/javascript\" \
+         src=\"http://cdn.mathjax.org/mathjax/latest/MathJax.js?\
+        config=TeX-AMS-MML_HTMLorMML\"></script>{end}"
+      else ()
+  
   (* http://tlt.its.psu.edu/suggestions/international/bylanguage/mathchart.html *)
   (* http://xahlee.org/emacs/emacs_n_unicode.html
      -> Logic & set theory
@@ -281,233 +308,6 @@ module Make (Camlmix_input: CAMLMIX) = struct
      - optional \n's
 
   *)
-    type binop =
-      | BO_add
-      | BO_sub
-      | BO_mul
-      | BO_div
-      | BO_mod
-      | BO_eq
-      | BO_ne
-      | BO_le
-      | BO_ge
-      | BO_lt
-      | BO_gt
-      | BO_imply
-      | BO_and
-      | BO_or
-      | BO_equivalent
-    (*   | BO_forall
-         | BO_exists
-         | BO_element
-         | BO_not_element *)
-      | BO_custom of string * string * string
-
-    type formula =
-      | Sum of formula * formula * formula * formula
-      | Paren of formula
-      | Binop of binop * formula * formula
-      | Variable of string
-      | Literal of string
-      | Apply of formula * formula list
-      | Custom of string * string * string
-      | Sup of formula * formula
-      | Sub of formula * formula
-      | Nil
-
-    module Constructors = struct
-      let sum i f t s = Sum (i, f, t, s)
-      let var s = Variable s
-      let lit s = Literal s
-      let int s = Literal (string_of_int s)
-      let float s = Literal (string_of_float s)
-      let (+) a b = Binop (BO_add, a, b)
-      let ( * ) a b = Binop (BO_mul, a, b)
-      let (-) a b = Binop (BO_sub, a, b)
-      let (/) a b = Binop (BO_div, a, b)
-      let (mod) a b = Binop (BO_mod, a, b)
-      let bin t l m a b = Binop (BO_custom (t, l, m), a, b)
-      let par f = Paren f
-      let app f l = Apply (f, l)
-      let (==) a b = Binop (BO_eq , a, b)
-      let (!=) a b = Binop (BO_ne , a, b)
-      let (<=) a b = Binop (BO_le , a, b)
-      let (>=) a b = Binop (BO_ge , a, b)
-      let (< ) a b = Binop (BO_lt , a, b)
-      let (> ) a b = Binop (BO_gt , a, b)
-      let (=>  ) a b = Binop (BO_imply     , a, b)
-      let (&&  ) a b = Binop (BO_and       , a, b)
-      let (||  ) a b = Binop (BO_or        , a, b)
-      let (<=> ) a b = Binop (BO_equivalent, a, b)
-      let custom t l m = Custom (t, l, m)
-      let sup a b = Sup (a, b)
-      let sub a b = Sub (a, b)
-
-      let nilbin f = f Nil Nil
-      let nil = Nil 
-
-      let ( << ) x y = y x 
-      and ( >> ) x y = x y 
-
-    end
-    let binop_str = function
-      | BO_add -> "+"
-      | BO_sub -> "-"
-      | BO_mul -> either "⋅" "\\cdot" "⋅"
-      | BO_div -> "/" (* "÷" "" "÷" *)
-      | BO_mod -> "mod"
-      | BO_eq  -> either "==" "=" "="
-      | BO_ne  -> either "!=" "\\neq" "≠"
-      | BO_le  -> either "<=" "\\le" "≤"
-      | BO_ge  -> either ">=" "\\ge" "≥"
-      | BO_lt  -> either "<" "<" "<"
-      | BO_gt  -> either ">" "<" ">"
-      | BO_imply       -> either "=>" "\\Rightarrow" "⇒"
-      | BO_and         -> either "/\\" "\\wedge" "∧"
-      | BO_or          -> either "\\/" "\\vee" "∨"
-      | BO_equivalent  -> either "<=>" "\\Leftrightarrow" "⇔"
-      | BO_custom (t, l, m) -> either t l m
-
-
-    let rec to_string style f =
-      match f with
-      | Sum (i, f, t, s) ->
-        either 
-          (sprintf "Sum[%s=%s..%s] %s" (to_string style i) (to_string style f)
-             (to_string style t) (to_string style s))
-          (sprintf "\\sum_{%s=%s}^{%s}{%s}" (to_string style i) (to_string style f)
-             (to_string style t) (to_string style s))
-          (sprintf "\
-            <munderover>\n\
-              <mrow><mo>&#x2211;</mo></mrow>\n\
-              <mrow>%s<mo>=</mo>%s</mrow>\n\
-              <mrow>%s</mrow></munderover><mrow>%s</mrow>\n\
-            "
-             (to_string style i) (to_string style f) 
-             (to_string style t) (to_string style s))
-      | Paren f -> 
-        either 
-          (sprintf "(%s)" (to_string style f))
-          (sprintf "\n(%s)" (to_string style f))
-          (sprintf "\n<mo>(</mo>%s<mo>)</mo>\n" (to_string style f))
-      | Binop (op, a, b) ->
-        let sop = binop_str op and sa =  to_string style a and sb = to_string style b in
-        either 
-          (sprintf "%s %s %s" sa sop sb)
-          (sprintf "%s %s %s" sa sop sb)
-          (sprintf "%s<mo>%s</mo>%s" sa sop sb)
-      | Variable s -> either s s (sprintf "<mi>%s</mi>" s)
-      | Literal s -> either s s (sprintf "<mn>%s</mn>" s)
-      | Apply (f, l) ->
-        let sf = to_string style f and 
-            sl = List.map (to_string style) l in
-        either 
-          (sprintf "%s(%s)" sf (String.concat ", " sl))
-          (sprintf "\n%s(%s)" sf (String.concat ", " sl))
-          (sprintf "\n%s<mo>(</mo>%s<mo>)</mo>\n" sf (String.concat "<mo>,</mo>" sl))
-      | Custom (t,l,m) -> either t l (sprintf "<mi>%s</mi>" m)
-      | Sup (a, b) ->
-        let sa = to_string style a and sb = to_string style b in
-        either 
-          (sprintf "%s^{%s}" sa sb)
-          (sprintf "%s^{%s}" sa sb)
-          (sprintf "\n<msup>\n  <mrow>%s</mrow>\n  <mrow>%s</mrow>\n</msup>" sa sb)
-      | Sub (a, b) ->
-        let sa = to_string style a and sb = to_string style b in
-        either 
-          (sprintf "%s_{%s}" sa sb)
-          (sprintf "%s_{%s}" sa sb)
-          (sprintf "\n<msub>\n  <mrow>%s</mrow>\n  <mrow>%s</mrow>\n</msub>" sa sb)
-      | Nil -> ""
-
-    let inline f =
-      let around =
-        Params.map_output
-          ~html:(either_fun 
-                   (sprintf "{t|{text endformula}\n%s\n{endformula}}")
-                   (sprintf "{t|{text endformula}%s{endformula}}")
-                   (sprintf
-                      "{bypass endbypass}\n\
-                        <math display='inline'>%s</math>\n{endbypass}"))
-          ~latex:(either_fun 
-                    (sprintf "{t|{text endformula}\n%s\n{endformula}}")
-                    (sprintf "{bypass endbypass}$%s${endbypass}")
-                    (sprintf "{t|{text endformula}\n<math display='inline'>\
-                              %s</math>\n{endformula}}"))      in
-      !Camlmix_input.printer (around (to_string `inline f))
-
-    let block f =
-      let around =
-        Params.map_output
-          ~html:(either_fun 
-                   (sprintf "{code endformula}\n%s\n{endformula}")
-                   (sprintf "{code endformula}%s{endformula}")
-                   (sprintf
-                      "{bypass endbypass}\n\
-                        <math display='block'>%s</math>\n{endbypass}"))
-          ~latex:(either_fun 
-                    (sprintf "{code endformula}\n%s\n{endformula}")
-                    (sprintf "{bypass endbypass}$$%s$${endbypass}")
-                    (sprintf "{code endformula}\n<math display='block'>\
-                              %s</math>\n{endformula}}"))      in
-      !Camlmix_input.printer (around (to_string `block f))
-
-    let array_mathml transform a =
-      let transformed =
-        List.map (fun row -> 
-          sprintf "<mtr>%s</mtr>\n"
-            (String.concat ""
-               (List.map (fun f -> 
-                 let s = transform f in
-                 sprintf "<mtd>%s</mtd>\n" s) row))) a in
-      sprintf "<math display='block'><mtable>%s</mtable></math>"
-        (String.concat "" transformed)
-
-    let array_latex transform a =
-      let transformed =
-        List.map (fun row -> 
-          (String.concat " & " (List.map transform row))) a in
-      sprintf "\\begin{eqnarray*}%s\n\\end{eqnarray*}"
-        (String.concat "\\\\ " transformed)
-
-    let array_text transform a =
-      let col_maxes = Array.create (Ls.length (Ls.hd a)) 0 in
-      let transformed =
-        Ls.map (fun row ->
-          Ls.mapi (fun i cell ->
-            let s = transform cell in 
-            let l = String.length s in
-            if l > col_maxes.(i) then col_maxes.(i) <- l;
-            s
-          ) row) a in
-      let padded =
-        Ls.map (fun row ->
-          String.concat " " 
-            (Ls.mapi (fun i cell ->
-              cell ^ (String.make (col_maxes.(i) - (Str.length cell)) ' ')) row)
-        ) transformed in
-      sprintf "\n%s\n" (String.concat "\n" padded)
-
-
-    let array a =
-      let around =
-        Params.map_output
-          ~html:(either_fun 
-                   (sprintf "{code endformula}\n%s\n{endformula}")
-                   (sprintf "{code endformula}%s{endformula}")
-                   (sprintf
-                      "{bypass endbypass}%s{endbypass}"))
-          ~latex:(either_fun 
-                    (sprintf "{code endformula}\n%s\n{endformula}")
-                    (sprintf "{bypass endbypass}%s{endbypass}")
-                    (sprintf "{code endformula}%s{endformula}}"))      in
-      !Camlmix_input.printer
-        (either
-           (around (array_text   (to_string `inline) a))
-           (around (array_latex  (to_string `inline) a))
-           (around (array_mathml (to_string `inline) a)))
-
-    include Constructors
 
   end
 
