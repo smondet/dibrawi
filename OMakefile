@@ -51,6 +51,8 @@ website:
   dbw wiki doc website/wiki -named-template three_columns_greenish
   dbw magic doc/examples/Blog.brtx 
   mv blog website/
+  dbw magic doc/examples/Formulae.brtx html
+  dbw magic doc/examples/Formulae.brtx pdf
 
 if $(not $(file-exists _build/))
     mkdir -p _build/lib _build/app

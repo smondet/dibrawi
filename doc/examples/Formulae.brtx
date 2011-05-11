@@ -1,0 +1,260 @@
+{mi}
+open Mix
+let () =
+  Camlmix.printer := ignore;
+  ()
+
+{me}
+
+{header|{title|Writing Math}}
+
+
+{section|Main Idea}
+
+The idea is to use the module {t|Mix.Math} which uses the operators and constructors
+of {t|Dibrawi_formula}.
+{p}
+
+{cmt|TODO: throw current signatures of Formula.Library and
+ Formula.Constructors
+}
+
+{section|Example}
+
+{section 2|Defining Expressions}
+
+Let's assemble the formulae and equations in a module, where we open the module
+{t|Mix.Math}:
+{mc}
+module Improbability_drive = struct
+  open Mix.Math
+{me}
+
+We can there define any {i|expression} as an OCaml value, for example, variables
+{i|i} and {i|n}:
+{mc}
+  let i = var "i"
+  let n = var "StatesNb"
+{me}
+When we want special characters or operators which are not already provided by
+the embryo of library provided by {i|Dibrawi}, we may just define new ones:
+{t|cvar <latex> <text> <mathml>} for variables, {t|bin <latex> <text> <mathml>}
+for binary operators, etc.:
+{mc}
+  let theta = cvar "\\theta" "θ" "&#x3b8;"
+  let oplus = bin "\\oplus" "⊕" "⊕"
+{me}
+It is just pure OCaml, why not define functions:
+{mc}
+  let alpha_i i = sub (cvar "\\alpha" "α" "α") i
+{me}
+{t|alpha_i (int 0)} will be {q|α{sub|0}},
+{t|alpha_i n} will be {q|α{sub|StatesNb}}, etc.
+{p}
+
+Then we may just assemble everything the way we want it, using operators and
+constructors:
+{mc}    
+  let fxn = (app (var "f") [ var "x"; var "n"; ])
+    
+  let expr1 =
+    (par (sum i (int 0) n (i * (int 42) * (int 17))))
+    + 
+    (app (var "sin") [theta])
+    - 
+    (par (int 0 / int 0))
+
+  let eq1 = fxn != expr1
+{me}
+{p}
+
+The {i|common} operators
+{code}
+  let ( << ) x y = y x 
+  let ( >> ) x y = x y 
+{end}
+can be used to make any binary operator {q|infix}:
+{mc}        
+  let expr2 =
+    (par ((var "bouh") <<oplus>> (int 42)))
+    /  
+    (sup (alpha_i (int 0)) n)
+
+  let expr3 =
+    (par (theta >= (int 42) || (alpha_i i == (float 0.1))))
+    
+  let bigexpr = expr2 / (par (frac (int 1) expr3))
+{me}
+{p}
+
+For presentation purposes, we can arrange everything inside {q|arrays}
+which are expected to be lists of lists
+(using the {t|nil} expression and {t|nilbin <binary operator>}):
+{mc}
+  let array1 = [
+    [ fxn; nilbin (!=); expr1 ];
+    [ nil; nilbin (>=); expr2 ];
+    [ nil; nilbin (<);  bigexpr ];
+  ]
+end
+{me}
+{section 2|Using Expressions in Target Documents}
+
+For now we can only render with
+{t|Math.inline}, {t|Math.block}, and {t|Math.array}
+(numbered equations, matrices, etc. are in the TODO-list{~}{...}).
+By default, formulae are rendered as Latex when outputting Latex, and
+as MathML when outputting HTML. But with {t|Math.set_pref} one can choose
+{t|latex}, {t|text}, or {t|mathml} (when the output format does not
+handle the preference, the formula is rendered as
+{t|{text}{code}{end}} which is safe but useless).
+Moreover, just saying
+{t|Math.with_MathJax ()} somewhere will add the call to 
+{link http://www.mathjax.org/docs/1.1/platforms/index.html |MathJax}
+to render MathML from an HTML document.
+{p}
+
+
+Here follows a sample document which uses the formulae defined above:
+
+{section 2|Sample Document}
+
+{mi}
+module Example_document 
+  (M : sig val s : Math.Formula.style val t : string end) = struct
+let () =
+  Math.set_style M.s;
+  Recorder.record_to M.t;
+  Math.with_MathJax ()
+{me}
+
+{mi}
+pr "
+{header|{title|Examples of Formulae}} 
+{section|Some Fake Math}
+"
+{me}
+
+We can have math expression render {q|in-line}, like:
+{=  Math.inline Improbability_drive.expr2}. We can also put them in
+a {q|block}:
+{=  Math.block Improbability_drive.eq1 }
+Finally, we can render {q|arrays} of expressions which are nicely aligned:
+{=  Math.array Improbability_drive.array1 } {p}
+{p}
+
+Of course one can define and render a formula at the same time:
+{mc}
+let open Math in
+var "E" == (var "M" * (var "C" ^ (int 2))) |> block |> pr
+{me}
+
+{mi}
+Recorder.stop ()
+{me}
+
+{mi}
+end
+
+{me}
+
+
+{section 2|Rendering Results}
+
+The results are:
+{begin list}
+{*} an
+{link ../../example_math_text.html|HTML document} with the formulae
+rendered as pure text;
+{*} an
+{link ../../example_math_mathml.html|HTML document} with the formulae
+rendered as MathML;
+{*} a
+{link ../../example_math_latex.pdf|PDF document} with the formulae
+rendered as {i|normal} LaTeX.
+{end}
+
+
+
+
+{mi}
+
+module DocLatex = Example_document (struct let s = Math.latex let t = "latex" end)
+
+module DocText = Example_document (struct let s = Math.text let t = "text" end)
+
+module DocMathML = Example_document (struct let s = Math.mathml let t = "mathml" end)
+
+let html () =
+
+  let html_template =
+    let open Dibrawi.HTML.Template in
+    make ~title:"Math Exmaple" ()
+      ~css:(css
+      ~color_theme:Color.sober_redish_theme [
+        install_color_theme;
+        install_font_theme
+          (Font.standardish_theme "80%" "sans-serif" "none");
+        install_font_theme ~for_class:".content"
+          (Font.standardish_theme "120%" "serif" "justify");
+        header_block ~frame:"7px";
+        paragraph_style ~separate:"0.5em";
+        enable_scrolling;
+        blockquote ~style:(`left_bar);
+        list_geometry ~style:(`compact "1.8em");
+        dibrawi_cmt;
+        dibrawi_menu;
+        tables_and_figures;
+        footnotes;
+        section_decoration;
+        code_blocks ~with_border:`no;
+        layout (`simple ("4em", "45em"));
+      ])
+      ~body:(body `simple)
+  in
+  Io.with_file_out "website/example_math_text.html" (fun out ->
+    String_tree.print ~out (html_template (Dbw.brtx (Recorder.get "text")));
+  );
+  Io.with_file_out "website/example_math_mathml.html" (fun out ->
+    String_tree.print ~out (html_template (Dbw.brtx (Recorder.get "mathml")));
+  );
+  ()
+
+let latex () =
+  let module XT = Xelatex.Template in
+  let latex_template =
+      XT.make ()
+        ~geometry:(XT.package_geometry ~paper:`A4
+                  ~raw_options:"inner=2cm,outer=2cm,top=2cm,bottom=2cm,\
+                                includeheadfoot")
+        ~add:[
+          XT.compact_title_box;
+          XT.paragraphs ~parindent:"0em"
+            ~baselinestretch:0.88 ~parskip:"1ex";
+          XT.small_itemize;
+          XT.package_caption;
+          XT.compact_sections;
+          XT.tabular_style ~font_size:`footnote ~vertical_cell_spacing:1.4;
+          XT.verbatim_style ~font_size:`footnote;
+          XT.listing_style;
+        ]
+        ~language:"english"
+        ~color:`classy
+        ~columns:`one
+        ~document_class:(`article 9)
+        ~fontspec:XT.fontspec
+  in
+  let full_latex =
+    Xelatex.make_full_file
+      ~pdf_title:"Example of MixMath"
+      ~pdf_authors:"Dibrawi Team"
+      ~pdf_subject:"A showcase of the features of Dibrawi"
+      ~latex_template (Dbw.brtx (Recorder.get "latex")) in
+  let pdf =  (Xelatex.build_string_tree  full_latex) in
+  ignore (Unix.system (sprintf "mv %s %s" pdf "website/example_math_latex.pdf"));
+  ()
+
+let () = Params.map_output ~html ~latex
+
+{me}
+
