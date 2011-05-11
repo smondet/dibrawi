@@ -219,6 +219,7 @@ module Constructors = struct
   let (||  ) a b = Bin_op (bin_or    , a, b)
   let (<=> ) a b = Bin_op (bin_equivalent, a, b)
   let sup a b = Sup (a, b)
+  let (^) a b = Sup (a, b)
   let sub a b = Sub (a, b)
     
   let nilbin f = f Nil Nil
