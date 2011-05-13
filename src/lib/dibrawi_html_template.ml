@@ -331,7 +331,8 @@ module CSS = struct
     
     
     
-  let paragraph_style ?(debug=false) ?(separate="0.5em") params =
+  let paragraph_style ?(debug=false) ?(separate="0.5em") : component =
+    fun params ->
     cat ~sep:new_line [
       str "div.p {";
       str "    padding-bottom: 0em;";
@@ -343,7 +344,7 @@ module CSS = struct
       str $ sprintf "div.p + div.p { padding-top: %s; }" separate;
     ]
     
-  let header_block ?(frame="5px") params =
+  let header_block ?(frame="5px") : component = fun params ->
     let frame_color = 
       Opt.default "black" (Color.border params.color_theme "headerframe") in
     str $ sprintf
@@ -355,10 +356,10 @@ module CSS = struct
       \    margin-bottom: 3em;\n\
       }" frame_color frame
     
-  let enable_scrolling params =
+  let enable_scrolling : component = fun params ->
     str "body {overflow: auto;}\ncode,pre {overflow: auto}"
     
-  let blockquote ?(style=`left_bar) params =
+  let blockquote ?(style=`left_bar) : component = fun params ->
     match style with
     | `left_bar ->
       str $ sprintf 
@@ -367,7 +368,8 @@ module CSS = struct
         \    padding-left: 1em;\n\
         }" (Opt.default "grey" (Color.border params.color_theme "blockquotebar"))
     
-  let list_geometry ?(style=`compact "2em") ?(debug=false) params =
+  let list_geometry ?(style=`compact "2em") ?(debug=false) : component = 
+    fun params ->
     match style with
     | `compact indent ->
       str $ sprintf 
@@ -382,7 +384,7 @@ module CSS = struct
         (if debug then "/* The debug border: */ border: thin #FF0000 solid;\n"
          else "")
     
-  let dibrawi_menu ?(style=`compact "1em") params =
+  let dibrawi_menu ?(style=`compact "1em") : component = fun params ->
     match style with
     | `compact indent ->
       str $ sprintf 
@@ -397,7 +399,7 @@ module CSS = struct
          }" indent
     
     
-  let dibrawi_cmt params =
+  let dibrawi_cmt : component = fun params ->
     str
       ".dibrawicomment:before { content:  \"[\"; }\n\
       .dibrawicomment:after { content: \"]\"; }\n\
@@ -406,7 +408,7 @@ module CSS = struct
       \    color: red;\n\
       }"
     
-  let tables_and_figures params =
+  let tables_and_figures : component = fun params ->
     str 
       "table.tablefigure {\n\
       \    margin-right:auto;\n\
@@ -438,7 +440,7 @@ module CSS = struct
       \n\
       }"
     
-  let footnotes ?(width="40%") params =
+  let footnotes ?(width="40%") : component = fun params ->
     cat [ 
       str
       "small.notebegin { font-size: 70%; vertical-align: super; \
@@ -459,7 +461,7 @@ module CSS = struct
         \    padding: 0.5em;\n\
         }" ]
     
-  let section_numbers params =
+  let section_numbers : component = fun params ->
     str
       "h1 { counter-reset: section subsection subsubsection footnote; }\n\
       body { counter-reset: section subsection subsubsection footnote; }\n\
@@ -483,13 +485,14 @@ module CSS = struct
       \    counter-increment: subsubsection;\n\
       }" 
     
-  let section_decoration params =
+  let section_decoration : component = fun params ->
     str $ sprintf
       "h2 { border: %s solid 2px; padding: 0.2em; }\n\
       h3 { text-decoration: underline;}"
       (Opt.default "black" (Color.border params.color_theme "h2border"))
     
-  let code_blocks ?(with_border=`dashed) ?(rigid_width=true) params =
+  let code_blocks ?(with_border=`dashed) ?(rigid_width=true) : component = 
+    fun params ->
     cat ~sep:new_line [
       str "pre {";
       begin match with_border with
