@@ -1,3 +1,6 @@
+(** Build XHTML templates from basic components.  *)
+
+(**/**)
 open Dibrawi_std
 open String_tree
 let ($) f x = f x
@@ -14,6 +17,7 @@ let css_block ?class_opt name l =
     Opt.map_default (fun s -> str (s ^ " ")) empty class_opt;
     str name; str " {\n"; cat ~sep:new_line l; str "\n}"]
 
+(**/**)
 
 
 module Color = struct
@@ -218,6 +222,7 @@ end
 type css_global_parameters = {
   color_theme: Color.theme;
 }
+type  css_component = css_global_parameters -> String_tree.t
 
 let install_color_theme
     ?for_class ?(theme:Color.theme option) params =
