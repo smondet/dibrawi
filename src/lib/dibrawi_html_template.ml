@@ -557,7 +557,9 @@ module Body_layout = struct
   (** A two columns layout. *)
   let with_sidepane
       ?(more_info=fun (p: Path.t option) -> "")
-      ?(which_side:[`right | `left]=`left) ?(side_width=25.)
+      ?(which_side:[`right | `left]=`left) 
+      ?(side_width=19.)
+      ?max_width
       () : body_layout =
     let body ?menu  ?toc ?title ?footer ?from content =
       cat ~sep [
@@ -617,6 +619,7 @@ module Body_layout = struct
         str "}";
         str "div.content {";
         content_part;
+        opt_str_map (sprintf "max-width: %s;") max_width;
         str "    top: 2px;";
         str "    position: absolute;";
         str "    text-align: justify;";
@@ -765,13 +768,13 @@ module Full = struct
       ~body
 
   let with_sidepane_greenish 
-      ?(add_section_numbers=true) ?(side=`right)
+      ?(add_section_numbers=true) ?(side=`right) ?max_width ?side_width
       ?(debug=false)  ?(rss: string option) ?(atom: string option)
       ?(icon:string option)
       ?(insertion=(fun _ -> "<!-- Side Insertion -->")) () =
     let body, layout =
       Body_layout.with_sidepane ~which_side:side ~more_info:insertion
-        ~side_width:30. () in
+        ?max_width ?side_width () in
     make ()
       ?rss ?atom ?icon
       ~css:(css ~color_theme:Color.greenish_main_theme [
@@ -798,13 +801,13 @@ module Full = struct
       ~body
 
   let with_sidepane_redish 
-      ?(add_section_numbers=true) ?(side=`right)
+      ?(add_section_numbers=true) ?(side=`right) ?max_width ?side_width
       ?(debug=false) ?(rss: string option) ?(atom: string option)
       ?(icon:string option)
       ?(insertion=(fun _ -> "<!-- Side Insertion -->")) () =
     let body, layout =
       Body_layout.with_sidepane ~which_side:side ~more_info:insertion
-        ~side_width:30. () in
+        ?max_width ?side_width () in
     make ()
       ~css:(css ~color_theme:Color.sober_redish_theme [
         install_color_theme;
