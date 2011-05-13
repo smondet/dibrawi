@@ -585,6 +585,200 @@ let body style params =
       ]
 
 
+(** Make together an HTML layout and its corresponding CSS component.  *)
+module Body_layout = struct
+
+  type t = html_template * css_component
+  type body_layout = t
+
+
+  (**/**)
+  let sep = new_line
+  (**/**)
+    
+  (** Just put everything in successive <div> environments.  *)  
+  let raw () : body_layout =
+    let body ?menu  ?toc ?title ?footer ?from content =
+      cat ~sep [
+        opt_str_map (sprintf "<div class=\"dibrawititle\">%s</div>") title;
+        str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
+        opt_str_map (sprintf "<div class=\"dibrawimenu\">%s</div>") menu;
+        opt_str_map (sprintf "<div class=\"dibrawitoc\">%s</div>") toc;
+        opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
+      ]
+    in
+    (body, fun _ -> empty)
+      
+  (** The [simple] layout uses only the [content] and the [footer], in a
+      one-column page. *)
+  let simple 
+      ?(position:[ `margin_left of string | `centered ] option)
+      ?(width:[ `fixed of string | `max_width of string ] option)
+      () : body_layout =
+    let css params =
+      cat ~sep [
+        str  "body {"; 
+        opt_str_map 
+          (function
+            | `margin_left  l -> sprintf "margin-left: %s;" l
+            | `centered -> "position: center;")
+          position;
+        opt_str_map (function
+          | `fixed w -> sprintf "width: %s;" w
+          | `max_width mw -> sprintf "max-width: %s;" mw) width;
+      ] in
+    let body ?menu  ?toc ?title ?footer ?from content =
+      cat ~sep [
+        str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
+        opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
+      ] in
+    (body, css)
+      
+  (** A three columns layout, the centre has width [width]% (default:
+      70%); the page's title and menu go to the left; the the table of
+      contents on the right [top_right] allows one to add some content on
+      the top of the right pane which depends on the current path if
+      applicable.  *)
+  let three_columns
+      ?(width=70.) ?(top_right=fun (p: Path.t option) -> "")
+      () : body_layout =
+    let body ?menu  ?toc ?title ?footer ?from content =
+      cat ~sep [
+        str "<div class=\"leftside\">";
+        opt_str_map (sprintf "<b>Page:</b> %s <br/>") title;
+        opt_str_map 
+          (sprintf "<hr/><b>Menu: </b>%s")
+          menu;
+        str "</div>";
+        str "<div class=\"rightside\">";
+        str (top_right from);
+        opt_str_map (sprintf "<hr/><b>Table of contents:</b><br/>%s<br/>") toc;
+        opt_str_map (sprintf "<hr/>%s<br/>") footer;
+        str "</div>";
+        str "<div class=\"content\">";
+        str content;
+        str "<div id=\"pagefoot\" />";
+        str "</div>";
+      ] in
+    let css params =
+      let on_the_left, on_the_right, in_the_middle =
+        let pad = 0.9 in
+        let margin = 0.4 in
+        let l = 
+          sprintf "  left:  %f%%; width: %f%%; padding: %f%%;" margin width pad
+        in
+        let r =
+          sprintf "  right: %f%%; width: %f%%; padding: %f%%;" margin width pad
+        in
+        let m = 
+          sprintf "  left: %f%%; right: %f%%; padding: %f%%;"
+            (margin +. pad +. width +. pad +. margin +. margin)
+            (margin +. pad +. width +. pad +. margin +. margin)
+            pad in
+        (str l, str r, str m) in
+      let frame_color = 
+        Opt.default "#999" (Color.border params.color_theme "stdframe") in
+      let std_frame = str $ sprintf "  border: %s ridge 3px;" frame_color in
+      cat ~sep:new_line [
+        str "div.leftside {";
+        on_the_left;
+        std_frame;
+        str "    top: 2px;";
+        str "    position:fixed;";
+        str "    overflow: auto;";
+        str "    bottom: 2px;";
+        str "}";
+        str "div.rightside {";
+        on_the_right;
+        std_frame;
+        str "    top: 2px;";
+        str "    position:fixed;";
+        str "    overflow: auto;";
+        str "    bottom: 2px;";
+        str "}";
+        str "div.content {";
+        in_the_middle;
+        std_frame;
+        str "    top: 2px;";
+        str "    position: absolute;";
+        str "    text-align: justify;";
+        str "}";
+      ] in
+    (body, css)
+
+  (** A two columns layout. *)
+  let with_sidepane
+      ?(more_info=fun (p: Path.t option) -> "")
+      ?(which_side:[`right | `left]=`left) ?(side_width=25.)
+      () : body_layout =
+    let body ?menu  ?toc ?title ?footer ?from content =
+      cat ~sep [
+        str "<div class=\"sidepane\">";
+        cat ~sep:(str "<hr/>\n") [
+          opt_str_map (sprintf "<b>Page:</b> %s <br/>") title;
+          str (more_info from);
+          opt_str_map (sprintf "<b>Menu: </b>%s") menu;
+          opt_str_map (sprintf "<b>Table of contents:</b><br/>%s<br/>") toc;
+          opt_str_map (sprintf "%s<br/>") footer;
+        ];
+        str "</div>";
+        str "<div class=\"content\">";
+        str content;
+        str "<div id=\"pagefoot\" />";
+        str "</div>";
+      ] in
+    let css params =
+      let sidepane_part, content_part =
+        let pad = 0.9 in
+        let margin = 0.4 in
+        match which_side with
+        | `left ->
+          let l = 
+            sprintf "  left:  %f%%; width: %f%%; padding: %f%%;"
+              margin side_width pad in
+          let m = 
+            sprintf "  left: %f%%; right: %f%%; padding: %f%%;"
+              (margin +. pad +. side_width +. pad +. margin +. margin)
+              (margin) pad
+          in
+          (str l, str m)
+        | `right ->
+          let r =
+            sprintf "  right: %f%%; width: %f%%; padding: %f%%;"
+              margin side_width pad in
+          let m = 
+            sprintf "  left: %f%%; right: %f%%; padding: %f%%;"
+              (margin)
+              (margin +. pad +. side_width +. pad +. margin +. margin) pad in
+          (str r, str m)
+      in
+      let frame_color = 
+        Opt.default "#999" (Color.border params.color_theme "stdframe") in
+      let std_frame = 
+        str $ sprintf "  border-%s: %s ridge 1px;" 
+          (match which_side with `left -> "right" | `right -> "left")
+          frame_color in
+      cat ~sep:new_line [
+        str "div.sidepane {";
+        sidepane_part;
+        std_frame;
+        str "    top: 2px;";
+        str "    position:fixed;";
+        str "    overflow: auto;";
+        str "    bottom: 2px;";
+        str "}";
+        str "div.content {";
+        content_part;
+        str "    top: 2px;";
+        str "    position: absolute;";
+        str "    text-align: justify;";
+        str "}";
+      ]
+    in
+    (body, css)
+
+
+end
 
 let make
     ?(rss: string option) ?(atom: string option)
