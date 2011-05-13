@@ -613,7 +613,7 @@ module Body_layout = struct
       one-column page. *)
   let simple 
       ?(position:[ `margin_left of string | `centered ] option)
-      ?(width:[ `fixed of string | `max_width of string ] option)
+      ?(width:[ `fixed of string | `max of string ] option)
       () : body_layout =
     let css params =
       cat ~sep [
@@ -621,11 +621,11 @@ module Body_layout = struct
         opt_str_map 
           (function
             | `margin_left  l -> sprintf "margin-left: %s;" l
-            | `centered -> "position: center;")
+            | `centered -> "margin-left: auto; margin-right: auto;")
           position;
         opt_str_map (function
           | `fixed w -> sprintf "width: %s;" w
-          | `max_width mw -> sprintf "max-width: %s;" mw) width;
+          | `max mw -> sprintf "max-width: %s;" mw) width;
       ] in
     let body ?menu  ?toc ?title ?footer ?from content =
       cat ~sep [
@@ -640,7 +640,7 @@ module Body_layout = struct
       the top of the right pane which depends on the current path if
       applicable.  *)
   let three_columns
-      ?(width=70.) ?(top_right=fun (p: Path.t option) -> "")
+      ?(side_width=70.) ?(top_right=fun (p: Path.t option) -> "")
       () : body_layout =
     let body ?menu  ?toc ?title ?footer ?from content =
       cat ~sep [
@@ -665,15 +665,15 @@ module Body_layout = struct
         let pad = 0.9 in
         let margin = 0.4 in
         let l = 
-          sprintf "  left:  %f%%; width: %f%%; padding: %f%%;" margin width pad
+          sprintf "  left:  %f%%; width: %f%%; padding: %f%%;" margin side_width pad
         in
         let r =
-          sprintf "  right: %f%%; width: %f%%; padding: %f%%;" margin width pad
+          sprintf "  right: %f%%; width: %f%%; padding: %f%%;" margin side_width pad
         in
         let m = 
           sprintf "  left: %f%%; right: %f%%; padding: %f%%;"
-            (margin +. pad +. width +. pad +. margin +. margin)
-            (margin +. pad +. width +. pad +. margin +. margin)
+            (margin +. pad +. side_width +. pad +. margin +. margin)
+            (margin +. pad +. side_width +. pad +. margin +. margin)
             pad in
         (str l, str r, str m) in
       let frame_color = 
