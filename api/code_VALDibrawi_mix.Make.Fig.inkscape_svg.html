@@ -1,0 +1,65 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_mix.Make.Fig.inkscape_svg</title>
+</head>
+<body>
+<code class="code"><span class="keyword">let</span>&nbsp;inkscape_svg&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?(label=<span class="string">""</span>)&nbsp;?(size=<span class="string">"100%"</span>)&nbsp;?(caption=<span class="string">""</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?(tmp_dir=<span class="string">"/tmp/"</span>)&nbsp;?(dest_dir=<span class="string">"/tmp/"</span>)&nbsp;?link_dir&nbsp;?path<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?(transform:svg_transformation&nbsp;option)&nbsp;filename&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;If&nbsp;SVGZ&nbsp;then&nbsp;decompress&nbsp;*)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;the_path,&nbsp;the_file&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;actual_path&nbsp;=&nbsp;<span class="constructor">Opt</span>.default&nbsp;!default_svg_inkscape_path&nbsp;path&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;chopped&nbsp;=&nbsp;<span class="constructor">Filename</span>.chop_extension&nbsp;filename&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>&nbsp;<span class="constructor">Filename</span>.check_suffix&nbsp;filename&nbsp;<span class="string">".svgz"</span>&nbsp;<span class="keyword">then</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;cmd&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sprintf&nbsp;<span class="string">"gunzip&nbsp;-c&nbsp;%s/%s&nbsp;&gt;&nbsp;%s/%s.svg"</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;actual_path&nbsp;filename&nbsp;tmp_dir&nbsp;chopped&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">System</span>.run_command&nbsp;cmd;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(tmp_dir,&nbsp;chopped)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">else</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(actual_path,&nbsp;chopped)&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;Do&nbsp;transformations&nbsp;*)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;the_path,&nbsp;the_file&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">match</span>&nbsp;transform&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Some</span>&nbsp;(<span class="keywordsign">`</span>select_layers_and_altheight_nb&nbsp;(layers,&nbsp;heightno))&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(tmp_dir,&nbsp;svg_layers&nbsp;the_path&nbsp;tmp_dir&nbsp;the_file&nbsp;~heightno&nbsp;layers)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Some</span>&nbsp;(<span class="keywordsign">`</span>select_layers&nbsp;layers)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(tmp_dir,&nbsp;svg_layers&nbsp;the_path&nbsp;tmp_dir&nbsp;the_file&nbsp;layers)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">None</span>&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(the_path,&nbsp;the_file)&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;Do&nbsp;the&nbsp;compilation&nbsp;*)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;outcmd,&nbsp;outname,&nbsp;outfmt&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;dest&nbsp;=&nbsp;sprintf&nbsp;<span class="string">"%s/%s"</span>&nbsp;dest_dir&nbsp;the_file&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Params</span>.map_output<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~latex:(<span class="keyword">fun</span>&nbsp;()&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="string">"inkscape&nbsp;-z&nbsp;-A"</span>,&nbsp;dest,&nbsp;<span class="string">".pdf"</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~html:(<span class="keyword">fun</span>&nbsp;()&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="string">"inkscape&nbsp;-z&nbsp;-e"</span>,&nbsp;&nbsp;dest,&nbsp;<span class="string">".png"</span>)&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;svg&nbsp;=&nbsp;sprintf&nbsp;<span class="string">"%s/%s.svg"</span>&nbsp;the_path&nbsp;the_file&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>&nbsp;not&nbsp;(<span class="constructor">Sys</span>.file_exists&nbsp;outname)&nbsp;<span class="keywordsign">||</span>&nbsp;<span class="constructor">System</span>.is_newer&nbsp;svg&nbsp;outname&nbsp;<span class="keyword">then</span>&nbsp;(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">System</span>.run_command<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sprintf&nbsp;<span class="string">"%s&nbsp;%s%s&nbsp;%s&nbsp;&gt;&nbsp;/dev/null"</span>&nbsp;&nbsp;outcmd&nbsp;outname&nbsp;outfmt&nbsp;svg);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)&nbsp;<span class="keyword">else</span>&nbsp;(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eprintf&nbsp;<span class="string">"Alt_fig.Inkscape:&nbsp;The&nbsp;.svg&nbsp;is&nbsp;older&nbsp;than&nbsp;%s%s\n"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outname&nbsp;outfmt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;link&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sprintf&nbsp;<span class="string">"%s/%s%s"</span>&nbsp;(<span class="constructor">Opt</span>.default&nbsp;dest_dir&nbsp;link_dir)&nbsp;the_file&nbsp;outfmt&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sprintf&nbsp;<span class="string">"{image&nbsp;%s&nbsp;%s&nbsp;%s|%s}"</span>&nbsp;link&nbsp;size&nbsp;label&nbsp;caption)</code></body></html>

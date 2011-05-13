@@ -1,0 +1,51 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_mix.Make.Blog</title>
+</head>
+<body>
+<code class="code"><span class="keyword">sig</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;post&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;title&nbsp;:&nbsp;string;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;date&nbsp;:&nbsp;string;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tags&nbsp;:&nbsp;string&nbsp;list;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;key&nbsp;:&nbsp;string;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">class</span>&nbsp;blog&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">object</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">method</span>&nbsp;all_tags&nbsp;:&nbsp;string&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">method</span>&nbsp;end_post&nbsp;:&nbsp;unit<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">method</span>&nbsp;get_posts&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&nbsp;<span class="keywordsign">`</span>all&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>tag&nbsp;<span class="keyword">of</span>&nbsp;string&nbsp;]&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dibrawi_mix</span>.<span class="constructor">Make</span>.<span class="keywordsign">??.</span>post&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">method</span>&nbsp;new_post&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;title:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;tags:string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;date:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">method</span>&nbsp;post_contents&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;rss&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;title:string&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;description:string&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;link:string&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;last_build_date:string&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;pub_date:string&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;describe:(<span class="constructor">Dibrawi_mix</span>.<span class="constructor">Make</span>.<span class="keywordsign">??.</span>post&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;make_link:(<span class="constructor">Dibrawi_mix</span>.<span class="constructor">Make</span>.<span class="keywordsign">??.</span>post&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dibrawi_mix</span>.<span class="constructor">Make</span>.<span class="keywordsign">??.</span>post&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;disqus&nbsp;:&nbsp;short_name:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;discus_id:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;url:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+<span class="keyword">end</span></code></body></html>

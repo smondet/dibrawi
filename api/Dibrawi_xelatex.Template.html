@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="Up" href="Dibrawi_xelatex.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_xelatex.Template</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a href="Dibrawi_xelatex.html">Up</a>
+&nbsp;</div>
+<center><h1>Module <a href="type_Dibrawi_xelatex.Template.html">Dibrawi_xelatex.Template</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Template: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi_xelatex.Template.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><hr width="100%">
+<pre><span id="TYPEcolor_theme"><span class="keyword">type</span> <code class="type"></code>color_theme</span> = <code class="type">[ `classy | `none ]</code> </pre>
+
+<pre><span id="TYPEglobal_parameters"><span class="keyword">type</span> <code class="type"></code>global_parameters</span> </pre>
+
+<pre><span id="TYPEcomponent"><span class="keyword">type</span> <code class="type"></code>component</span> = <code class="type"><a href="Dibrawi_xelatex.Template.html#TYPEglobal_parameters">global_parameters</a> -> <a href="Dibrawi_std.String_tree.html#TYPEt">Dibrawi_std.String_tree.t</a></code> </pre>
+
+<pre><span id="VALcompact_title_box"><span class="keyword">val</span> compact_title_box</span> : <code class="type">?with_color:bool -> <a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALchange_height"><span class="keyword">val</span> change_height</span> : <code class="type">?pt:int -> <a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALpackage_geometry"><span class="keyword">val</span> package_geometry</span> : <code class="type">?paper:[< `A0 | `A1 | `A2 | `A3 | `A4 | `A5 | `A6 > `A4 ] -><br>       ?raw_options:string -> <a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALparagraphs"><span class="keyword">val</span> paragraphs</span> : <code class="type">?baselinestretch:float -><br>       ?parskip:string -> ?parindent:string -> <a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALsmall_itemize"><span class="keyword">val</span> small_itemize</span> : <code class="type"><a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALverbatim_style"><span class="keyword">val</span> verbatim_style</span> : <code class="type">?font_size:[ `footnote | `small ] -> <a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALpackage_caption"><span class="keyword">val</span> package_caption</span> : <code class="type"><a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALcompact_sections"><span class="keyword">val</span> compact_sections</span> : <code class="type">?how:[ `homemade | `with_titlesec ] -> <a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALtabular_style"><span class="keyword">val</span> tabular_style</span> : <code class="type">?font_size:[ `footnote | `small ] -><br>       ?vertical_cell_spacing:float -> <a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALlisting_style"><span class="keyword">val</span> listing_style</span> : <code class="type">?style:string -> <a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALpackage_fancyhdr"><span class="keyword">val</span> package_fancyhdr</span> : <code class="type"><a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALhyphenations"><span class="keyword">val</span> hyphenations</span> : <code class="type">string list -> <a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALfontspec"><span class="keyword">val</span> fontspec</span> : <code class="type"><a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALsection_numbers"><span class="keyword">val</span> section_numbers</span> : <code class="type">?section_numbers_depth:int -><br>       ?toc_depth:int -> <a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a></code></pre><pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">?add:<a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a> list -><br>       ?color:<a href="Dibrawi_xelatex.Template.html#TYPEcolor_theme">color_theme</a> -><br>       ?language:string -><br>       ?document_class:[ `article of int<br>                       | `book of int<br>                       | `french_letter of int<br>                       | `letter of int<br>                       | `none ] -><br>       ?columns:[ `one | `two ] -><br>       ?geometry:<a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a> -><br>       ?fontspec:<a href="Dibrawi_xelatex.Template.html#TYPEcomponent">component</a> -><br>       ?two_sides:bool -> unit -> <a href="Dibrawi_std.String_tree.html#TYPEt">Dibrawi_std.String_tree.t</a></code></pre></body></html>

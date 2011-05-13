@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Dibrawi_html_template.Color.html">
+<link rel="next" href="Dibrawi_html_template.Body_layout.html">
+<link rel="Up" href="Dibrawi_html_template.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_html_template.Font</title>
+</head>
+<body>
+<div class="navbar"><a href="Dibrawi_html_template.Color.html">Previous</a>
+&nbsp;<a href="Dibrawi_html_template.html">Up</a>
+&nbsp;<a href="Dibrawi_html_template.Body_layout.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Dibrawi_html_template.Font.html">Dibrawi_html_template.Font</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Font: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi_html_template.Font.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><hr width="100%">
+<br><code><span id="TYPEspec"><span class="keyword">type</span> <code class="type"></code>spec</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>family&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>align&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>size&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>variant&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>style&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>decoration&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr></table>
+}
+
+
+<pre><span id="TYPEtheme"><span class="keyword">type</span> <code class="type"></code>theme</span> = <code class="type">(string * <a href="Dibrawi_html_template.Font.html#TYPEspec">spec</a>) list</code> </pre>
+
+<pre><span id="VALspec"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.Font.spec.html">spec</a></span> : <code class="type">?family:string -><br>       ?align:string -><br>       ?size:string -><br>       ?variant:string -><br>       ?style:string -><br>       ?decoration:string -> unit -> <a href="Dibrawi_html_template.Font.html#TYPEspec">spec</a></code></pre><pre><span id="VALassociate"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.Font.associate.html">associate</a></span> : <code class="type">'a -> 'b -> 'a * 'b</code></pre><pre><span id="VALspecify"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.Font.specify.html">specify</a></span> : <code class="type">?family:string -><br>       ?align:string -><br>       ?size:string -><br>       ?variant:string -><br>       ?style:string -><br>       ?decoration:string -> 'a -> 'a * <a href="Dibrawi_html_template.Font.html#TYPEspec">spec</a></code></pre><pre><span id="VALempty_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.Font.empty_theme.html">empty_theme</a></span> : <code class="type">'a list</code></pre><pre><span id="VALdummy_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.Font.dummy_theme.html">dummy_theme</a></span> : <code class="type">(string * <a href="Dibrawi_html_template.Font.html#TYPEspec">spec</a>) list</code></pre><pre><span id="VALinstall_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.Font.install_theme.html">install_theme</a></span> : <code class="type">?for_class:string -><br>       (string * <a href="Dibrawi_html_template.Font.html#TYPEspec">spec</a>) list -> <a href="Dibrawi_std.String_tree.html#TYPEt">Dibrawi_std.String_tree.t</a></code></pre><pre><span id="VALstandardish_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.Font.standardish_theme.html">standardish_theme</a></span> : <code class="type">string -> string -> string -> (string * <a href="Dibrawi_html_template.Font.html#TYPEspec">spec</a>) list</code></pre></body></html>

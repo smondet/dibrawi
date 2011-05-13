@@ -1,0 +1,68 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_html_template.Color</title>
+</head>
+<body>
+<code class="code"><span class="keyword">sig</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;color&nbsp;=&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;text_color&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">One</span>&nbsp;<span class="keyword">of</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(string&nbsp;*&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color&nbsp;option&nbsp;*<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color&nbsp;option)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">List</span>&nbsp;<span class="keyword">of</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(string&nbsp;list&nbsp;*&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color&nbsp;option&nbsp;*<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color&nbsp;option)<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;theme&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;text&nbsp;:&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.text_color&nbsp;list;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;borders&nbsp;:&nbsp;(string&nbsp;*&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color)&nbsp;list;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;color&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?bg:<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?fg:<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.text_color<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;color_list&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?bg:<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?fg:<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.text_color<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fg&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.text_color<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;bg&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.text_color<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;theme&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?text:<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.text_color&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?borders:(string&nbsp;*&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color)&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.theme<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;empty_theme&nbsp;:&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.theme<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dummy_theme&nbsp;:&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.theme<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;install_theme&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?for_class:string&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.theme&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dibrawi_std</span>.<span class="constructor">String_tree</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;border&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.theme&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.color&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;greenish_main_theme&nbsp;:&nbsp;theme<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;greenish_secondary_theme&nbsp;:&nbsp;theme<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sober_redish_theme&nbsp;:&nbsp;<span class="constructor">Dibrawi_html_template</span>.<span class="constructor">Color</span>.theme<br>
+<span class="keyword">end</span></code></body></html>

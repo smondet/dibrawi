@@ -1,0 +1,90 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_html_template.Body_layout.three_columns</title>
+</head>
+<body>
+<code class="code"><span class="keyword">let</span>&nbsp;three_columns<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?(side_width=20.)&nbsp;?(top_right=<span class="keyword">fun</span>&nbsp;(p:&nbsp;<span class="constructor">Path</span>.t&nbsp;option)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="string">""</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;()&nbsp;:&nbsp;body_layout&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;body&nbsp;?menu&nbsp;&nbsp;?toc&nbsp;?title&nbsp;?footer&nbsp;?from&nbsp;content&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cat&nbsp;~sep&nbsp;[<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&lt;div&nbsp;class=\"leftside\"&gt;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opt_str_map&nbsp;(sprintf&nbsp;<span class="string">"&lt;b&gt;Page:&lt;/b&gt;&nbsp;%s&nbsp;&lt;br/&gt;"</span>)&nbsp;title;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opt_str_map&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sprintf&nbsp;<span class="string">"&lt;hr/&gt;&lt;b&gt;Menu:&nbsp;&lt;/b&gt;%s"</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;menu;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&lt;/div&gt;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&lt;div&nbsp;class=\"rightside\"&gt;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;(top_right&nbsp;from);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opt_str_map&nbsp;(sprintf&nbsp;<span class="string">"&lt;hr/&gt;&lt;b&gt;Table&nbsp;of&nbsp;contents:&lt;/b&gt;&lt;br/&gt;%s&lt;br/&gt;"</span>)&nbsp;toc;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opt_str_map&nbsp;(sprintf&nbsp;<span class="string">"&lt;hr/&gt;%s&lt;br/&gt;"</span>)&nbsp;footer;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&lt;/div&gt;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&lt;div&nbsp;class=\"content\"&gt;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;content;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&lt;div&nbsp;id=\"pagefoot\"&nbsp;/&gt;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&lt;/div&gt;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;css&nbsp;params&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;on_the_left,&nbsp;on_the_right,&nbsp;in_the_middle&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;pad&nbsp;=&nbsp;0.9&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;margin&nbsp;=&nbsp;0.4&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;l&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sprintf&nbsp;<span class="string">"&nbsp;&nbsp;left:&nbsp;&nbsp;%f%%;&nbsp;width:&nbsp;%f%%;&nbsp;padding:&nbsp;%f%%;"</span>&nbsp;margin&nbsp;side_width&nbsp;pad<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;r&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sprintf&nbsp;<span class="string">"&nbsp;&nbsp;right:&nbsp;%f%%;&nbsp;width:&nbsp;%f%%;&nbsp;padding:&nbsp;%f%%;"</span>&nbsp;margin&nbsp;side_width&nbsp;pad<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;m&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sprintf&nbsp;<span class="string">"&nbsp;&nbsp;left:&nbsp;%f%%;&nbsp;right:&nbsp;%f%%;&nbsp;padding:&nbsp;%f%%;"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(margin&nbsp;+.&nbsp;pad&nbsp;+.&nbsp;side_width&nbsp;+.&nbsp;pad&nbsp;+.&nbsp;margin&nbsp;+.&nbsp;margin)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(margin&nbsp;+.&nbsp;pad&nbsp;+.&nbsp;side_width&nbsp;+.&nbsp;pad&nbsp;+.&nbsp;margin&nbsp;+.&nbsp;margin)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pad&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(str&nbsp;l,&nbsp;str&nbsp;r,&nbsp;str&nbsp;m)&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;frame_color&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Opt</span>.default&nbsp;<span class="string">"#999"</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">CSS</span>.<span class="constructor">Color</span>.border&nbsp;params.<span class="constructor">CSS</span>.color_theme&nbsp;<span class="string">"stdframe"</span>)&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;std_frame&nbsp;=&nbsp;str&nbsp;$&nbsp;sprintf&nbsp;<span class="string">"&nbsp;&nbsp;border:&nbsp;%s&nbsp;ridge&nbsp;3px;"</span>&nbsp;frame_color&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cat&nbsp;~sep:new_line&nbsp;[<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"div.leftside&nbsp;{"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;on_the_left;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std_frame;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&nbsp;&nbsp;&nbsp;&nbsp;top:&nbsp;2px;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&nbsp;&nbsp;&nbsp;&nbsp;position:fixed;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&nbsp;&nbsp;&nbsp;&nbsp;overflow:&nbsp;auto;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&nbsp;&nbsp;&nbsp;&nbsp;bottom:&nbsp;2px;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"}"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"div.rightside&nbsp;{"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;on_the_right;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std_frame;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&nbsp;&nbsp;&nbsp;&nbsp;top:&nbsp;2px;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&nbsp;&nbsp;&nbsp;&nbsp;position:fixed;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&nbsp;&nbsp;&nbsp;&nbsp;overflow:&nbsp;auto;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&nbsp;&nbsp;&nbsp;&nbsp;bottom:&nbsp;2px;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"}"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"div.content&nbsp;{"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;in_the_middle;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std_frame;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&nbsp;&nbsp;&nbsp;&nbsp;top:&nbsp;2px;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&nbsp;&nbsp;&nbsp;&nbsp;position:&nbsp;absolute;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&nbsp;&nbsp;&nbsp;&nbsp;text-align:&nbsp;justify;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"}"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;((<span class="keyword">fun</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;body),&nbsp;css)</code></body></html>

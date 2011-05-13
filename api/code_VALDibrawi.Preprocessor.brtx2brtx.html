@@ -1,0 +1,30 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi.Preprocessor.brtx2brtx</title>
+</head>
+<body>
+<code class="code"><span class="keyword">let</span>&nbsp;brtx2brtx&nbsp;?todo_list&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?(html_cite=default_html_cite&nbsp;default_html_biblio_page)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?(output=<span class="keywordsign">`</span>html)&nbsp;?(mix_output=<span class="keywordsign">`</span>wiki)&nbsp;?from&nbsp;brtx&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;future&nbsp;=&nbsp;make&nbsp;~html_cite&nbsp;~output&nbsp;~mix_output&nbsp;()&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;brtx&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;future&nbsp;(<span class="constructor">Str</span>.concat&nbsp;<span class="string">"/"</span>&nbsp;(<span class="constructor">Ls</span>.rev&nbsp;(<span class="constructor">Opt</span>.default&nbsp;[<span class="string">"?NoFile?"</span>]&nbsp;from)))&nbsp;brtx&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;brtx</code></body></html>

@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="Up" href="Dibrawi.Address_book.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi.Address_book.Adbose</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a href="Dibrawi.Address_book.html">Up</a>
+&nbsp;</div>
+<center><h1>Module <a href="type_Dibrawi.Address_book.Adbose.html">Dibrawi.Address_book.Adbose</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Adbose: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi.Address_book.Adbose.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><hr width="100%">
+<pre><span class="keyword">module</span> <a href="Dibrawi.Address_book.Adbose.Sx.html">Sx</a>: <code class="type">Sexplib.Sexp</code></pre><pre><span id="TYPEfield"><span class="keyword">type</span> <code class="type"></code>field</span> = <code class="type">string list</code> </pre>
+
+<pre><span id="TYPEkind"><span class="keyword">type</span> <code class="type"></code>kind</span> = <code class="type">[ `group | `organisation | `person ]</code> </pre>
+
+<pre><span id="TYPEentry"><span class="keyword">type</span> <code class="type"></code>entry</span> = <code class="type"><a href="Dibrawi.Address_book.Adbose.html#TYPEkind">kind</a> * string *<br>       <a href="Dibrawi.Address_book.Adbose.html#TYPEfield">field</a> list</code> </pre>
+
+<pre><span id="TYPEaddress_book"><span class="keyword">type</span> <code class="type"></code>address_book</span> = <code class="type"><a href="Dibrawi.Address_book.Adbose.html#TYPEentry">entry</a> list</code> </pre>
+
+<pre><span id="EXCEPTIONParse_error"><span class="keyword">exception</span> Parse_error</span> <span class="keyword">of</span> <code class="type">string</code></pre>
+<pre><span id="VALaddress_book_of_string"><span class="keyword">val</span> <a href="code_VALDibrawi.Address_book.Adbose.address_book_of_string.html">address_book_of_string</a></span> : <code class="type">string -><br>       ([> `group | `organisation | `person ] * string * string list list) list</code></pre><pre><span id="VALget_one"><span class="keyword">val</span> <a href="code_VALDibrawi.Address_book.Adbose.get_one.html">get_one</a></span> : <code class="type">String.t -> 'a * 'b * String.t list list -> String.t list option</code></pre><pre><span id="VALget_all"><span class="keyword">val</span> <a href="code_VALDibrawi.Address_book.Adbose.get_all.html">get_all</a></span> : <code class="type">String.t -> 'a * 'b * String.t list list -> String.t list list</code></pre><pre><span id="VALsort_by_family"><span class="keyword">val</span> <a href="code_VALDibrawi.Address_book.Adbose.sort_by_family.html">sort_by_family</a></span> : <code class="type">('a * 'b * String.t list list) list -> ('a * 'b * String.t list list) list</code></pre></body></html>

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Dibrawi.Brtx_transform.html">
+<link rel="next" href="Dibrawi.Address_book.html">
+<link rel="Up" href="Dibrawi.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi.HTML_menu</title>
+</head>
+<body>
+<div class="navbar"><a href="Dibrawi.Brtx_transform.html">Previous</a>
+&nbsp;<a href="Dibrawi.html">Up</a>
+&nbsp;<a href="Dibrawi.Address_book.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Dibrawi.HTML_menu.html">Dibrawi.HTML_menu</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> HTML_menu: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi.HTML_menu.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><hr width="100%">
+<pre><span id="VALbrtx_menu"><span class="keyword">val</span> <a href="code_VALDibrawi.HTML_menu.brtx_menu.html">brtx_menu</a></span> : <code class="type">?url_prefix:string -><br>       ?filter:string -><br>       ?exclude_dir:string -><br>       ?chop_filter:bool -><br>       ?replace:string -> <a href="Dibrawi.File_tree.html#TYPEfile_tree_item">Dibrawi.File_tree.file_tree_item</a> list -> string</code></pre><pre><span id="VALhtml_menu"><span class="keyword">val</span> <a href="code_VALDibrawi.HTML_menu.html_menu.html">html_menu</a></span> : <code class="type">?url_prefix:string -><br>       ?filter:string -><br>       ?exclude_dir:string -><br>       ?chop_filter:bool -><br>       ?replace:string -><br>       from:string list -> <a href="Dibrawi.File_tree.html#TYPEfile_tree_item">Dibrawi.File_tree.file_tree_item</a> list -> string</code></pre><br><code><span id="TYPEmenu_factory"><span class="keyword">type</span> <code class="type"></code>menu_factory</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>cache&nbsp;: <code class="type">(int, string) Dibrawi_std.Ht.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>source&nbsp;: <code class="type"><a href="Dibrawi.File_tree.html#TYPEfile_tree">Dibrawi.File_tree.file_tree</a></code>;</code></td>
+
+</tr></table>
+}
+
+
+<pre><span id="VALmake_menu_factory"><span class="keyword">val</span> <a href="code_VALDibrawi.HTML_menu.make_menu_factory.html">make_menu_factory</a></span> : <code class="type"><a href="Dibrawi.File_tree.html#TYPEfile_tree">Dibrawi.File_tree.file_tree</a> -> <a href="Dibrawi.HTML_menu.html#TYPEmenu_factory">menu_factory</a></code></pre><pre><span id="VALget_menu"><span class="keyword">val</span> <a href="code_VALDibrawi.HTML_menu.get_menu.html">get_menu</a></span> : <code class="type"><a href="Dibrawi.HTML_menu.html#TYPEmenu_factory">menu_factory</a> -> from:string list -> string</code></pre></body></html>

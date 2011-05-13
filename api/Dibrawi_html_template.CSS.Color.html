@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="next" href="Dibrawi_html_template.CSS.Font.html">
+<link rel="Up" href="Dibrawi_html_template.CSS.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_html_template.CSS.Color</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a href="Dibrawi_html_template.CSS.html">Up</a>
+&nbsp;<a href="Dibrawi_html_template.CSS.Font.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Dibrawi_html_template.CSS.Color.html">Dibrawi_html_template.CSS.Color</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Color: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi_html_template.CSS.Color.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>Create or use existing color themes.<br>
+<hr width="100%">
+<pre><span id="TYPEcolor"><span class="keyword">type</span> <code class="type"></code>color</span> = <code class="type">string</code> </pre>
+
+<br><code><span id="TYPEtext_color"><span class="keyword">type</span> <code class="type"></code>text_color</span> = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">One</span> <span class="keyword">of</span> <code class="type">(string * <a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a> option *<br>      <a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a> option)</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">List</span> <span class="keyword">of</span> <code class="type">(string list * <a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a> option *<br>      <a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a> option)</code></code></td>
+
+</tr></table>
+
+
+<br><code><span id="TYPEtheme"><span class="keyword">type</span> <code class="type"></code>theme</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>text&nbsp;: <code class="type"><a href="Dibrawi_html_template.CSS.Color.html#TYPEtext_color">text_color</a> list</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>borders&nbsp;: <code class="type">(string * <a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a>) list</code>;</code></td>
+
+</tr></table>
+}
+
+
+<pre><span id="VALcolor"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.color.html">color</a></span> : <code class="type">?bg:<a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a> -><br>       ?fg:<a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a> -><br>       string -> <a href="Dibrawi_html_template.CSS.Color.html#TYPEtext_color">text_color</a></code></pre><pre><span id="VALcolor_list"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.color_list.html">color_list</a></span> : <code class="type">?bg:<a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a> -><br>       ?fg:<a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a> -><br>       string list -> <a href="Dibrawi_html_template.CSS.Color.html#TYPEtext_color">text_color</a></code></pre><pre><span id="VALfg"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.fg.html">fg</a></span> : <code class="type">string -><br>       <a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a> -><br>       <a href="Dibrawi_html_template.CSS.Color.html#TYPEtext_color">text_color</a></code></pre><pre><span id="VALbg"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.bg.html">bg</a></span> : <code class="type">string -><br>       <a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a> -><br>       <a href="Dibrawi_html_template.CSS.Color.html#TYPEtext_color">text_color</a></code></pre><pre><span id="VALtheme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.theme.html">theme</a></span> : <code class="type">?text:<a href="Dibrawi_html_template.CSS.Color.html#TYPEtext_color">text_color</a> list -><br>       ?borders:(string * <a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a>) list -><br>       unit -> <a href="Dibrawi_html_template.CSS.Color.html#TYPEtheme">theme</a></code></pre><pre><span id="VALinstall_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.install_theme.html">install_theme</a></span> : <code class="type">?for_class:string -><br>       <a href="Dibrawi_html_template.CSS.Color.html#TYPEtheme">theme</a> -> <a href="Dibrawi_std.String_tree.html#TYPEt">Dibrawi_std.String_tree.t</a></code></pre><pre><span id="VALborder"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.border.html">border</a></span> : <code class="type"><a href="Dibrawi_html_template.CSS.Color.html#TYPEtheme">theme</a> -><br>       string -> <a href="Dibrawi_html_template.CSS.Color.html#TYPEcolor">color</a> option</code></pre><div class="info">
+Get the color associated with a given border name.<br>
+</div>
+<pre><span id="VALempty_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.empty_theme.html">empty_theme</a></span> : <code class="type"><a href="Dibrawi_html_template.CSS.Color.html#TYPEtheme">theme</a></code></pre><pre><span id="VALdummy_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.dummy_theme.html">dummy_theme</a></span> : <code class="type"><a href="Dibrawi_html_template.CSS.Color.html#TYPEtheme">theme</a></code></pre><pre><span id="VALgreenish_main_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.greenish_main_theme.html">greenish_main_theme</a></span> : <code class="type"><a href="Dibrawi_html_template.CSS.Color.html#TYPEtheme">theme</a></code></pre><pre><span id="VALgreenish_secondary_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.greenish_secondary_theme.html">greenish_secondary_theme</a></span> : <code class="type"><a href="Dibrawi_html_template.CSS.Color.html#TYPEtheme">theme</a></code></pre><pre><span id="VALsober_redish_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.Color.sober_redish_theme.html">sober_redish_theme</a></span> : <code class="type"><a href="Dibrawi_html_template.CSS.Color.html#TYPEtheme">theme</a></code></pre><div class="info">
+This theme is good examples of usage of the <code class="code"><span class="constructor">Color</span></code> module to
+        build your own themes.<br>
+</div>
+</body></html>

@@ -1,0 +1,181 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi.Preprocessor.make</title>
+</head>
+<body>
+<code class="code"><span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;make<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?(html_cite=default_html_cite&nbsp;default_html_biblio_page)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?(output=<span class="keywordsign">`</span>html)&nbsp;?(mix_output=<span class="keywordsign">`</span>wiki)&nbsp;()&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;buf&nbsp;=&nbsp;<span class="constructor">Buffer</span>.create&nbsp;42&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;pr&nbsp;=&nbsp;<span class="constructor">Buffer</span>.add_string&nbsp;buf&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;brtx_ploc&nbsp;l&nbsp;str&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;snd&nbsp;(<span class="constructor">Str</span>.replace&nbsp;~str&nbsp;~sub:<span class="string">"&nbsp;"</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~by:(sprintf&nbsp;<span class="string">"\n#line&nbsp;%d&nbsp;%S\n"</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;l.<span class="constructor">Bracetax</span>.<span class="constructor">Error</span>.l_line&nbsp;l.<span class="constructor">Bracetax</span>.<span class="constructor">Error</span>.l_file))&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;caml_ploc&nbsp;l&nbsp;str&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;snd&nbsp;(<span class="constructor">Str</span>.replace&nbsp;~str&nbsp;~sub:<span class="string">"&nbsp;"</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~by:(sprintf&nbsp;<span class="string">"\n#&nbsp;%d&nbsp;%S&nbsp;;;\n"</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;l.<span class="constructor">Bracetax</span>.<span class="constructor">Error</span>.l_line&nbsp;l.<span class="constructor">Bracetax</span>.<span class="constructor">Error</span>.l_file))&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;default_raw_end&nbsp;=&nbsp;<span class="constructor">Bracetax</span>.<span class="constructor">Commands</span>.<span class="constructor">Raw</span>.default_raw_end&nbsp;()&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;is_old_pp_raw_2&nbsp;s&nbsp;=&nbsp;<span class="constructor">Ls</span>.exists&nbsp;((=)&nbsp;s)&nbsp;[<span class="string">"mc"</span>;&nbsp;<span class="string">"mi"</span>;&nbsp;<span class="string">"me"</span>]&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;is_old_pp_raw_n&nbsp;s&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Ls</span>.exists&nbsp;((=)&nbsp;s)&nbsp;[<span class="string">"mix:code"</span>;&nbsp;<span class="string">"mix:ignore"</span>;&nbsp;<span class="string">"mix:end"</span>]&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;is_old_pp_raw&nbsp;s&nbsp;=&nbsp;is_old_pp_raw_2&nbsp;s&nbsp;<span class="keywordsign">||</span>&nbsp;is_old_pp_raw_n&nbsp;s&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;cmd_stack&nbsp;=&nbsp;<span class="constructor">Stack</span>.create&nbsp;()&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;pop_loc&nbsp;stack&nbsp;loc&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">try</span>&nbsp;<span class="constructor">Stack</span>.pop&nbsp;stack&nbsp;<span class="keyword">with</span>&nbsp;<span class="constructor">Stack</span>.<span class="constructor">Empty</span>&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eprintf&nbsp;<span class="string">"[[%s:%d]]&nbsp;Trying&nbsp;to&nbsp;close&nbsp;a&nbsp;non-existing&nbsp;command.\n"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;loc.<span class="constructor">Bracetax</span>.<span class="constructor">Error</span>.l_file&nbsp;loc.<span class="constructor">Bracetax</span>.<span class="constructor">Error</span>.l_line;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;failwith&nbsp;<span class="string">"Preprocessor&nbsp;Error"</span>&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;bypass&nbsp;s&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;endtag&nbsp;=&nbsp;<span class="string">"dibrawipreprocessorendtag"</span>&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sprintf&nbsp;<span class="string">"{bypass&nbsp;%s}%s{%s}"</span>&nbsp;endtag&nbsp;s&nbsp;endtag)&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;html_or_latex&nbsp;h&nbsp;l&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;output&nbsp;<span class="keyword">with</span>&nbsp;<span class="keywordsign">`</span>html&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;h&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>pdf&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;l&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;clean_cite&nbsp;s&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Str</span>.replace_chars&nbsp;(<span class="keyword">function</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">'a'</span>&nbsp;..&nbsp;<span class="string">'z'</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">'A'</span>&nbsp;..&nbsp;<span class="string">'Z'</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">'0'</span>&nbsp;..&nbsp;<span class="string">'9'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">':'</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">'.'</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">'-'</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">'_'</span>&nbsp;<span class="keyword">as</span>&nbsp;ok&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Str</span>.of_char&nbsp;ok<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="string">""</span>)&nbsp;s&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;split_cites&nbsp;s&nbsp;=&nbsp;<span class="constructor">Str</span>.nsplit&nbsp;s&nbsp;<span class="string">","</span>&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;brtx_printer&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<span class="constructor">Bracetax</span>.<span class="constructor">Signatures</span>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print_comment&nbsp;=&nbsp;(<span class="keyword">fun</span>&nbsp;_&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;());<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print_text&nbsp;=&nbsp;(<span class="keyword">fun</span>&nbsp;loc&nbsp;s&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;pr&nbsp;(brtx_ploc&nbsp;loc&nbsp;s));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enter_cmd&nbsp;=&nbsp;(<span class="keyword">fun</span>&nbsp;loc&nbsp;cmd&nbsp;args&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Stack</span>.push&nbsp;(cmd,&nbsp;args)&nbsp;cmd_stack;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">match</span>&nbsp;cmd&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">"cmt"</span>&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(bypass&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(html_or_latex<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"&lt;span&nbsp;class=\"dibrawicomment\"&gt;"</span>&nbsp;<span class="string">"\\dbwcmt{"</span>));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(<span class="constructor">Str</span>.concat&nbsp;<span class="string">"&nbsp;"</span>&nbsp;(<span class="constructor">Ls</span>.map&nbsp;sanitize_brtx_content&nbsp;args))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">"cite"</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">"="</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">"@"</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">"mix:include"</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(sprintf&nbsp;<span class="string">"{%s%s|"</span>&nbsp;cmd<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">Str</span>.concat&nbsp;<span class="string">""</span>&nbsp;(<span class="constructor">Ls</span>.map&nbsp;(<span class="keyword">fun</span>&nbsp;s&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sprintf&nbsp;<span class="string">"&nbsp;%s"</span>&nbsp;(sanitize_brtx_command&nbsp;s))&nbsp;args))));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;leave_cmd&nbsp;=&nbsp;(<span class="keyword">fun</span>&nbsp;loc&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">match</span>&nbsp;pop_loc&nbsp;cmd_stack&nbsp;loc&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;(<span class="string">"cmt"</span>,&nbsp;_)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;pr&nbsp;(bypass&nbsp;(html_or_latex&nbsp;<span class="string">"&lt;/span&gt;"</span>&nbsp;<span class="string">"}"</span>))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;(<span class="string">"cite"</span>,&nbsp;args)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;cites&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Ls</span>.map&nbsp;~f:clean_cite<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">Ls</span>.flatten&nbsp;(<span class="constructor">Ls</span>.map&nbsp;args&nbsp;~f:split_cites))&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(html_or_latex&nbsp;(html_cite&nbsp;cites)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(bypass&nbsp;(sprintf&nbsp;<span class="string">"\\cite{%s}"</span>&nbsp;(<span class="constructor">Str</span>.concat&nbsp;<span class="string">","</span>&nbsp;cites))))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;(<span class="string">"mix:include"</span>,&nbsp;args)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;mix_output&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>wiki&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;<span class="string">"{bypass&nbsp;endfordiv}&lt;span&nbsp;class=\"dbwmixcode\"&gt;{endfordiv}"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(sprintf&nbsp;<span class="string">"{t|{utf&nbsp;0x22b2}mix:include&nbsp;{text&nbsp;mixspecialend}"</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(<span class="constructor">Str</span>.concat&nbsp;<span class="string">"&nbsp;"</span>&nbsp;args);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;<span class="string">"{mixspecialend}{utf&nbsp;0x22b3}}"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;<span class="string">"{bypass&nbsp;endfordiv}&lt;/span&gt;{endfordiv}"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>camlmix&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;filename&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">try</span>&nbsp;<span class="constructor">Ls</span>.hd&nbsp;args&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eprintf&nbsp;<span class="string">"[[%s:%d]]&nbsp;{mix:include}&nbsp;has&nbsp;no&nbsp;argument.\n"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;loc.<span class="constructor">Bracetax</span>.<span class="constructor">Error</span>.l_file&nbsp;loc.<span class="constructor">Bracetax</span>.<span class="constructor">Error</span>.l_line;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;failwith&nbsp;<span class="string">"Preprocessor&nbsp;Error"</span>&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;contents&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Data_source</span>.get_file&nbsp;filename&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(sprintf&nbsp;<span class="string">"#&nbsp;Inserting&nbsp;%s\n"</span>&nbsp;filename);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;future_prepro&nbsp;=&nbsp;make&nbsp;~html_cite&nbsp;~output&nbsp;~mix_output&nbsp;()&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(future_prepro&nbsp;~filename&nbsp;contents);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;(cmd,&nbsp;args)&nbsp;<span class="keyword">when</span>&nbsp;cmd&nbsp;=&nbsp;<span class="string">"="</span>&nbsp;<span class="keywordsign">||</span>&nbsp;cmd&nbsp;=&nbsp;<span class="string">"@"</span>&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;mix_output&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>wiki&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;<span class="string">"{bypass&nbsp;endfordiv}&lt;span&nbsp;class=\"dbwmixcode\"&gt;{endfordiv}"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(sprintf&nbsp;<span class="string">"{t|{utf&nbsp;0x22b2}%s&nbsp;{text&nbsp;mixspecialend}"</span>&nbsp;cmd);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(<span class="constructor">Str</span>.concat&nbsp;<span class="string">"&nbsp;"</span>&nbsp;args);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;<span class="string">"{mixspecialend}{utf&nbsp;0x22b3}}"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;<span class="string">"{bypass&nbsp;endfordiv}&lt;/span&gt;{endfordiv}"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>camlmix&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;<span class="string">"##"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(<span class="keyword">if</span>&nbsp;cmd&nbsp;=&nbsp;<span class="string">"="</span>&nbsp;<span class="keyword">then</span>&nbsp;<span class="string">"=&nbsp;"</span>&nbsp;<span class="keyword">else</span>&nbsp;<span class="string">"&nbsp;"</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(<span class="constructor">Str</span>.concat&nbsp;<span class="string">"&nbsp;"</span>&nbsp;args);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;<span class="string">"&nbsp;##"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;pr&nbsp;<span class="string">"}"</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;terminate&nbsp;=&nbsp;(<span class="keyword">fun</span>&nbsp;loc&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;());<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is_raw&nbsp;=&nbsp;(<span class="keyword">fun</span>&nbsp;s&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">Bracetax</span>.<span class="constructor">Commands</span>.<span class="constructor">Raw</span>.is_raw_cmd&nbsp;s)&nbsp;<span class="keywordsign">||</span>&nbsp;(is_old_pp_raw&nbsp;s));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;default_raw_end&nbsp;=&nbsp;(<span class="keyword">function</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;s&nbsp;<span class="keyword">when</span>&nbsp;<span class="constructor">Bracetax</span>.<span class="constructor">Commands</span>.<span class="constructor">Raw</span>.is_raw_cmd&nbsp;s&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="string">"end"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;s&nbsp;<span class="keyword">when</span>&nbsp;is_old_pp_raw_2&nbsp;s&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="string">"me"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;s&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="string">"mix:end"</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enter_raw&nbsp;=&nbsp;(<span class="keyword">fun</span>&nbsp;loc&nbsp;cmd&nbsp;args&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Stack</span>.push&nbsp;(cmd,&nbsp;args)&nbsp;cmd_stack;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">match</span>&nbsp;cmd&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">"mix:ignore"</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">"mi"</span>&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;mix_output&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>wiki&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;pr&nbsp;<span class="string">"{ignore&nbsp;mixspecialend}"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>camlmix&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;pr&nbsp;(caml_ploc&nbsp;loc&nbsp;<span class="string">"##&nbsp;"</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">"mix:code"</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="string">"mc"</span>&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;mix_output&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>wiki&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;<span class="string">"{bypass&nbsp;endfordiv}&lt;div&nbsp;class=\"dbwmixcode\"&gt;{endfordiv}{code&nbsp;mixspecialend}"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>camlmix&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;pr&nbsp;(caml_ploc&nbsp;loc&nbsp;<span class="string">"##&nbsp;"</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;s&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(sprintf&nbsp;<span class="string">"{%s%s}"</span>&nbsp;cmd<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">Str</span>.concat&nbsp;<span class="string">""</span>&nbsp;(<span class="constructor">Ls</span>.map&nbsp;(<span class="keyword">fun</span>&nbsp;s&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sprintf&nbsp;<span class="string">"&nbsp;%s"</span>&nbsp;(sanitize_brtx_command&nbsp;s))&nbsp;args))));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print_raw&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="keyword">fun</span>&nbsp;loc&nbsp;line&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>&nbsp;mix_output&nbsp;=&nbsp;<span class="keywordsign">`</span>camlmix&nbsp;<span class="keyword">then</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;(<span class="constructor">Str</span>.replace_all&nbsp;line&nbsp;~sub:<span class="string">"##"</span>&nbsp;~by:<span class="string">"###"</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">else</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;line);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;leave_raw&nbsp;=&nbsp;(<span class="keyword">fun</span>&nbsp;loc&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">match</span>&nbsp;pop_loc&nbsp;cmd_stack&nbsp;loc&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;(<span class="string">"mix:ignore"</span>,&nbsp;_)&nbsp;<span class="keywordsign">|</span>&nbsp;(<span class="string">"mi"</span>,&nbsp;_)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;mix_output&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>wiki&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;pr&nbsp;<span class="string">"{mixspecialend}"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>camlmix&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;pr&nbsp;<span class="string">"##"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;(<span class="string">"mix:code"</span>,&nbsp;_)&nbsp;<span class="keywordsign">|</span>&nbsp;(<span class="string">"mc"</span>,&nbsp;_)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;mix_output&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>wiki&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;<span class="string">"{mixspecialend}"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pr&nbsp;<span class="string">"{bypass&nbsp;endfordiv}&lt;/div&gt;{endfordiv}"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>camlmix&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;pr&nbsp;<span class="string">"##"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;(s,&nbsp;[])&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;pr&nbsp;(sprintf&nbsp;<span class="string">"{%s}"</span>&nbsp;default_raw_end)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;(s,&nbsp;endtag&nbsp;::&nbsp;_)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;pr&nbsp;(sprintf&nbsp;<span class="string">"{%s}"</span>&nbsp;endtag));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;error&nbsp;=&nbsp;(<span class="keyword">function</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>undefined&nbsp;s&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;eprintf&nbsp;<span class="string">"%s\n"</span>&nbsp;s;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>message&nbsp;((_,&nbsp;gravity,&nbsp;_)&nbsp;<span class="keyword">as</span>&nbsp;msg)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eprintf&nbsp;<span class="string">"%s\n"</span>&nbsp;(<span class="constructor">Bracetax</span>.<span class="constructor">Error</span>.to_string&nbsp;msg));}&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;do_prepro&nbsp;~filename&nbsp;str&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;read_char_opt&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;cpt&nbsp;=&nbsp;ref&nbsp;(-1)&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="keyword">fun</span>&nbsp;()&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keyword">try</span>&nbsp;<span class="constructor">Some</span>&nbsp;(incr&nbsp;cpt;&nbsp;str.[!cpt])&nbsp;<span class="keyword">with</span>&nbsp;e&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">None</span>)&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Stack</span>.clear&nbsp;cmd_stack;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Buffer</span>.clear&nbsp;buf;&nbsp;<span class="comment">(*&nbsp;`clear'&nbsp;keeps&nbsp;the&nbsp;internal&nbsp;string,&nbsp;`reset'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deallocates&nbsp;it.&nbsp;*)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Bracetax</span>.<span class="constructor">Parser</span>.do_transformation&nbsp;~deny_bypass:<span class="keyword">false</span>&nbsp;brtx_printer&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_char_opt&nbsp;filename;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Buffer</span>.contents&nbsp;buf&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;do_prepro</code></body></html>

@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Dibrawi_html_template.CSS.html">
+<link rel="next" href="Dibrawi_html_template.Full.html">
+<link rel="Up" href="Dibrawi_html_template.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_html_template.Body_layout</title>
+</head>
+<body>
+<div class="navbar"><a href="Dibrawi_html_template.CSS.html">Previous</a>
+&nbsp;<a href="Dibrawi_html_template.html">Up</a>
+&nbsp;<a href="Dibrawi_html_template.Full.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Dibrawi_html_template.Body_layout.html">Dibrawi_html_template.Body_layout</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Body_layout: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi_html_template.Body_layout.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>Make together an HTML layout and its corresponding CSS component.<br>
+<hr width="100%">
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type"><a href="Dibrawi_html_template.html#TYPEbody_style">Dibrawi_html_template.body_style</a> * <a href="Dibrawi_html_template.CSS.html#TYPEcomponent">Dibrawi_html_template.CSS.component</a></code> </pre>
+
+<pre><span id="TYPEbody_layout"><span class="keyword">type</span> <code class="type"></code>body_layout</span> = <code class="type"><a href="Dibrawi_html_template.Body_layout.html#TYPEt">t</a></code> </pre>
+
+<pre><span id="VALraw"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.Body_layout.raw.html">raw</a></span> : <code class="type">unit -> <a href="Dibrawi_html_template.Body_layout.html#TYPEbody_layout">body_layout</a></code></pre><div class="info">
+Just put everything in successive &lt;div&gt; environments.<br>
+</div>
+<pre><span id="VALsimple"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.Body_layout.simple.html">simple</a></span> : <code class="type">?position:[ `centered | `margin_left of string ] -><br>       ?width:[ `fixed of string | `max of string ] -><br>       unit -> <a href="Dibrawi_html_template.Body_layout.html#TYPEbody_layout">body_layout</a></code></pre><div class="info">
+The <code class="code">simple</code> layout uses only the <code class="code">content</code> and the <code class="code">footer</code>, in a
+      one-column page.<br>
+</div>
+<pre><span id="VALthree_columns"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.Body_layout.three_columns.html">three_columns</a></span> : <code class="type">?side_width:float -><br>       ?top_right:(<a href="Dibrawi_std.Path.html#TYPEt">Dibrawi_std.Path.t</a> option -> string) -><br>       unit -> <a href="Dibrawi_html_template.Body_layout.html#TYPEbody_layout">body_layout</a></code></pre><div class="info">
+A three columns layout, the centre has width <code class="code">width</code>% (default:
+      70%); the page's title and menu go to the left; the the table of
+      contents on the right <code class="code">top_right</code> allows one to add some content on
+      the top of the right pane which depends on the current path if
+      applicable.<br>
+</div>
+<pre><span id="VALwith_sidepane"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.Body_layout.with_sidepane.html">with_sidepane</a></span> : <code class="type">?more_info:(<a href="Dibrawi_std.Path.html#TYPEt">Dibrawi_std.Path.t</a> option -> string) -><br>       ?which_side:[ `left | `right ] -><br>       ?side_width:float -><br>       ?max_width:string -> unit -> <a href="Dibrawi_html_template.Body_layout.html#TYPEbody_layout">body_layout</a></code></pre><div class="info">
+A two columns layout.<br>
+</div>
+</body></html>

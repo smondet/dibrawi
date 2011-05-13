@@ -207,14 +207,14 @@ ul, ol {
     margin-bottom: 0em;
 }
 .dibrawimenudir { display: block; }
-       ul  li.dibrawi_menuli {
-         display: inline;
-       } 
-       ul.dibrawi_menuul {
-         padding: 0em;
-         margin: 0em;
-         margin-left: 1em;
-       }
+         ul  li.dibrawi_menuli {
+           display: inline;
+         } 
+         ul.dibrawi_menuul {
+           padding: 0em;
+           margin: 0em;
+           margin-left: 1em;
+         }
 .dibrawicomment:before { content:  "["; }
 .dibrawicomment:after { content: "]"; }
 .dibrawicomment {
@@ -250,13 +250,14 @@ img {
     clear: both;
 
 }
-small.notebegin { counter-increment: footnote; }
+small.notebegin { font-size: 70%; vertical-align: super; counter-increment: footnote; }
+small.noteend { font-size: 70%; vertical-align: super; }
 small.noteend:before {  content: counter(footnote) }
 small.note:before { content: counter(footnote) ": " }
 body { counter-reset: section subsection subsubsection footnote; }
 
 small.note {
-    font-size: 70%;
+    font-size: 76%;
     clear: right;
     width: 40%;
     border: thin #959595 solid;
@@ -304,6 +305,7 @@ div.content {
  <li class="dibrawi_menuli"> <div class="dibrawimenudir">examples 
 <ul class="dibrawi_menuul">
  <li class="dibrawi_menuli"> <a href=".././examples/Blog.html" class="dibrawi_menua">Blog</a> </li>
+<li class="dibrawi_menuli"> <a href=".././examples/Formulae.html" class="dibrawi_menua">Formulae</a> </li>
 </ul>
 </div> </li>
 </ul>
@@ -329,7 +331,8 @@ div.content {
 <div class="p">
    This is an example of usage of usage of the <tt>Blog</tt> module. Just run <pre>
 dbw run doc/examples/Blog.brtx
-</pre> to get a <tt>./blog/</tt> directory.  </div>
+</pre> to get a <tt>./blog/</tt> directory. </div>
+<div class="p">  The example of this page can be found <a href="../../blog/index.html">on this website</a>.  </div>
 <h2 id="The_Posts">The Posts</h2>
 <div class="p">  Here is the first post: <div class="dbwmixcode"><pre>
 blog#new_post 
@@ -359,6 +362,7 @@ let () =
   let page ~from =
     let template =
       Dibrawi.HTML.Template.Full.with_sidepane_greenish
+        ~max_width:"50em" ~side_width:18.
         ~add_section_numbers:false ~side:`left in
     let rss = sprintf "%s/blog/feed/all_posts.rss" base_url in
     template ~rss () in

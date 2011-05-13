@@ -1,0 +1,63 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_html_template.make</title>
+</head>
+<body>
+<code class="code"><span class="keyword">let</span>&nbsp;make<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?(rss:&nbsp;string&nbsp;option)&nbsp;?(atom:&nbsp;string&nbsp;option)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?(icon:string&nbsp;option)&nbsp;?(css:css=<span class="keywordsign">`</span>none)&nbsp;?(body:body_style&nbsp;option)&nbsp;()&nbsp;=<br>
+<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;insert_css&nbsp;css&nbsp;params&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">match</span>&nbsp;css&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>none&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;str&nbsp;<span class="string">""</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>link&nbsp;target&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;$&nbsp;sprintf<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"&lt;link&nbsp;rel=\"stylesheet\"&nbsp;&nbsp;type=\"text/css\"&nbsp;href=\"%s\"/&gt;"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;target<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>link_from_root&nbsp;target&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;depth&nbsp;=&nbsp;<span class="constructor">Ls</span>.length&nbsp;params.path_to_root&nbsp;-&nbsp;1&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;$&nbsp;sprintf<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"&lt;link&nbsp;rel=\"stylesheet\"&nbsp;&nbsp;type=\"text/css\"&nbsp;href=\"%s/%s\"/&gt;"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="string">"./"</span>&nbsp;^&nbsp;(<span class="constructor">Str</span>.concat&nbsp;<span class="string">"/"</span>&nbsp;(<span class="constructor">Ls</span>.init&nbsp;depth&nbsp;(<span class="keyword">fun</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="string">".."</span>))))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;target<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>inline&nbsp;string_tree&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string_tree<br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;template_function&nbsp;&nbsp;?menu&nbsp;?toc&nbsp;?title&nbsp;?footer&nbsp;?(from=[])&nbsp;content&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;params&nbsp;=&nbsp;{&nbsp;path_to_root&nbsp;=&nbsp;from&nbsp;}&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;cat&nbsp;~sep:(str&nbsp;<span class="string">"\n"</span>)&nbsp;[<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&lt;!DOCTYPE&nbsp;html\nPUBLIC&nbsp;\"-//W3C//DTD&nbsp;XHTML&nbsp;1.0&nbsp;Strict//EN\"\n\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"&gt;\n&lt;html&nbsp;xmlns=\"http://www.w3.org/1999/xhtml\"&nbsp;xml:lang=\"en\"&nbsp;lang=\"en\"&gt;\n&lt;!--&nbsp;Generated&nbsp;with&nbsp;Dibrawi,&nbsp;BraceTax,&nbsp;Sebib,&nbsp;and&nbsp;some&nbsp;more&nbsp;hacks&nbsp;--&gt;\n&lt;head&gt;\n&lt;meta&nbsp;http-equiv=\"Content-Type\"&nbsp;content=\"text/html;&nbsp;charset=utf-8\"/&gt;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;insert_css&nbsp;css&nbsp;params;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opt_str_map&nbsp;(sprintf&nbsp;<span class="string">"&lt;link&nbsp;rel=\"shortcut&nbsp;icon\"&nbsp;href=\"%s\"&gt;"</span>)&nbsp;icon;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opt_str_map&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sprintf&nbsp;<span class="string">"&lt;link&nbsp;rel=\"alternate\"&nbsp;type=\"application/rss+xml\"&nbsp;title=\"RSS\"&nbsp;href=\"%s\"&gt;"</span>)&nbsp;rss;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opt_str_map&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sprintf&nbsp;<span class="string">"&lt;link&nbsp;rel=\"alternate\"&nbsp;type=\"application/atom+xml\"&nbsp;title=\"Atom\"&nbsp;href=\"%s\"&gt;"</span>)&nbsp;atom;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opt_str_map&nbsp;(sprintf&nbsp;<span class="string">"&lt;title&gt;%s&lt;/title&gt;"</span>)&nbsp;&nbsp;title;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&lt;/head&gt;\n&lt;body&gt;"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;body&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">None</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;str&nbsp;<span class="string">"&lt;!--&nbsp;No&nbsp;Body&nbsp;--&gt;"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Some</span>&nbsp;b&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(b&nbsp;params)&nbsp;?menu&nbsp;&nbsp;?toc&nbsp;?title&nbsp;?footer&nbsp;~from&nbsp;content<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;str&nbsp;<span class="string">"&lt;/body&gt;&lt;/html&gt;\n"</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;]<br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;(template_function:html_template)</code></body></html>

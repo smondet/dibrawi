@@ -1,0 +1,98 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_formula.to_string</title>
+</head>
+<body>
+<code class="code"><span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;to_string&nbsp;style&nbsp;expr&nbsp;=<br>
+&nbsp;&nbsp;<span class="keyword">match</span>&nbsp;expr&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Range_op</span>&nbsp;(op,&nbsp;i,&nbsp;f,&nbsp;t,&nbsp;s)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;style&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Latex</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"%s_{%s=%s}^{%s}{%s}"</span>&nbsp;(op&nbsp;style)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(to_string&nbsp;style&nbsp;i)&nbsp;(to_string&nbsp;style&nbsp;f)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(to_string&nbsp;style&nbsp;t)&nbsp;(to_string&nbsp;style&nbsp;s))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Text</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sprintf&nbsp;<span class="string">"%s[%s=%s..%s]&nbsp;%s"</span>&nbsp;(op&nbsp;style)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(to_string&nbsp;style&nbsp;i)&nbsp;(to_string&nbsp;style&nbsp;f)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(to_string&nbsp;style&nbsp;t)&nbsp;(to_string&nbsp;style&nbsp;s))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">MathML</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"&lt;munderover&gt;\n&lt;mrow&gt;&lt;mo&gt;%s&lt;/mo&gt;&lt;/mrow&gt;\n&lt;mrow&gt;%s&lt;mo&gt;=&lt;/mo&gt;%s&lt;/mrow&gt;\n&lt;mrow&gt;%s&lt;/mrow&gt;&lt;/munderover&gt;&lt;mrow&gt;%s&lt;/mrow&gt;\n"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(op&nbsp;style)&nbsp;(to_string&nbsp;style&nbsp;i)&nbsp;(to_string&nbsp;style&nbsp;f)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(to_string&nbsp;style&nbsp;t)&nbsp;(to_string&nbsp;style&nbsp;s))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Fraction</span>&nbsp;(a,&nbsp;b)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;sa&nbsp;=&nbsp;to_string&nbsp;style&nbsp;a&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;sb&nbsp;=&nbsp;to_string&nbsp;style&nbsp;b&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;style&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Latex</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"\\frac{%s}{%s}"</span>&nbsp;sa&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Text</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"[%s] /&nbsp;[%s]"</span>&nbsp;sa&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">MathML</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"&lt;mfrac&gt;\n&lt;mrow&gt;%s&lt;/mrow&gt;\n&lt;mrow&gt;%s&lt;/mrow&gt;\n&lt;/mfrac&gt;"</span>&nbsp;sa&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Paren</span>&nbsp;f&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;style&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Latex</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"(%s)"</span>&nbsp;(to_string&nbsp;style&nbsp;f))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Text</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"(%s)"</span>&nbsp;(to_string&nbsp;style&nbsp;f))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">MathML</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"\n&lt;mo&gt;(&lt;/mo&gt;%s&lt;mo&gt;)&lt;/mo&gt;\n"</span>&nbsp;(to_string&nbsp;style&nbsp;f))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Bin_op</span>&nbsp;(op,&nbsp;a,&nbsp;b)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;sop&nbsp;=&nbsp;op&nbsp;style&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;sa&nbsp;=&nbsp;to_string&nbsp;style&nbsp;a&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;sb&nbsp;=&nbsp;to_string&nbsp;style&nbsp;b&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;style&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Latex</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"%s&nbsp;%s&nbsp;%s"</span>&nbsp;sa&nbsp;sop&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Text</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"%s&nbsp;%s&nbsp;%s"</span>&nbsp;sa&nbsp;sop&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">MathML</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"%s&lt;mo&gt;%s&lt;/mo&gt;%s"</span>&nbsp;sa&nbsp;sop&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Variable</span>&nbsp;v&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;s&nbsp;=&nbsp;v&nbsp;style&nbsp;<span class="keyword">in</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;style&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Latex</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Text</span><span class="keywordsign">-&gt;</span>&nbsp;s&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">MathML</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"&lt;mi&gt;%s&lt;/mi&gt;"</span>&nbsp;s)&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Literal</span>&nbsp;l&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;s&nbsp;=&nbsp;l&nbsp;style&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;style&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Latex</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Text</span><span class="keywordsign">-&gt;</span>&nbsp;s&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">MathML</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"&lt;mn&gt;%s&lt;/mn&gt;"</span>&nbsp;s)&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Apply</span>&nbsp;(f,&nbsp;l)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;sf&nbsp;=&nbsp;to_string&nbsp;style&nbsp;f&nbsp;<span class="keyword">and</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sl&nbsp;=&nbsp;<span class="constructor">List</span>.map&nbsp;(to_string&nbsp;style)&nbsp;l&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;style&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Latex</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"%s(%s)"</span>&nbsp;sf&nbsp;(<span class="constructor">String</span>.concat&nbsp;<span class="string">",&nbsp;"</span>&nbsp;sl))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Text</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"%s(%s)"</span>&nbsp;sf&nbsp;(<span class="constructor">String</span>.concat&nbsp;<span class="string">",&nbsp;"</span>&nbsp;sl))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">MathML</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sprintf&nbsp;<span class="string">"\n%s&lt;mo&gt;(&lt;/mo&gt;%s&lt;mo&gt;)&lt;/mo&gt;\n"</span>&nbsp;sf&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">String</span>.concat&nbsp;<span class="string">"&lt;mo&gt;,&lt;/mo&gt;"</span>&nbsp;sl))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Sup</span>&nbsp;(a,&nbsp;b)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;sa&nbsp;=&nbsp;to_string&nbsp;style&nbsp;a&nbsp;<span class="keyword">and</span>&nbsp;sb&nbsp;=&nbsp;to_string&nbsp;style&nbsp;b&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;style&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Latex</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"%s^{%s}"</span>&nbsp;sa&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Text</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"%s^{%s}"</span>&nbsp;sa&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">MathML</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sprintf&nbsp;<span class="string">"\n&lt;msup&gt;\n&nbsp;&nbsp;&lt;mrow&gt;%s&lt;/mrow&gt;\n&nbsp;&nbsp;&lt;mrow&gt;%s&lt;/mrow&gt;\n&lt;/msup&gt;"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sa&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Sub</span>&nbsp;(a,&nbsp;b)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;sa&nbsp;=&nbsp;to_string&nbsp;style&nbsp;a&nbsp;<span class="keyword">and</span>&nbsp;sb&nbsp;=&nbsp;to_string&nbsp;style&nbsp;b&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;style&nbsp;<span class="keyword">with</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Latex</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"%s_{%s}"</span>&nbsp;sa&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Text</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(sprintf&nbsp;<span class="string">"%s_{%s}"</span>&nbsp;sa&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">MathML</span>&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sprintf&nbsp;<span class="string">"\n&lt;msub&gt;\n&nbsp;&nbsp;&lt;mrow&gt;%s&lt;/mrow&gt;\n&nbsp;&nbsp;&lt;mrow&gt;%s&lt;/mrow&gt;\n&lt;/msub&gt;"</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sa&nbsp;sb)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Nil</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="string">""</span></code></body></html>

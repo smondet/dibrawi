@@ -207,14 +207,14 @@ ul, ol {
     margin-bottom: 0em;
 }
 .dibrawimenudir { display: block; }
-       ul  li.dibrawi_menuli {
-         display: inline;
-       } 
-       ul.dibrawi_menuul {
-         padding: 0em;
-         margin: 0em;
-         margin-left: 1em;
-       }
+         ul  li.dibrawi_menuli {
+           display: inline;
+         } 
+         ul.dibrawi_menuul {
+           padding: 0em;
+           margin: 0em;
+           margin-left: 1em;
+         }
 .dibrawicomment:before { content:  "["; }
 .dibrawicomment:after { content: "]"; }
 .dibrawicomment {
@@ -250,13 +250,14 @@ img {
     clear: both;
 
 }
-small.notebegin { counter-increment: footnote; }
+small.notebegin { font-size: 70%; vertical-align: super; counter-increment: footnote; }
+small.noteend { font-size: 70%; vertical-align: super; }
 small.noteend:before {  content: counter(footnote) }
 small.note:before { content: counter(footnote) ": " }
 body { counter-reset: section subsection subsubsection footnote; }
 
 small.note {
-    font-size: 70%;
+    font-size: 76%;
     clear: right;
     width: 40%;
     border: thin #959595 solid;
@@ -304,6 +305,7 @@ div.content {
  <li class="dibrawi_menuli"> <div class="dibrawimenudir">examples 
 <ul class="dibrawi_menuul">
  <li class="dibrawi_menuli"> <a href="././examples/Blog.html" class="dibrawi_menua">Blog</a> </li>
+<li class="dibrawi_menuli"> <a href="././examples/Formulae.html" class="dibrawi_menua">Formulae</a> </li>
 </ul>
 </div> </li>
 </ul>

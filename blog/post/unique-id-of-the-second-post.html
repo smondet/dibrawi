@@ -207,14 +207,14 @@ ul, ol {
     margin-bottom: 0em;
 }
 .dibrawimenudir { display: block; }
-       ul  li.dibrawi_menuli {
-         display: inline;
-       } 
-       ul.dibrawi_menuul {
-         padding: 0em;
-         margin: 0em;
-         margin-left: 1em;
-       }
+         ul  li.dibrawi_menuli {
+           display: inline;
+         } 
+         ul.dibrawi_menuul {
+           padding: 0em;
+           margin: 0em;
+           margin-left: 1em;
+         }
 .dibrawicomment:before { content:  "["; }
 .dibrawicomment:after { content: "]"; }
 .dibrawicomment {
@@ -250,13 +250,14 @@ img {
     clear: both;
 
 }
-small.notebegin { counter-increment: footnote; }
+small.notebegin { font-size: 70%; vertical-align: super; counter-increment: footnote; }
+small.noteend { font-size: 70%; vertical-align: super; }
 small.noteend:before {  content: counter(footnote) }
 small.note:before { content: counter(footnote) ": " }
 body { counter-reset: section subsection subsubsection footnote; }
 
 small.note {
-    font-size: 70%;
+    font-size: 76%;
     clear: right;
     width: 40%;
     border: thin #959595 solid;
@@ -271,7 +272,7 @@ pre {
     position: relative; left: 5%; width: 90%; clear: left;
 }
 div.sidepane {
-  left:  0.400000%; width: 30.000000%; padding: 0.900000%;
+  left:  0.400000%; width: 18.000000%; padding: 0.900000%;
   border-right: #6A96B3 ridge 1px;
     top: 2px;
     position:fixed;
@@ -279,7 +280,8 @@ div.sidepane {
     bottom: 2px;
 }
 div.content {
-  left: 33.000000%; right: 0.400000%; padding: 0.900000%;
+  left: 21.000000%; right: 0.400000%; padding: 0.900000%;
+max-width: 50em;
     top: 2px;
     position: absolute;
     text-align: justify;

@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Dibrawi.Data_source.html">
+<link rel="next" href="Dibrawi.Special_paths.html">
+<link rel="Up" href="Dibrawi.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi.Todo_list</title>
+</head>
+<body>
+<div class="navbar"><a href="Dibrawi.Data_source.html">Previous</a>
+&nbsp;<a href="Dibrawi.html">Up</a>
+&nbsp;<a href="Dibrawi.Special_paths.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Dibrawi.Todo_list.html">Dibrawi.Todo_list</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Todo_list: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi.Todo_list.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><hr width="100%">
+<pre><span id="TYPEtodo"><span class="keyword">type</span> <code class="type"></code>todo</span> = <code class="type">[ `copy of string * string list ]</code> </pre>
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type"><a href="Dibrawi.Todo_list.html#TYPEtodo">todo</a> list Pervasives.ref</code> </pre>
+
+<pre><span id="VALempty"><span class="keyword">val</span> <a href="code_VALDibrawi.Todo_list.empty.html">empty</a></span> : <code class="type">unit -> 'a list Pervasives.ref</code></pre><pre><span id="VALis_empty"><span class="keyword">val</span> <a href="code_VALDibrawi.Todo_list.is_empty.html">is_empty</a></span> : <code class="type">'a list Pervasives.ref -> bool</code></pre><pre><span id="VALto_string"><span class="keyword">val</span> <a href="code_VALDibrawi.Todo_list.to_string.html">to_string</a></span> : <code class="type">?sep:string -><br>       [< `copy of string * string list ] list Pervasives.ref -> string</code></pre><pre><span id="VALiter"><span class="keyword">val</span> <a href="code_VALDibrawi.Todo_list.iter.html">iter</a></span> : <code class="type">'a list Pervasives.ref -> f:('a -> unit) -> unit</code></pre><pre><span id="VALdo_things"><span class="keyword">val</span> <a href="code_VALDibrawi.Todo_list.do_things.html">do_things</a></span> : <code class="type"><a href="Dibrawi.Todo_list.html#TYPEtodo">todo</a> list Pervasives.ref -><br>       f:(<a href="Dibrawi.Todo_list.html#TYPEtodo">todo</a> -> <a href="Dibrawi.Todo_list.html#TYPEtodo">todo</a> list) -> unit</code></pre><pre><span id="VALsimplify"><span class="keyword">val</span> <a href="code_VALDibrawi.Todo_list.simplify.html">simplify</a></span> : <code class="type">'a list Pervasives.ref -> unit</code></pre></body></html>

@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Dibrawi_html_template.html">
+<link rel="next" href="Dibrawi_mix.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_make</title>
+</head>
+<body>
+<div class="navbar"><a href="Dibrawi_html_template.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Dibrawi_mix.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Dibrawi_make.html">Dibrawi_make</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Dibrawi_make: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi_make.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><hr width="100%">
+<br><code><span id="TYPEtarget"><span class="keyword">type</span> <code class="type"></code>target</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span class="keyword">mutable&nbsp;</span>done_once&nbsp;: <code class="type">bool</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>build&nbsp;: <code class="type">bool -> bool</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>deps&nbsp;: <code class="type"><a href="Dibrawi_make.html#TYPEtarget">target</a> list</code>;</code></td>
+
+</tr></table>
+}
+
+
+<pre><span id="VALtarget"><span class="keyword">val</span> <a href="code_VALDibrawi_make.target.html">target</a></span> : <code class="type">build:(bool -> bool) -> deps:<a href="Dibrawi_make.html#TYPEtarget">target</a> list -> <a href="Dibrawi_make.html#TYPEtarget">target</a></code></pre><pre><span id="VALmake_simple"><span class="keyword">val</span> <a href="code_VALDibrawi_make.make_simple.html">make_simple</a></span> : <code class="type"><a href="Dibrawi_make.html#TYPEtarget">target</a> -> bool</code></pre><pre><span id="VALprepare_complex"><span class="keyword">val</span> <a href="code_VALDibrawi_make.prepare_complex.html">prepare_complex</a></span> : <code class="type"><a href="Dibrawi_make.html#TYPEtarget">target</a> -> unit</code></pre><pre><span id="VALmake_complex"><span class="keyword">val</span> <a href="code_VALDibrawi_make.make_complex.html">make_complex</a></span> : <code class="type"><a href="Dibrawi_make.html#TYPEtarget">target</a> -> bool</code></pre><pre><span id="VALmake"><span class="keyword">val</span> <a href="code_VALDibrawi_make.make.html">make</a></span> : <code class="type">?complex:bool -> <a href="Dibrawi_make.html#TYPEtarget">target</a> -> bool</code></pre><br><code><span id="TYPEfile_and_md5"><span class="keyword">type</span> <code class="type"></code>file_and_md5</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span class="keyword">mutable&nbsp;</span>previous_md5&nbsp;: <code class="type">Digest.t option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>filename&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span id="TYPEdigestible_content"><span class="keyword">type</span> <code class="type">('a, 'b)</code> digestible_content</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span class="keyword">mutable&nbsp;</span>current_digest&nbsp;: <code class="type">'a option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span class="keyword">mutable&nbsp;</span>current_content&nbsp;: <code class="type">'b option</code>;</code></td>
+
+</tr></table>
+}
+
+
+<pre><span id="VALget_content"><span class="keyword">val</span> <a href="code_VALDibrawi_make.get_content.html">get_content</a></span> : <code class="type">('a, 'b) <a href="Dibrawi_make.html#TYPEdigestible_content">digestible_content</a> -> 'b option</code></pre><pre><span id="VALmake_digestible_target"><span class="keyword">val</span> <a href="code_VALDibrawi_make.make_digestible_target.html">make_digestible_target</a></span> : <code class="type">build_command:('a option -> 'a option) -><br>       digest:('a option -> 'b option) -><br>       ?initial_content:('b, 'a) <a href="Dibrawi_make.html#TYPEdigestible_content">digestible_content</a> -><br>       <a href="Dibrawi_make.html#TYPEtarget">target</a> list -><br>       <a href="Dibrawi_make.html#TYPEtarget">target</a> * ('b, 'a) <a href="Dibrawi_make.html#TYPEdigestible_content">digestible_content</a></code></pre><pre><span class="keyword">module</span> <a href="Dibrawi_make.MD5.html">MD5</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi_make.MD5.html">..</a> <code class="code"><span class="keyword">end</span></code></pre></body></html>

@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Dibrawi.Address_book.html">
+<link rel="Up" href="Dibrawi.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi.Persistence</title>
+</head>
+<body>
+<div class="navbar"><a href="Dibrawi.Address_book.html">Previous</a>
+&nbsp;<a href="Dibrawi.html">Up</a>
+&nbsp;</div>
+<center><h1>Module <a href="type_Dibrawi.Persistence.html">Dibrawi.Persistence</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Persistence: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi.Persistence.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><hr width="100%">
+<br><code><span id="TYPEbuild_persistence"><span class="keyword">type</span> <code class="type"></code>build_persistence</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span class="keyword">mutable&nbsp;</span>file_hashes&nbsp;: <code class="type">(string * Dibrawi.Make.MD5.file_content) list</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>menu_hash&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr></table>
+}
+
+
+<pre><span id="VALempty"><span class="keyword">val</span> <a href="code_VALDibrawi.Persistence.empty.html">empty</a></span> : <code class="type">?menu_hash:string -> unit -> <a href="Dibrawi.Persistence.html#TYPEbuild_persistence">build_persistence</a></code></pre><pre><span id="VALfrom_file"><span class="keyword">val</span> <a href="code_VALDibrawi.Persistence.from_file.html">from_file</a></span> : <code class="type">string -> <a href="Dibrawi.Persistence.html#TYPEbuild_persistence">build_persistence</a> option</code></pre><pre><span id="VALfind_file_opt"><span class="keyword">val</span> <a href="code_VALDibrawi.Persistence.find_file_opt.html">find_file_opt</a></span> : <code class="type"><a href="Dibrawi.Persistence.html#TYPEbuild_persistence">build_persistence</a> -><br>       String.t -> Dibrawi.Make.MD5.file_content option</code></pre><pre><span id="VALsave"><span class="keyword">val</span> <a href="code_VALDibrawi.Persistence.save.html">save</a></span> : <code class="type"><a href="Dibrawi.Persistence.html#TYPEbuild_persistence">build_persistence</a> -> string -> unit</code></pre><pre><span id="VALmenu_hash"><span class="keyword">val</span> <a href="code_VALDibrawi.Persistence.menu_hash.html">menu_hash</a></span> : <code class="type"><a href="Dibrawi.Persistence.html#TYPEbuild_persistence">build_persistence</a> -> string</code></pre><pre><span id="VALfilter_files"><span class="keyword">val</span> <a href="code_VALDibrawi.Persistence.filter_files.html">filter_files</a></span> : <code class="type">f:(string * Dibrawi.Make.MD5.file_content -> bool) -><br>       <a href="Dibrawi.Persistence.html#TYPEbuild_persistence">build_persistence</a> -><br>       (string * Dibrawi.Make.MD5.file_content) list</code></pre><pre><span id="VALset_files"><span class="keyword">val</span> <a href="code_VALDibrawi.Persistence.set_files.html">set_files</a></span> : <code class="type"><a href="Dibrawi.Persistence.html#TYPEbuild_persistence">build_persistence</a> -><br>       (string * Dibrawi.Make.MD5.file_content) list -> unit</code></pre></body></html>

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="next" href="Dibrawi_html_template.Body_layout.html">
+<link rel="Up" href="Dibrawi_html_template.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi_html_template.CSS</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a href="Dibrawi_html_template.html">Up</a>
+&nbsp;<a href="Dibrawi_html_template.Body_layout.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Dibrawi_html_template.CSS.html">Dibrawi_html_template.CSS</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> CSS: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi_html_template.CSS.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>A module to create style-sheets with components.<br>
+<hr width="100%">
+<pre><span class="keyword">module</span> <a href="Dibrawi_html_template.CSS.Color.html">Color</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi_html_template.CSS.Color.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+Create or use existing color themes.
+</div>
+<pre><span class="keyword">module</span> <a href="Dibrawi_html_template.CSS.Font.html">Font</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi_html_template.CSS.Font.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+Build or use existing font themes.
+</div>
+<br><code><span id="TYPEglobal_parameters"><span class="keyword">type</span> <code class="type"></code>global_parameters</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>color_theme&nbsp;: <code class="type"><a href="Dibrawi_html_template.CSS.Color.html#TYPEtheme">Color.theme</a></code>;</code></td>
+
+</tr></table>
+}
+
+
+<pre><span id="TYPEcomponent"><span class="keyword">type</span> <code class="type"></code>component</span> = <code class="type"><a href="Dibrawi_html_template.CSS.html#TYPEglobal_parameters">global_parameters</a> -> <a href="Dibrawi_std.String_tree.html#TYPEt">Dibrawi_std.String_tree.t</a></code> </pre>
+
+<pre><span id="VALinstall_color_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.install_color_theme.html">install_color_theme</a></span> : <code class="type">?for_class:string -><br>       ?theme:<a href="Dibrawi_html_template.CSS.Color.html#TYPEtheme">Color.theme</a> -><br>       <a href="Dibrawi_html_template.CSS.html#TYPEglobal_parameters">global_parameters</a> -> <a href="Dibrawi_std.String_tree.html#TYPEt">Dibrawi_std.String_tree.t</a></code></pre><pre><span id="VALinstall_font_theme"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.install_font_theme.html">install_font_theme</a></span> : <code class="type">?for_class:string -><br>       (string * <a href="Dibrawi_html_template.CSS.Font.html#TYPEspec">Font.spec</a>) list -><br>       'a -> <a href="Dibrawi_std.String_tree.html#TYPEt">Dibrawi_std.String_tree.t</a></code></pre><pre><span id="VALcss"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.css.html">css</a></span> : <code class="type">?color_theme:<a href="Dibrawi_html_template.CSS.Color.html#TYPEtheme">Color.theme</a> -><br>       ?raw:string -><br>       (<a href="Dibrawi_html_template.CSS.html#TYPEglobal_parameters">global_parameters</a> -> <a href="Dibrawi_std.String_tree.html#TYPEt">Dibrawi_std.String_tree.t</a>)<br>       list -> <a href="Dibrawi_html_template.html#TYPEcss">Dibrawi_html_template.css</a></code></pre><pre><span id="VALparagraph_style"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.paragraph_style.html">paragraph_style</a></span> : <code class="type">?debug:bool -> ?separate:string -> <a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre><pre><span id="VALheader_block"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.header_block.html">header_block</a></span> : <code class="type">?frame:string -> <a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre><pre><span id="VALenable_scrolling"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.enable_scrolling.html">enable_scrolling</a></span> : <code class="type"><a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre><pre><span id="VALblockquote"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.blockquote.html">blockquote</a></span> : <code class="type">?style:[ `left_bar ] -> <a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre><pre><span id="VALlist_geometry"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.list_geometry.html">list_geometry</a></span> : <code class="type">?style:[ `compact of string ] -><br>       ?debug:bool -> <a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre><pre><span id="VALdibrawi_menu"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.dibrawi_menu.html">dibrawi_menu</a></span> : <code class="type">?style:[ `compact of string ] -> <a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre><pre><span id="VALdibrawi_cmt"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.dibrawi_cmt.html">dibrawi_cmt</a></span> : <code class="type"><a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre><pre><span id="VALtables_and_figures"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.tables_and_figures.html">tables_and_figures</a></span> : <code class="type"><a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre><pre><span id="VALfootnotes"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.footnotes.html">footnotes</a></span> : <code class="type">?width:string -> <a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre><pre><span id="VALsection_numbers"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.section_numbers.html">section_numbers</a></span> : <code class="type"><a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre><pre><span id="VALsection_decoration"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.section_decoration.html">section_decoration</a></span> : <code class="type"><a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre><pre><span id="VALcode_blocks"><span class="keyword">val</span> <a href="code_VALDibrawi_html_template.CSS.code_blocks.html">code_blocks</a></span> : <code class="type">?with_border:[< `dashed | `no > `dashed ] -><br>       ?rigid_width:bool -> <a href="Dibrawi_html_template.CSS.html#TYPEcomponent">component</a></code></pre></body></html>

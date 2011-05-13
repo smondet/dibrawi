@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Dibrawi.Info.html">
+<link rel="next" href="Dibrawi.Data_source.html">
+<link rel="Up" href="Dibrawi.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class attributes" rel=Appendix href="index_attributes.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dibrawi" rel="Chapter" href="Dibrawi.html">
+<link title="Dibrawi_Yaboon_PolyComp" rel="Chapter" href="Dibrawi_Yaboon_PolyComp.html">
+<link title="Dibrawi_formula" rel="Chapter" href="Dibrawi_formula.html">
+<link title="Dibrawi_html_template" rel="Chapter" href="Dibrawi_html_template.html">
+<link title="Dibrawi_make" rel="Chapter" href="Dibrawi_make.html">
+<link title="Dibrawi_mix" rel="Chapter" href="Dibrawi_mix.html">
+<link title="Dibrawi_std" rel="Chapter" href="Dibrawi_std.html">
+<link title="Dibrawi_system" rel="Chapter" href="Dibrawi_system.html">
+<link title="Dibrawi_xelatex" rel="Chapter" href="Dibrawi_xelatex.html"><title>Dibrawi Library : Dibrawi.File_tree</title>
+</head>
+<body>
+<div class="navbar"><a href="Dibrawi.Info.html">Previous</a>
+&nbsp;<a href="Dibrawi.html">Up</a>
+&nbsp;<a href="Dibrawi.Data_source.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Dibrawi.File_tree.html">Dibrawi.File_tree</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> File_tree: <code class="code"><span class="keyword">sig</span></code> <a href="Dibrawi.File_tree.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><hr width="100%">
+<br><code><span id="TYPEfile_tree_item"><span class="keyword">type</span> <code class="type"></code>file_tree_item</span> = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Dir</span> <span class="keyword">of</span> <code class="type">string * string * <a href="Dibrawi.File_tree.html#TYPEfile_tree">file_tree</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">File</span> <span class="keyword">of</span> <code class="type">string * string</code></code></td>
+
+</tr></table>
+
+
+<pre><span id="TYPEfile_tree"><span class="keyword">type</span> <code class="type"></code>file_tree</span> = <code class="type"><a href="Dibrawi.File_tree.html#TYPEfile_tree_item">file_tree_item</a> list</code> </pre>
+
+<pre><span id="VALfold_tree"><span class="keyword">val</span> <a href="code_VALDibrawi.File_tree.fold_tree.html">fold_tree</a></span> : <code class="type">?dir:(string -> string -> 'a -> 'a) -><br>       ?file:(string -> string -> 'a -> unit) -><br>       'a -> <a href="Dibrawi.File_tree.html#TYPEfile_tree_item">file_tree_item</a> list -> unit</code></pre><pre><span id="VALprint_tree"><span class="keyword">val</span> <a href="code_VALDibrawi.File_tree.print_tree.html">print_tree</a></span> : <code class="type"><a href="Dibrawi.File_tree.html#TYPEfile_tree_item">file_tree_item</a> list -> unit</code></pre><pre><span id="VALfilter_tree"><span class="keyword">val</span> <a href="code_VALDibrawi.File_tree.filter_tree.html">filter_tree</a></span> : <code class="type"><a href="Dibrawi.File_tree.html#TYPEfile_tree">file_tree</a> -><br>       f:(string -> string -> bool) -> <a href="Dibrawi.File_tree.html#TYPEfile_tree">file_tree</a></code></pre><div class="info">
+Filter the file tree.<br>
+</div>
+<pre><span id="VALexclude_from_tree"><span class="keyword">val</span> <a href="code_VALDibrawi.File_tree.exclude_from_tree.html">exclude_from_tree</a></span> : <code class="type">string -> <a href="Dibrawi.File_tree.html#TYPEfile_tree">file_tree</a> -> <a href="Dibrawi.File_tree.html#TYPEfile_tree">file_tree</a></code></pre><div class="info">
+Exclude files and directories matching <code class="code">pattern</code>.<br>
+</div>
+<pre><span id="VALfilter_tree_with_pattern"><span class="keyword">val</span> <a href="code_VALDibrawi.File_tree.filter_tree_with_pattern.html">filter_tree_with_pattern</a></span> : <code class="type">string -> <a href="Dibrawi.File_tree.html#TYPEfile_tree">file_tree</a> -> <a href="Dibrawi.File_tree.html#TYPEfile_tree">file_tree</a></code></pre><div class="info">
+Keep only the files and directories matching <code class="code">pattern</code>.<br>
+</div>
+<pre><span id="VALstring_path_list"><span class="keyword">val</span> <a href="code_VALDibrawi.File_tree.string_path_list.html">string_path_list</a></span> : <code class="type">?filter:string -><br>       ?exclude:string -><br>       ?url_prefix:string -> <a href="Dibrawi.File_tree.html#TYPEfile_tree_item">file_tree_item</a> list -> string list</code></pre><pre><span id="VALpath_list"><span class="keyword">val</span> <a href="code_VALDibrawi.File_tree.path_list.html">path_list</a></span> : <code class="type">?filter:string -><br>       ?exclude:string -><br>       ?prefix:string list -><br>       <a href="Dibrawi.File_tree.html#TYPEfile_tree_item">file_tree_item</a> list -> string list list</code></pre><pre><span id="VALstr_and_path_list"><span class="keyword">val</span> <a href="code_VALDibrawi.File_tree.str_and_path_list.html">str_and_path_list</a></span> : <code class="type">?filter:string -><br>       ?exclude:string -><br>       ?prefix:string * string list -><br>       <a href="Dibrawi.File_tree.html#TYPEfile_tree_item">file_tree_item</a> list -> (string * string list) list</code></pre></body></html>
