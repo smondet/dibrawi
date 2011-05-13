@@ -404,106 +404,6 @@ let code_blocks ?(with_border=`dashed) ?(rigid_width=true) params =
     str "}";
   ]
 
-let layout kind params =
-  match kind with
-  | `simple (left, w) ->
-    str $ sprintf "body {margin-left: %s; max-width: %s;}" left w
-  | `three_columns width ->
-    let on_the_left, on_the_right, in_the_middle =
-      let pad = 0.9 in
-      let margin = 0.4 in
-      let l = 
-        sprintf "  left:  %f%%; width: %f%%; padding: %f%%;" margin width pad in
-      let r =
-        sprintf "  right: %f%%; width: %f%%; padding: %f%%;" margin width pad in
-      let m = 
-        sprintf "  left: %f%%; right: %f%%; padding: %f%%;"
-          (margin +. pad +. width +. pad +. margin +. margin)
-          (margin +. pad +. width +. pad +. margin +. margin)
-          pad in
-      (str l, str r, str m) in
-    let frame_color = 
-      Opt.default "#999" (Color.border params.color_theme "stdframe") in
-    let std_frame = str $ sprintf "  border: %s ridge 3px;" frame_color in
-    cat ~sep:new_line [
-      str "div.leftside {";
-      on_the_left;
-      std_frame;
-      str "    top: 2px;";
-      str "    position:fixed;";
-      str "    overflow: auto;";
-      str "    bottom: 2px;";
-      str "}";
-      str "div.rightside {";
-      on_the_right;
-      std_frame;
-      str "    top: 2px;";
-      str "    position:fixed;";
-      str "    overflow: auto;";
-      str "    bottom: 2px;";
-      str "}";
-      str "div.content {";
-      in_the_middle;
-      std_frame;
-      str "    top: 2px;";
-      str "    position: absolute;";
-      str "    text-align: justify;";
-      str "}";
-    ]
-  | `with_sidepane (which_side, width) ->
-    let sidepane_part, content_part =
-      let pad = 0.9 in
-      let margin = 0.4 in
-      match which_side with
-      | `left ->
-        let l = 
-          sprintf "  left:  %f%%; width: %f%%; padding: %f%%;" margin width pad
-        in
-        let m = 
-          sprintf "  left: %f%%; right: %f%%; padding: %f%%;"
-            (margin +. pad +. width +. pad +. margin +. margin)
-            (margin)
-            pad
-        in
-        (str l, str m)
-      | `right ->
-        let r =
-          sprintf "  right: %f%%; width: %f%%; padding: %f%%;" margin width pad
-        in
-        let m = 
-          sprintf "  left: %f%%; right: %f%%; padding: %f%%;"
-            (margin)
-            (margin +. pad +. width +. pad +. margin +. margin)
-            pad
-        in
-        (str r, str m)
-    in
-    let frame_color = 
-      Opt.default "#999" (Color.border params.color_theme "stdframe") in
-    let std_frame = 
-      str $ sprintf "  border-%s: %s ridge 1px;" 
-        (match which_side with `left -> "right" | `right -> "left")
-        frame_color in
-    cat ~sep:new_line [
-      str "div.sidepane {";
-      sidepane_part;
-      std_frame;
-      str "    top: 2px;";
-      str "    position:fixed;";
-      str "    overflow: auto;";
-      str "    bottom: 2px;";
-      str "}";
-      str "div.content {";
-      content_part;
-      str "    top: 2px;";
-      str "    position: absolute;";
-      str "    text-align: justify;";
-      str "}";
-    ]
-
-
-
-
 
 let css ?(color_theme=Color.empty_theme) ?raw l =
   let params = {
@@ -532,58 +432,6 @@ type html_global_parameters = {
 
 type body_style = html_global_parameters -> html_template
     
-let body style params =
-  let sep = new_line in
-  fun ?menu  ?toc ?title ?footer ?from content ->
-    match style with
-    | `raw  ->
-      cat ~sep [
-        str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
-        opt_str_map (sprintf "<div class=\"dibrawititle\">%s</div>") title;
-        opt_str_map (sprintf "<div class=\"dibrawimenu\">%s</div>") menu;
-        opt_str_map (sprintf "<div class=\"dibrawitoc\">%s</div>") toc;
-        opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
-      ]
-    | `simple ->
-      cat ~sep [
-        str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
-        opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
-      ]
-    | `three_columns top_right ->
-      cat ~sep [
-        str "<div class=\"leftside\">";
-        opt_str_map (sprintf "<b>Page:</b> %s <br/>") title;
-        opt_str_map 
-          (sprintf "<hr/><b>Menu: </b>%s")
-          menu;
-        str "</div>";
-        str "<div class=\"rightside\">";
-        str (top_right from);
-        opt_str_map (sprintf "<hr/><b>Table of contents:</b><br/>%s<br/>") toc;
-        opt_str_map (sprintf "<hr/>%s<br/>") footer;
-        str "</div>";
-        str "<div class=\"content\">";
-        str content;
-        str "<div id=\"pagefoot\" />";
-        str "</div>";
-      ]
-    | `with_sidepane more_info ->
-      cat ~sep [
-        str "<div class=\"sidepane\">";
-        cat ~sep:(str "<hr/>\n") [
-          opt_str_map (sprintf "<b>Page:</b> %s <br/>") title;
-          str (more_info from);
-          opt_str_map (sprintf "<b>Menu: </b>%s") menu;
-          opt_str_map (sprintf "<b>Table of contents:</b><br/>%s<br/>") toc;
-          opt_str_map (sprintf "%s<br/>") footer;
-        ];
-        str "</div>";
-        str "<div class=\"content\">";
-        str content;
-        str "<div id=\"pagefoot\" />";
-        str "</div>";
-      ]
-
 
 (** Make together an HTML layout and its corresponding CSS component.  *)
 module Body_layout = struct
@@ -835,6 +683,7 @@ module Full = struct
       ?(debug=false) ?(rss: string option) ?(atom: string option)
       ?(icon:string option)      
       ?(top_right=(fun _ -> "<!-- Right Side Insertion -->")) () =
+    let body, layout = Body_layout.three_columns ~top_right ~side_width:20. () in
     make ()
       ?rss ?atom ?icon
       ~css:(css ~color_theme:Color.dummy_theme [
@@ -851,15 +700,16 @@ module Full = struct
         footnotes;
         section_numbers;
         code_blocks;
-        layout (`three_columns 20.);
+        layout;
       ])
-      ~body:(body (`three_columns top_right))
+      ~body
 
   let three_columns_greenish
       ?(add_section_numbers=false)
       ?(debug=false)  ?(rss: string option) ?(atom: string option)
       ?(icon:string option)
       ?(top_right=(fun _ -> "<!-- Right Side Insertion -->")) () =
+    let body, layout = Body_layout.three_columns ~top_right ~side_width:18. () in
     make ()
       ?rss ?atom ?icon
       ~css:(css ~color_theme:Color.greenish_main_theme [
@@ -881,15 +731,18 @@ module Full = struct
         if add_section_numbers then section_numbers else (fun _ -> empty);
         section_decoration;
         code_blocks ~with_border:`no;
-        layout (`three_columns 18.);
+        layout;
       ])
-      ~body:(body (`three_columns top_right))
+      ~body
 
   let simple_page_greenish
       ?(add_section_numbers=true) ?(rss: string option) ?(atom: string option)
       ?(icon:string option)
       ?(base_font_size="90%") ?(text_width="40em") ?(left_margin="4em")
       ?(debug=false) () =
+    let body, layout =
+      Body_layout.simple ~position:(`margin_left left_margin)
+        ~width:(`max text_width) () in
     make ()
       ?rss ?atom ?icon
       ~css:(css ~color_theme:Color.greenish_main_theme [
@@ -907,15 +760,18 @@ module Full = struct
         footnotes;
         if add_section_numbers then section_numbers else (fun _ -> empty);
         code_blocks ~with_border:`no;
-        layout (`simple (left_margin, text_width));
+        layout
       ])
-      ~body:(body (`simple))
+      ~body
 
   let with_sidepane_greenish 
       ?(add_section_numbers=true) ?(side=`right)
       ?(debug=false)  ?(rss: string option) ?(atom: string option)
       ?(icon:string option)
       ?(insertion=(fun _ -> "<!-- Side Insertion -->")) () =
+    let body, layout =
+      Body_layout.with_sidepane ~which_side:side ~more_info:insertion
+        ~side_width:30. () in
     make ()
       ?rss ?atom ?icon
       ~css:(css ~color_theme:Color.greenish_main_theme [
@@ -937,14 +793,18 @@ module Full = struct
         if add_section_numbers then section_numbers else (fun _ -> empty);
         section_decoration;
         code_blocks ~with_border:`no;
-        layout (`with_sidepane (side, 30.));
+        layout
       ])
-      ~body:(body (`with_sidepane insertion))
+      ~body
 
   let with_sidepane_redish 
       ?(add_section_numbers=true) ?(side=`right)
-      ?(debug=false) 
+      ?(debug=false) ?(rss: string option) ?(atom: string option)
+      ?(icon:string option)
       ?(insertion=(fun _ -> "<!-- Side Insertion -->")) () =
+    let body, layout =
+      Body_layout.with_sidepane ~which_side:side ~more_info:insertion
+        ~side_width:30. () in
     make ()
       ~css:(css ~color_theme:Color.sober_redish_theme [
         install_color_theme;
@@ -964,9 +824,9 @@ module Full = struct
         if add_section_numbers then section_numbers else (fun _ -> empty);
         section_decoration;
         code_blocks ~with_border:`no;
-        layout (`with_sidepane (side, 30.));
+        layout
       ])
-      ~body:(body (`with_sidepane insertion))
+      ~body
 
 end
 
