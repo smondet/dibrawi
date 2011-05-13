@@ -17,6 +17,10 @@ Just run
 dbw run doc/examples/Blog.brtx
 {end}
 to get a {t|./blog/} directory.
+{p}
+
+The example of this page can be found
+{link ../../blog/index.html |on this website}.
 
 {section|The Posts}
 
@@ -64,6 +68,7 @@ let () =
   let page ~from =
     let template =
       Dibrawi.HTML.Template.Full.with_sidepane_greenish
+        ~max_width:"50em" ~side_width:18.
         ~add_section_numbers:false ~side:`left in
     let rss = sprintf "%s/blog/feed/all_posts.rss" base_url in
     template ~rss () in
