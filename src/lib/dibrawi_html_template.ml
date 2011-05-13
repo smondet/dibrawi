@@ -488,7 +488,7 @@ module Body_layout = struct
       the top of the right pane which depends on the current path if
       applicable.  *)
   let three_columns
-      ?(side_width=70.) ?(top_right=fun (p: Path.t option) -> "")
+      ?(side_width=20.) ?(top_right=fun (p: Path.t option) -> "")
       () : body_layout =
     let body ?menu  ?toc ?title ?footer ?from content =
       cat ~sep [
