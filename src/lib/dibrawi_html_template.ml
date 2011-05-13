@@ -588,7 +588,7 @@ let body style params =
 (** Make together an HTML layout and its corresponding CSS component.  *)
 module Body_layout = struct
 
-  type t = html_template * css_component
+  type t = body_style * css_component
   type body_layout = t
 
 
@@ -607,7 +607,7 @@ module Body_layout = struct
         opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
       ]
     in
-    (body, fun _ -> empty)
+    ((fun _ -> body), (fun _ -> empty))
       
   (** The [simple] layout uses only the [content] and the [footer], in a
       one-column page. *)
@@ -632,7 +632,7 @@ module Body_layout = struct
         str $ sprintf "<div class=\"dibrawicontent\">%s</div>" content;
         opt_str_map (sprintf "<div class=\"dibrawifooter\">%s</div>") footer;
       ] in
-    (body, css)
+    ((fun _ -> body), css)
       
   (** A three columns layout, the centre has width [width]% (default:
       70%); the page's title and menu go to the left; the the table of
@@ -704,7 +704,7 @@ module Body_layout = struct
         str "    text-align: justify;";
         str "}";
       ] in
-    (body, css)
+    ((fun _ -> body), css)
 
   (** A two columns layout. *)
   let with_sidepane
@@ -775,7 +775,7 @@ module Body_layout = struct
         str "}";
       ]
     in
-    (body, css)
+    ((fun _ -> body), css)
 
 
 end
