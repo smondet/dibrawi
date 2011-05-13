@@ -168,4 +168,12 @@ module Substitute = struct
 
 end
 
+(** Simple paths which are lists of strings (c.f. Batteries). *)
+module Path = struct
 
+  type t = string list
+  type path = t
+
+  let str : path -> string = Str.concat "/"
+
+end
