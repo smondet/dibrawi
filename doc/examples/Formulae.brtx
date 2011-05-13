@@ -194,6 +194,8 @@ let html () =
 
   let html_template =
     let open Dibrawi.HTML.Template in
+    let body, layout =
+      Body_layout.simple ~position:(`centered) ~width:(`max "55em") () in
     make ~title:"Math Exmaple" ()
       ~css:(css
       ~color_theme:Color.sober_redish_theme [
@@ -213,9 +215,9 @@ let html () =
         footnotes;
         section_decoration;
         code_blocks ~with_border:`no;
-        layout (`simple ("4em", "65em"));
+        layout
       ])
-      ~body:(body `simple)
+      ~body
   in
   Io.with_file_out "website/example_math_text.html" (fun out ->
     String_tree.print ~out (html_template (Dbw.brtx (Recorder.get "text")));
