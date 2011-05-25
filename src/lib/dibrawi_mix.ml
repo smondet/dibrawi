@@ -211,29 +211,37 @@ module Make (Camlmix_input: CAMLMIX) = struct
   module Local_bibliography = struct
 
     let make ?pattern biblio =
-      let local_cites = (ref [] : (int * string) list ref) in
+      let local_cites = (ref [] : (int * string * string option) list ref) in
       let count = ref 0 in
-      let meta_cite f ref =
-        match Ls.find_opt !local_cites ~f:(fun (i, s) -> s = ref) with
-        | Some (i, s) -> f i
+      let meta_cite ?id f ref =
+        match Ls.find_opt !local_cites ~f:(fun (_, s, _) -> s = ref) with
+        | Some (i, s, None) -> f (string_of_int i)
+        | Some (i, s, Some id) -> f id
         | None -> 
           incr count;
-          local_cites := (!count, ref) :: !local_cites;
-          f !count
+          local_cites := (!count, ref, id) :: !local_cites;
+          match id with None -> f (string_of_int !count) | Some s -> f s
       in
-      let cite = fun r -> meta_cite (sprintf "[%d]") r |> pr in
+      let cite ?(silent=false) ?id r =
+        meta_cite ?id (sprintf "[%s]") r |> 
+            (if not silent then pr else ignore)
+      in
       let cites refs =
-        sprintf "[%s]" (Str.concat "," (Ls.map (meta_cite string_of_int) refs)) |> pr in
+        sprintf "[%s]" (Str.concat ", " 
+          (Ls.map (meta_cite (fun s -> s)) refs)) |> pr in
       let print () =
         let pattern_fun = 
           (match pattern with Some f -> f | None ->
-            sprintf "[%d] @{authors}; {i|@{title-punct}} @{how}, @{year}. {br}") in
-        Ls.iter (Ls.rev !local_cites) ~f:(fun (i, s) ->
+            sprintf "[%s] @{authors}; {i|@{title-punct}} @{how}, @{year}. {br}") in
+        Ls.iter (Ls.rev !local_cites) ~f:(fun (i, s, id) ->
           let subset = Sebib.Request.exec (`ids [s]) biblio in
           if Ls.length subset <> 1 then
             eprintf "Warning: subset has %d elements\n" (Ls.length subset);
-          let str = Sebib.Format.str ~pattern:(pattern_fun i) subset in
-          pr str) in
+          let str =
+            let idstr = match id with None -> string_of_int i | Some s -> s in
+            Sebib.Format.str ~pattern:(pattern_fun idstr) subset in
+          pr str;
+        ) in
       (cite, cites, print)
 
   end
