@@ -44,8 +44,10 @@ let named_templates: (string * (unit ->  Dibrawi.HTML.Template.html_template)) l
   ]
 
 
-let transform ?(html_template=`none)
+let transform ?(html_template=`none) ?(wiki_name="DBW")
     ?exclude ?filter ?persistence_file data_root build =
+
+  let title_prefix = sprintf "[%s]" wiki_name in
 
   let the_source_tree =
     Data_source.get_file_tree ~data_root () |>
@@ -144,7 +146,8 @@ let transform ?(html_template=`none)
         output_buffers
           ~output_content:(fun out ->
             let whole = 
-              html_templ_fun ~from ~menu ~toc ~title:"Bibliography" 
+              html_templ_fun ~from ~menu ~toc 
+                ~title:(title_prefix ^ "Bibliography")
                 (Buffer.contents html_buffer) in
             String_tree.print ~out whole;)
           html err_buffer in
@@ -183,7 +186,8 @@ let transform ?(html_template=`none)
         output_buffers
           ~output_content:(fun out ->
             let whole = 
-              html_templ_fun ~from ~menu ~toc ~title:"Address Book"
+              html_templ_fun ~from ~menu ~toc 
+                ~title:(title_prefix ^ "Address Book")
                 (Buffer.contents html_buffer) in
             String_tree.print ~out whole;)
           html err_buffer in
@@ -202,11 +206,16 @@ let transform ?(html_template=`none)
     let list_brtxes = File_tree.str_and_path_list  the_source_tree in
     
     let make_target_html (str, path) =
-      let filename = build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
+      let filename =
+        build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
       let build_cmd () = 
         printf "Building %s\n" filename;
         let brtx = data_root ^ "/" ^ str in
-        let title = Filename.chop_extension str in
+        let title = 
+          let s = Filename.chop_extension str in
+          let pretty = 
+            if s.[0] =@= '.' then Str.sub s 1 (Str.length s - 1) else s in
+          title_prefix ^ pretty in
         let from = path in
         let menu = HTML_menu.get_menu ~from menu_factory in
         let page = dbw_prepro ~filename:str (Data_source.get_page brtx) in
@@ -335,6 +344,7 @@ let transform_wiki name argv =
   let print_named_templates = ref false in
   let exclude = ref None in
   let filter = ref None in
+  let wiki_name = ref None in
 
   let usage = 
     sprintf "Usage: dbw %s [OPTIONS] <input-dir> <output-dir>" name in 
@@ -349,6 +359,10 @@ let transform_wiki name argv =
       ~doc:"<path>\n\tSet an HTML template file"
       "-template-file"
       (Arg.String (fun s -> html_tmpl := `file s));
+    arg_cmd
+      ~doc:"<path>\n\tSet a name for the wiki"
+      "-name"
+      (Arg.String (fun s -> wiki_name := Some s));
     arg_cmd
       ~doc:"<name>\n\tSet an HTML `internal' template"
       "-named-template"
@@ -390,6 +404,7 @@ let transform_wiki name argv =
         let persistence_file =
           if !persistence =$= "" then None else Some !persistence in
         transform ?exclude:!exclude ?filter:!filter
+          ?wiki_name:!wiki_name
           ~html_template:!html_tmpl ?persistence_file i o 
       | _ -> 
         printf "Wrong number of arguments: %d\n" 
