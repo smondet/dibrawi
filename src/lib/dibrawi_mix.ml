@@ -434,8 +434,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
     | `select_layers_and_altheight_nb of int list * int
     ]
 
-    let inkscape_svg 
-        ?(label="") ?(size="100%") ?(caption="")
+    let inkscape_svg_file
         ?(tmp_dir="/tmp/") ?(dest_dir="/tmp/") ?link_dir ?path
         ?(transform:svg_transformation option) filename =
       (* If SVGZ then decompress *)
@@ -475,9 +474,17 @@ module Make (Camlmix_input: CAMLMIX) = struct
       );
       let link = 
         sprintf "%s/%s%s" (Opt.default dest_dir link_dir) the_file outfmt in
-      (sprintf "{image %s %s %s|%s}" link size label caption)
+      link
       
-
+    let inkscape_svg 
+        ?(label="") ?(size="100%") ?(caption="")
+        ?(tmp_dir="/tmp/") ?(dest_dir="/tmp/") ?link_dir ?path
+        ?(transform:svg_transformation option) filename =
+      let link = 
+        inkscape_svg_file
+          ~tmp_dir ~dest_dir ?link_dir ?path ?transform filename in
+      (sprintf "{image %s %s %s|%s}" link size label caption)
+        
   end
 
 
