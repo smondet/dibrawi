@@ -389,10 +389,10 @@ module Make (Camlmix_input: CAMLMIX) = struct
         close_out _channel;
       in
       let is_an_unwanted_layer layers atts =
-        List.exists (fun (a, b) -> 
+        List.exists (fun (a, b) ->
           if a =$= "id" then
             if (String.sub b 0 5 =$= "layer") then
-              (List.for_all (fun l -> b <$> sprintf "layer%d" l) layers)
+              List.for_all (fun l -> b <$> sprintf "layer%d" l) layers
             else
               false
           else
@@ -408,19 +408,25 @@ module Make (Camlmix_input: CAMLMIX) = struct
       let rec filter layers xml = 
         match xml with
         | Xml.PCData s as x -> x
-        | Xml.Element ("svg", attributes, children) ->
+        | Xml.Element (tagname, attributes, children)
+            when tagname =$= "svg" || tagname =$= "svg:svg" ->
           begin match (contains_alt_height heightno attributes) with
           | Some (_, h) ->
-            Xml.Element ("svg", change_height h attributes,
+            Xml.Element (tagname, change_height h attributes,
                          List.map (filter layers) children)
           | None ->
-            Xml.Element ("svg", attributes, List.map (filter layers) children)
+            Xml.Element (tagname, attributes, List.map (filter layers) children)
           end
         | Xml.Element (tagname, attributes, children) ->
-          if tagname =$= "g" && (is_an_unwanted_layer layers attributes) then
-            Xml.Element ("g", [],  []) 
+          if tagname =$= "g" || tagname =$= "svg:g" then
+            if (is_an_unwanted_layer layers attributes) then
+              Xml.Element ("g", [],  [])
+            else 
+              Xml.Element (tagname, attributes, 
+                           List.map (filter layers) children)
           else
-            Xml.Element (tagname, attributes, List.map (filter layers) children)
+            Xml.Element (tagname, attributes, 
+                         List.map (filter layers) children)
       in
       let infile = sprintf "%s/%s" srcpath file in
       let outfile =
