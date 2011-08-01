@@ -94,8 +94,9 @@ let is_whitespace s =
 let strip_lines s =
   let lines = 
     Ls.map (fun s -> s ^ "\n") (Str.nsplit s "\n") in
-  Ls.takewhile (fun s -> not (is_whitespace s))
-    (Ls.dropwhile is_whitespace lines) |> Str.concat ""
+  List.rev (Ls.dropwhile is_whitespace 
+              (List.rev (Ls.dropwhile is_whitespace lines)))
+  |> Str.concat ""
 
 let caml fmt =
   ("caml",  
