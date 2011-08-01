@@ -5,6 +5,8 @@ module Make = Dibrawi_make
 
 module System = Dibrawi_system
 
+module Anyweb = Dibrawi_anyweb
+
 module HTML = struct
   module Template = Dibrawi_html_template
 end

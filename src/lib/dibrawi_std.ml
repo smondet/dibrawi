@@ -71,6 +71,9 @@ module Str = struct
   let tail str pos =
     sub str pos (length str - pos)
 
+  let find_opt a b = try Some (find a b) with e -> None
+  let split_opt s i = try Some (split s i) with e -> None
+
   let replace_all str ~sub ~by =
     let len = length str in
     let sublen = length sub in
