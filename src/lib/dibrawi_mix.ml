@@ -610,6 +610,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
       date : string;
       tags : string list;
       key : string;
+      description: string option;
     }
     class blog :
     object
@@ -618,7 +619,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
       method get_posts : [ `all | `tag of string ] -> post list
       method new_post :
         title:string ->
-          tags:string list -> date:string -> string -> unit
+        tags:string list -> date:string -> ?description:string ->
+        string -> unit
       method post_contents : string -> string
     end
 
@@ -636,11 +638,18 @@ module Make (Camlmix_input: CAMLMIX) = struct
   
   end = struct
       
-    type post = { title: string; date: string; tags: string list; key: string }
+    type post = {
+      title : string;
+      date : string;
+      tags : string list;
+      key : string;
+      description: string option;
+    }
     class blog = object (self)
       val mutable blog_posts_stack = []
-      method new_post ~title ~tags ~date key =
-        blog_posts_stack <- {title; date; tags; key} :: blog_posts_stack;
+      method new_post ~title ~tags ~date ?description key =
+        blog_posts_stack <- 
+          {title; date; tags; key; description} :: blog_posts_stack;
         Recorder.record_to key
       method end_post = Recorder.stop ()
       method get_posts (what:[`all | `tag of string]) =
@@ -673,7 +682,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
       let items =
         let f = 
           fun item ->
-            let {title; date; tags; key} = item in
+            let {title; date} = item in
             sprintf
               "    <item>\n\
              \         <title>%s</title>\n\
