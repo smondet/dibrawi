@@ -119,10 +119,14 @@ let camlbrtx fmt = [
 
 let coqbrtx fmt = 
   let coqdoc =
+    let file_name = "/tmp/coqbrtx" in
     sprintf
-      "cat > /tmp/ttt.v ; coqdoc -s --parse-comments --stdout \
-        --body-only --no-externals --no-index %s /tmp/ttt.v"
-      (match fmt with `html -> "--html" | `latex -> "--latex") in 
+      "cat > %s.v ; coqdoc -s -utf8 --parse-comments --stdout \
+        --body-only --no-externals --no-index %s %s.v \
+        2> %s.log" file_name
+      (match fmt with `html -> "--html" | `latex -> "--latex")
+      file_name file_name
+  in 
   let coq =
     ("coq",  
      (let on_text, on_end =
