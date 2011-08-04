@@ -45,7 +45,10 @@ let named_templates: (string * (unit ->  Dibrawi.HTML.Template.html_template)) l
 
 
 let transform ?(html_template=`none) ?(wiki_name="DBW")
-    ?exclude ?filter ?persistence_file data_root build =
+    ?exclude ?filter ?persistence_file ?(verbosity=1) data_root build =
+
+  let logf level = 
+    if level <= verbosity then printf else ifprintf stdout in 
 
   let title_prefix = sprintf "[%s]" wiki_name in
 
@@ -85,7 +88,7 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
       if previous_menu_hash =$= current_menu_hash then
         pc
       else (
-        printf "The File Tree has changed, everything must be rebuilt\n";
+        logf 0 "The File Tree has changed, everything must be rebuilt\n";
         Persistence.empty ~menu_hash:current_menu_hash ()
       )
  in
@@ -96,7 +99,7 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
   let make_target_source ?(prefix="") str =
     let filename = data_root ^ "/" ^ str in
     let build_cmd () =
-      printf "Source '%s%s' has changed [%s]\n" prefix str filename;
+      logf 1 "Source '%s%s' has changed [%s]\n" prefix str filename;
       Some filename in
     let initial_content = previous_file_content (prefix ^ str) in
     Make.MD5.make_file_target ?initial_content ~filename ~build_cmd [] in
@@ -128,7 +131,7 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
                (str, target_source, content_source))) in
     let html = build ^ "/bibliography.html" in
     let build_cmd () =
-      printf "Build %s\n" html;
+      logf 1 "Build %s\n" html;
       let bib =
         Bibliography.load
           (Ls.map list_sebibs 
@@ -169,7 +172,7 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
                (str, target_source, content_source))) in
     let html = build ^ "/address_book.html" in
     let build_cmd () =
-      printf "Build %s\n" html;
+      logf 1 "Build %s\n" html;
       let ab =
         Address_book.load
           (Ls.map list_abs ~f:(fun (str, path) ->
@@ -209,7 +212,7 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
       let filename =
         build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
       let build_cmd () = 
-        printf "Building %s\n" filename;
+        logf 1 "Building %s\n" filename;
         let brtx = data_root ^ "/" ^ str in
         let title = 
           let s = Filename.chop_extension str in
@@ -277,7 +280,7 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
                 Dbw_sys.mkdir_p (Filename.dirname dest);
                 try 
                   Dbw_sys.copy (sprintf "%s/%s" data_root origin) dest;
-                  printf "Copied %s/%s to %s\n" data_root origin dest;
+                  logf 1 "Copied %s/%s to %s\n" data_root origin dest;
                   (Some dest)
                 with e ->
                   printf "ERROR copying %s/%s to %s: %s\n"
@@ -345,6 +348,7 @@ let transform_wiki name argv =
   let exclude = ref None in
   let filter = ref None in
   let wiki_name = ref None in
+  let verbosity = ref None in
 
   let usage = 
     sprintf "Usage: dbw %s [OPTIONS] <input-dir> <output-dir>" name in 
@@ -355,6 +359,10 @@ let transform_wiki name argv =
       ~doc:"\n\tPrint version informations and exit"
       "-version"
       (Arg.Set print_v);
+    arg_cmd
+      ~doc:"<int>\n\tSet the verbosity level (default: 1)"
+      "-verbosity"
+      (Arg.Int (fun i -> verbosity := Some i));
     arg_cmd
       ~doc:"<path>\n\tSet an HTML template file"
       "-template-file"
@@ -405,7 +413,7 @@ let transform_wiki name argv =
           if !persistence =$= "" then None else Some !persistence in
         transform ?exclude:!exclude ?filter:!filter
           ?wiki_name:!wiki_name
-          ~html_template:!html_tmpl ?persistence_file i o 
+          ~html_template:!html_tmpl ?verbosity:!verbosity ?persistence_file i o 
       | _ -> 
         printf "Wrong number of arguments: %d\n" 
           (Ls.length anonymous_arguments);
