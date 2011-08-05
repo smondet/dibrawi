@@ -127,20 +127,25 @@ let coqbrtx fmt =
       (match fmt with `html -> "--html" | `latex -> "--latex")
       file_name file_name
   in 
-  let coq =
-    ("coq",  
+  let coq name start stop =
+    (name,  
      (let on_text, on_end =
         bufferise_and_do (fun input ->
           if is_whitespace input then "# Removed whitespace\n"
           else
             let input = strip_lines input in
-            "{bypass endanywebbypass}" ^ (Dbw_sys.feed ~cmd:coqdoc ~input)
-            ^ "{endanywebbypass}") in
+            let hash = Digest.string input |> Digest.to_hex in
+            (sprintf "{bypass endanywebbypass%s}<div class=\"%s\">%s\
+                      </div>{endanywebbypass%s}"
+              hash name (Dbw_sys.feed ~cmd:coqdoc ~input) hash)) in
       environment ~on_text ~on_end ~on_change:on_end
-        "[coq[" "]coq]" [ "bracetax" ])) in
+        start stop [ "bracetax" ])) in
   
-  [ coq; caml fmt; 
-    "bracetax", environment ("(*" ^ "B") ("B" ^ "*)") [ "coq"; "caml" ];
+  [ coq "maincoq" "[maincoq[" "]maincoq]"; 
+    coq "coqexample" "[coq[" "]coq]"; 
+    caml fmt; 
+    "bracetax", 
+      environment ("(*" ^ "B") ("B" ^ "*)") [ "maincoq"; "coqexample"; "caml" ];
   ]
 
 let coq_brtx ?(fmt:[`html | `latex]=`html) str =
