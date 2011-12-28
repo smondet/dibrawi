@@ -520,26 +520,42 @@ module HTML_menu = struct
       ?(filter="\\.brtx$") ?(exclude_dir=".*\\.svn.*")
       ?(chop_filter=true) ?(replace=".html") tree =
     let buf = Buffer.create 1024 in
+    let buffer = Buffer.add_string buf in
     let filt = Pcre.regexp filter in
     let excl = Pcre.regexp exclude_dir in
+    let file_of_name l name =
+      match Ls.partition l ~f:(function File (_, n) when n = name ^ ".brtx" -> true | _ -> false) with
+      | ([ File (p, n) ], filtered) ->
+        eprintf "Got: %s for %s\n" n name;
+        Some (File (p, n), filtered)
+      | _ -> None
+    in
     let presort l =
       let dirs, files =
         Ls.partition (function Dir _ -> false | _ -> true) l in
       dirs @ files in
-    let rec to_brtx  = function
+    let rec to_brtx ?(with_item=true) = function
       | Dir (path, name, l) ->
-                (* eprintf "path: %s, name: %s\n" path name; *)
         if not (pcre_matches excl name) then (
-          Buffer.add_string buf 
-            (sprintf "{*} {bypass}<div class=\"dibrawimenudir\">{end}\
-                       %s\n{begin list}\n" name);
-          Ls.iter ~f:to_brtx (presort l);
-          Buffer.add_string buf (sprintf "{end}{bypass}</div>{end} # %s\n" name);
+          begin match file_of_name l name with
+          | Some (f, l) ->
+            ksprintf buffer "{*} {bypass}<div class=\"dibrawimenudir\">\
+                                  <span class=\"dibrawimenudirname\">{end}";
+            to_brtx ~with_item:false f;
+            ksprintf buffer "{bypass}</span>{end}{begin list}";
+            Ls.iter ~f:to_brtx (presort l);
+          | None ->
+            ksprintf buffer "{*} {bypass}<div class=\"dibrawimenudir\">\
+                            <span class=\"dibrawimenudirname\">{end}\
+                             %s\n{bypass}</span>{end}{begin list}\n" name;
+            Ls.iter ~f:to_brtx (presort l);
+          end;
+          ksprintf buffer "{end}{bypass}</div>{end} # %s\n" name;
         ) else (
-          Buffer.add_string buf
-            (sprintf "# ignore: %s %s\n" path name);
+          ksprintf buffer "# ignore: %s %s\n" path name;
         );
       | File (path, name) ->
+        (* eprintf "?? path: %s, name: %s\n" path name; *)
         if pcre_matches filt name then (
           let rex = filt in
           let link =
@@ -548,8 +564,8 @@ module HTML_menu = struct
             if chop_filter
             then Pcre.replace ~rex ~templ:"" name
             else name in
-          Buffer.add_string buf
-            (sprintf "{*} {link %s%s|%s}\n" url_prefix link official_name);
+          ksprintf buffer "%s{link %s%s|%s}\n"
+            (if with_item then "{*} " else "") url_prefix link official_name;
         );
     in
     Buffer.add_string buf (sprintf "{begin list}\n");

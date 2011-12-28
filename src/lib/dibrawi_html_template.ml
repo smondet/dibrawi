@@ -389,6 +389,7 @@ module CSS = struct
     | `compact indent ->
       str $ sprintf 
         ".dibrawimenudir { display: block; }
+        .dibrawimenudirname { font-size: 115%%;  font-weight:bold; }
          ul  li.dibrawi_menuli {
          \  display: inline;
          } 
