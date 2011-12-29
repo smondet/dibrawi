@@ -526,7 +526,6 @@ module HTML_menu = struct
     let file_of_name l name =
       match Ls.partition l ~f:(function File (_, n) when n = name ^ ".brtx" -> true | _ -> false) with
       | ([ File (p, n) ], filtered) ->
-        eprintf "Got: %s for %s\n" n name;
         Some (File (p, n), filtered)
       | _ -> None
     in
