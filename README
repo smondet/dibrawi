@@ -8,8 +8,8 @@ Status: Still Under Heavy Development
 
 Installation:
 
-  * Dibrawi is written in OCaml, and is built with OCamlfind and
-    OMake. It uses the following libraries:
+  * Dibrawi is written in OCaml, and is built with OASIS/OCamlbuild.
+    It uses the following libraries:
       sebib
       bracetax
       unix
@@ -23,16 +23,11 @@ Installation:
       Inkscape
       Graphviz
   
-  * To build, just run omake, the binaries are linked to
-      _build/app/dbwpp
-      _build/app/dbw
-    and to install the `dibrawi' library with ocamlfind, just run:
-      omake reinstall_library
-    (depending on your setup this might require root priviledges),
-    to uninstall the library, you may have guessed:
-      omake uninstall_library
-
-
+  * To build:
+    oasis setup
+    ocaml setup.ml -configure --prefix /some/cool/place/like/usr
+    make
+    make install
 
 
 Basic Usage:
