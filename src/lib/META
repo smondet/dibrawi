@@ -1,5 +1,0 @@
-description = "Dibrawi - Distributed Bracetax Wiki"
-version="1"
-archive(byte)="dibrawi.cma"
-archive(native)="dibrawi.cmxa"
-requires = "sebib, bracetax, unix, extlib, pcre, sexplib, xml-light"

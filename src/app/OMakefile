@@ -1,8 +1,0 @@
-
-OCAML_LIBS += ../lib/dibrawi
-OCAMLINCLUDES += ../lib/
-
-
-test_dbw:  $(OCamlProgram test_dbw, test_dbw)
-
-.DEFAULT: $(OCamlProgram dbw, dbw)

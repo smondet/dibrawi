@@ -1,0 +1,44 @@
+OASISFormat: 0.2
+Name:        dibrawi
+Version:     0.1
+Synopsis:    Distributed Bracetax Wiki
+Authors:     Sebastien Mondet
+License:     ISC
+Plugins:     META (0.2)
+
+Library dibrawi
+  Path:       src/lib
+  BuildTools: ocamlbuild
+  BuildDepends: sebib
+    , bracetax
+    , unix
+    , extlib
+    , pcre
+    , xml-light
+    , sexplib
+  Modules:    Dibrawi
+    , Dibrawi_Yaboon_PolyComp
+    , Dibrawi_std
+    , Dibrawi_system
+    , Dibrawi_xelatex
+    , Dibrawi_formula
+    , Dibrawi_html_template
+    , Dibrawi_make
+    , Dibrawi_anyweb
+    , Dibrawi_mix
+
+Executable dbw
+  Path:       src/app
+  BuildTools: ocamlbuild
+  BuildDepends: dibrawi
+  MainIs:     dbw.ml
+  
+Document dibrawi_libdoc
+  Title:      Documentation of the Dibrawi library
+  InstallDir: $docdir
+  Type:                 ocamlbuild (0.2)
+  Install:              false
+  BuildTools:          ocamlbuild, ocamldoc
+  XOCamlbuildPath:      src/lib/
+  XOCamlbuildLibraries: dibrawi
+
