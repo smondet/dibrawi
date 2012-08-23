@@ -31,6 +31,7 @@ Executable dbw
   Path:       src/app
   BuildTools: ocamlbuild
   BuildDepends: dibrawi
+  CompiledObject: best
   MainIs:     dbw.ml
   
 Document dibrawi_libdoc
