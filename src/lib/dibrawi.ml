@@ -246,6 +246,77 @@ module Special_paths = struct
 
 end
 
+module Light_syntax = struct
+
+let is_whitespace s =
+  Str.fold_left (fun already -> function
+  | ' ' | '\n' | '\t' | '\r' -> already
+  | c -> false ) true s
+let indentation s =
+  Str.fold_left (fun (continue, result) -> function
+  | ' ' | '\n' | '\t' | '\r' ->
+    if continue then (true, result + 1) else (false, result)
+  | c -> (false, result)) (true, 0) s
+
+let todo_item s =
+  let indentation = snd (indentation s) / 2 + 1 in
+  let without = Str.strip s in
+  let try_prefix without prefix tag () =
+    if Str.starts_with without prefix
+    then Some (tag, indentation, snd (Str.replace ~str:without ~sub:prefix ~by:""))
+    else None in
+  let (==<) x f = if x = None then f () else x in
+  try_prefix without "*" `important ()
+  ==< try_prefix without "[]"   `to_do
+  ==< try_prefix without "[x]"  `to_do_failed
+  ==< try_prefix without "[v]"  `to_do_done
+  ==< try_prefix without "()"   `to_delegate
+  ==< try_prefix without "?"    `to_research
+  ==< try_prefix without "-"    `simple_item
+    
+let to_brtx s =
+  let lines = Str.nsplit s "\n" in
+  let result = Buffer.create 42 in
+  let transform (paragraph_to_end, indentation) = function
+    | s when is_whitespace s ->
+      if paragraph_to_end then begin
+        for i = 1 to indentation do
+          Buffer.add_string result "{end}\n";
+        done;
+        Buffer.add_string result "{p}\n";
+      end;
+      Buffer.add_string result "\n";
+      (false, 0)
+    | s ->
+      let next_indent =
+        match todo_item s with
+        | None -> Buffer.add_string result (s ^ "\n"); indentation
+        | Some (tag, line_indentation, line) ->
+          for i = indentation - 1 downto line_indentation do
+            Buffer.add_string result "{end}\n";
+          done;
+          for i = indentation + 1 to line_indentation do
+            Buffer.add_string result "{begin list}\n"
+          done;
+          let string_tag =
+            match tag with
+            | `important -> "⚑"
+            | `to_do -> "☐"
+            | `to_do_failed -> "☒"
+            | `to_do_done -> "☑"
+            | `to_delegate -> "☛"
+            | `to_research -> "�"
+            | `simple_item -> "•"
+          in
+          Buffer.add_string result (sprintf  "{*} %s %s \n" string_tag line);
+          line_indentation
+      in
+      (true, next_indent)
+  in
+  Pervasives.ignore (Ls.fold_left lines ~f:transform ~init:(false, 0));
+  Buffer.contents result
+end
+    
 module Preprocessor = struct
 
   let default_html_biblio_page = "page:/bibliography"
@@ -289,7 +360,7 @@ module Preprocessor = struct
     let default_raw_end = Bracetax.Commands.Raw.default_raw_end () in
     let is_old_pp_raw_2 s = Ls.exists ((=) s) ["mc"; "mi"; "me"] in
     let is_old_pp_raw_n s =
-      Ls.exists ((=) s) ["mix:code"; "mix:ignore"; "mix:end"] in
+      Ls.exists ((=) s) ["mix:code"; "mix:ignore"; "mix:end"; "light"] in
     let is_old_pp_raw s = is_old_pp_raw_2 s || is_old_pp_raw_n s in
     let cmd_stack = Stack.create () in
     let pop_loc stack loc =
@@ -307,6 +378,7 @@ module Preprocessor = struct
         | ':' | '.' | '-' | '_' as ok -> Str.of_char ok
         | _ -> "") s in
     let split_cites s = Str.nsplit s "," in
+    let light_syntax_buffer = ref None in
     let brtx_printer = 
       { Bracetax.Signatures.
         print_comment = (fun _ _ -> ());
@@ -375,6 +447,7 @@ module Preprocessor = struct
         default_raw_end = (function
           | s when Bracetax.Commands.Raw.is_raw_cmd s -> "end"
           | s when is_old_pp_raw_2 s -> "me"
+          | "light" -> "end"
           | s -> "mix:end");
         enter_raw = (fun loc cmd args -> 
           Stack.push (cmd, args) cmd_stack;
@@ -391,16 +464,20 @@ module Preprocessor = struct
                   {code mixspecialend}"
             | `camlmix -> pr (caml_ploc loc "## ")
             end
+          | "light" ->
+            light_syntax_buffer := Some (Buffer.create 42);
           | s ->
             pr (sprintf "{%s%s}" cmd
                   (Str.concat "" (Ls.map (fun s -> 
                     sprintf " %s" (sanitize_brtx_command s)) args))));
-        print_raw = 
-          (fun loc line -> 
-            if mix_output = `camlmix then 
-              pr (Str.replace_all line ~sub:"##" ~by:"###")
-            else
-              pr line);
+        print_raw = (fun loc line ->
+          begin match !light_syntax_buffer with
+          | None -> 
+            if mix_output = `camlmix
+            then pr (Str.replace_all line ~sub:"##" ~by:"###")
+            else pr line
+          | Some buf -> Buffer.add_string buf line
+          end);
         leave_raw = (fun loc -> 
           match pop_loc cmd_stack loc with
           | ("mix:ignore", _) | ("mi", _) ->
@@ -414,6 +491,29 @@ module Preprocessor = struct
               pr "{mixspecialend}";
               pr "{bypass endfordiv}</div>{endfordiv}";
             | `camlmix -> pr "##"
+            end
+          | ("light", _) ->
+            begin match output with
+            | `html ->
+              pr "{bypass}\
+                 <style>ul {list-style-type: inherit}</style>\
+                 <div style=\"list-style-type: none;\"><div>{end}{p}"
+            | `pdf -> 
+              pr "{bypass} {
+                  \ \\renewcommand{\\labelitemi}{}
+                  \ \\renewcommand{\\labelitemii}{}
+                  \ \\renewcommand{\\labelitemiii}{}
+                  \ \\renewcommand{\\labelitemiv}{}
+                  \ {end}"
+            end;
+            Opt.may !light_syntax_buffer ~f:(fun buf ->
+              pr (Light_syntax.to_brtx (Buffer.contents buf));
+            );
+            light_syntax_buffer := None;
+            begin match output with
+            | `html ->
+              pr "{bypass}</div></div>{end}"
+            | `pdf -> pr "{bypass}}{end}\n"
             end
           | (s, []) -> pr (sprintf "{%s}" default_raw_end)
           | (s, endtag :: _) -> pr (sprintf "{%s}" endtag));
