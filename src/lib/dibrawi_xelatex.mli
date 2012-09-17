@@ -9,7 +9,7 @@ val make_french_letter :
   ?opening:string -> ?closing:string -> 
   string -> string
 
-exception Build_error of Unix.process_status * string
+exception Build_error of string
 
 type print_error_style = 
   [ `no | `simple of out_channel | `complex of out_channel ]

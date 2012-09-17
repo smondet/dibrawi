@@ -1,54 +1,50 @@
 open Dibrawi_std
 
-
+let opt_map_default f default o = Option.value_map ~f ~default o
+  
 let make_letter ~src ~dest ?date ?sign ?opening ?closing content =
-  Str.concat "\n\n" [
+  String.concat ~sep:"\n\n" [
     sprintf "\\address{%s}" src;
-    Opt.map_default (fun s -> sprintf "\\signature{%s}" s) "% No sig" sign;
-    Opt.map_default (fun s -> sprintf "\\date{%s}" s) "% No sig" date;
+    opt_map_default (fun s -> sprintf "\\signature{%s}" s) "% No sig" sign;
+    opt_map_default (fun s -> sprintf "\\date{%s}" s) "% No sig" date;
     sprintf "\\begin{letter}{%s}\n" dest;
-    Opt.map_default (fun s -> sprintf "\\opening{%s}" s) "% No open" opening;
+    opt_map_default (fun s -> sprintf "\\opening{%s}" s) "% No open" opening;
     content;
-    Opt.map_default (sprintf "\\closing{%s}") "% No closing" closing;
+    opt_map_default (sprintf "\\closing{%s}") "% No closing" closing;
     "\\end{letter}\n";
   ]
 let make_french_letter
     ~src ~dest ?(cut_rule=false)
     ?phone ?from_city ?subject
     ?date ?sign ?opening ?closing content =
-  Str.concat "\n\n" [
+  String.concat ~sep:"\n\n" [
     sprintf "\\begin{letter}{%s}\n" dest;
     "\\nofax\n";
-    Opt.map_default (fun s -> sprintf "\\telephone{%s}" s) "\\notelephone" phone;
+    opt_map_default (fun s -> sprintf "\\telephone{%s}" s) "\\notelephone" phone;
         (* "\\name{Seb}\n"; *)
-    Opt.map_default (fun s -> sprintf "\\lieu{%s}" s) "\\nolieu" from_city;
+    opt_map_default (fun s -> sprintf "\\lieu{%s}" s) "\\nolieu" from_city;
     sprintf "\\address{%s}" src;
-    Opt.map_default (fun s -> sprintf "\\conc{%s}" s) "% No conc" subject;
-    Opt.map_default (fun s -> sprintf "\\signature{%s}" s) "% No sig" sign;
-    Opt.map_default (fun s -> sprintf "\\date{%s}" s) "% No sig" date;
+    opt_map_default (fun s -> sprintf "\\conc{%s}" s) "% No conc" subject;
+    opt_map_default (fun s -> sprintf "\\signature{%s}" s) "% No sig" sign;
+    opt_map_default (fun s -> sprintf "\\date{%s}" s) "% No sig" date;
     if cut_rule then "" else "\\NoRule\n";
-    Opt.map_default (fun s -> sprintf "\\opening{%s}" s) "% No open" opening;
+    opt_map_default (fun s -> sprintf "\\opening{%s}" s) "% No open" opening;
     content;
-    sprintf "\\closing{%s}" (Opt.default "CLOSING" closing);
+    sprintf "\\closing{%s}" (Option.value ~default:"CLOSING" closing);
     "\\end{letter}\n";
   ]
         
-exception Build_error of Unix.process_status * string
+exception Build_error of string
     
-let show_errors ?(out=stderr) err log =
+let show_errors ?(out=stderr) log =
   let sep = "===================================================" in
   let log_extract =
     Dibrawi_system.slurp_command
       (sprintf
          "egrep -A 10 ^! %s | sed 's/^--$/%s/'" log sep) in
-  let msg =
-    match err with
-    | Unix.WEXITED n -> (sprintf "XeLaTeX returned error code: %d" n)
-    | Unix.WSIGNALED n -> (sprintf "XeLaTeX was killed by signal %d" n)
-    | Unix.WSTOPPED  n -> (sprintf "XeLaTeX was stopped by signal %d" n)
-  in
-  fprintf out "\nERROR:\n  => %s\n  log: %s\n%s\n%s" msg log sep log_extract
-
+  fprintf out "\nERROR:\n  => XeLaTeX error\n  log: %s\n%s\n%s"
+    log sep log_extract
+    
 type print_error_style = 
   [ `no | `simple of out_channel | `complex of out_channel ]
 
@@ -62,30 +58,26 @@ let build ?(with_bibtex=false) ?(raises=true)
   let target = Filename.chop_extension (Filename.basename path) in
   let run_command c =
     match Unix.system c with
-    | Unix.WEXITED 0 -> ()
+    | Ok () -> ()
     | err ->
       let log = sprintf "%s/%s.log" cd target in
-      raise (Build_error (err, log))
-  in
+      raise (Build_error log) in
   let commands =
     let latex = (sprintf "%s %s > /dev/null 2>&1" pdflatex target) in
     if with_bibtex then
       [ latex; (sprintf "bibtex %s > /dev/null"  target); latex; latex; latex ]
     else
       [ latex; latex; latex ] in
-  begin 
-    try
-      List.iter run_command commands
-    with
-    | Build_error (err, log) as e ->
-      begin match print_errors with
-      | `no -> ()
-      | `simple out ->
-        (fprintf out "XeLaTeX: Compilation of %s failed; see %s\n" target log)
-      | `complex out ->
-        show_errors ~out err log
-      end;
-      if raises then raise e;
+  begin try List.iter ~f:run_command commands with
+  | Build_error log as e ->
+    begin match print_errors with
+    | `no -> ()
+    | `simple out ->
+      (fprintf out "XeLaTeX: Compilation of %s failed; see %s\n" target log)
+    | `complex out ->
+      show_errors ~out log
+    end;
+    if raises then raise e;
   end;
   Sys.chdir pwd;
   (sprintf "%s/%s.pdf" cd target)
@@ -93,7 +85,7 @@ let build ?(with_bibtex=false) ?(raises=true)
 let do_clean basename =
   let exts = [ ".aux"; ".bbl"; ".blg"; ".out"; ".toc"; ".tns" ] in
   let cmd =
-    "rm -f " ^ (Str.concat " " (Ls.map exts ~f:((^) basename))) in
+    "rm -f " ^ (String.concat ~sep:" " (List.map exts ~f:((^) basename))) in
   ignore (Unix.system cmd)
 
 let build_string ?with_bibtex ?raises ?print_errors str =
@@ -107,7 +99,7 @@ let build_string ?with_bibtex ?raises ?print_errors str =
 
 let build_string_tree ?with_bibtex ?raises ?print_errors stree =
   let name = "/tmp/xelatexbuildstringtree.tex" in
-  Io.with_file_out name (fun out ->
+  Out_channel.with_file name ~f:(fun out ->
     String_tree.print ~out stree;
   );
   let result = build ?with_bibtex ?raises ?print_errors name in
@@ -212,7 +204,7 @@ module Template = struct
     usepackage
 
   let paragraphs ?baselinestretch ?parskip ?parindent params =
-    let omd f o = Opt.map_default f "" o in
+    let omd f o = opt_map_default f "" o in
     str_cat [
       omd (sprintf "\\renewcommand{\\baselinestretch}{%.2f}\n") baselinestretch;
       omd (sprintf "\\setlength{\\parindent}{%s}\n") parindent;
@@ -360,7 +352,7 @@ stringstyle=%s\\bfseries,
   let hyphenations l params =
     str_cat [
       "\\hyphenation{";
-      Str.concat " " l;
+      String.concat ~sep:" " l;
       "}\n";
     ]
 
@@ -373,7 +365,7 @@ stringstyle=%s\\bfseries,
 \\setsansfont[Scale=MatchLowercase]{DejaVu Sans}
 "
   let section_numbers ?section_numbers_depth ?toc_depth params =
-    let omd f o = Opt.map_default f "" o in
+    let omd f o = opt_map_default f "" o in
     str_cat [
       omd (sprintf "\\setcounter{secnumdepth}{%d}") section_numbers_depth;
       omd (sprintf "\\setcounter{tocdepth}{%d}") toc_depth;
@@ -474,6 +466,6 @@ pdfproducer = {}}
 \\frenchspacing
 \\newcommand\\dbwcmt[1]{\\textbf{\\textcolor{red}{[#1]}}}
 ";
-    (cat (Ls.map (fun x -> x params) add))
+    (cat (List.map ~f:(fun x -> x params) add))
   ]
 end

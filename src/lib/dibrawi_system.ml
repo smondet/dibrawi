@@ -3,7 +3,7 @@ open Dibrawi_std
 (** create a directory but doesn't raise an exception if the
     directory * already exist *)
 let mkdir_safe dir perm =
-  try Unix.mkdir dir perm with Unix.Unix_error (Unix.EEXIST, _, _) -> ()
+  try Unix.mkdir dir ~perm with Unix.Unix_error (Unix.EEXIST, _, _) -> ()
 
 (** create a directory, and create parent if doesn't exist
     i.e. mkdir -p *)
@@ -16,13 +16,14 @@ let mkdir_p ?(perm=0o700) dir =
   p_mkdir dir 
     
 let copy src dest =
-  Io.with_file_in src 
-    (fun i ->
-      Io.with_file_out dest
-        (fun o ->
-          try while true do Io.write_byte o (Io.read_byte i) done;
-          with Io.No_more_input -> ()))
-
+  In_channel.with_file src ~f:(fun i ->
+    Out_channel.with_file dest ~f:(fun o ->
+      let rec loop () =
+        match In_channel.input_byte i with
+        | Some c -> Out_channel.output_byte o c; loop ()
+        | None -> () in
+      loop ())) 
+    
 let read_command_output f s =
   let ic = Unix.open_process_in s in
   (try
@@ -31,8 +32,9 @@ let read_command_output f s =
      done
    with End_of_file -> ());
   match Unix.close_process_in ic with
-  | Unix.WEXITED 0 -> ()
-  | _ -> invalid_arg ("read_command_output: " ^ s)
+  | Ok () -> ()
+  | Error _ -> invalid_arg ("read_command_output: " ^ s)
+  (* type error = [ `Exit_non_zero of int | `Signal of Core.Signal.t ] *)
 
 let slurp_command s =
   let buf = Buffer.create 100 in
@@ -45,7 +47,7 @@ let is_newer filea fileb =
         
 let run_command c =
   match Unix.system c with
-  | Unix.WEXITED 0 -> ()
+  | Ok () -> ()
   | _ -> failwith (sprintf "Command exited with non-zero: %s" c)
 
 
@@ -68,7 +70,7 @@ module Feed = struct
       | e -> exn := Some e
     end;
     begin match Unix.close_process channels with
-    | Unix.WEXITED 0 -> ()
+    | Ok () -> ()
     | _ -> invalid_arg ("feed_command: " ^ command)
     end;
     (match !exn with Some e -> raise e | None -> ())

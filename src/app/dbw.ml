@@ -6,12 +6,11 @@ module Dbw_sys = Dibrawi.System
 
 
 let output_buffers
-    ~(output_content:'a Io.output -> unit) file_name err_buffer =
+    ~(output_content:Out_channel.t -> unit) file_name err_buffer =
   Dbw_sys.mkdir_p (Filename.dirname file_name);
-  Io.with_file_out file_name
-    (fun o ->
-      output_content o;
-      Io.printf o "%!";);
+  Out_channel.with_file file_name ~f:(fun o ->
+    output_content o;
+    fprintf o "%!";);
   let s = Buffer.contents err_buffer in
   if s <$> "" then (eprintf "Errors for %s:\n%s\n" file_name s;false)
   else true
@@ -24,7 +23,7 @@ let named_templates: (string * (unit ->  Dibrawi.HTML.Template.html_template)) l
     fun from ->
       let buf, _ =
         Brtx_transform.to_html 
-          ~from:(Opt.default ["NONE"] from) 
+          ~from:(Option.value ~default:["NONE"] from) 
           "{link page:/Main|Main}{~}{link #|Top}{~}{link #pagefoot|Bottom}{br}\n\
               {link http://bracetax.berlios.de/bracetax_syntax.html|Bracetax Syntax}"
       in
@@ -53,9 +52,10 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
   let title_prefix = sprintf "[%s]" wiki_name in
 
   let the_source_tree =
-    Data_source.get_file_tree ~data_root () |>
-        Opt.may_apply exclude ~f:File_tree.exclude_from_tree |>
-        Opt.may_apply filter ~f:File_tree.filter_tree_with_pattern in
+    let may_apply o f t = match o with None -> t | Some s -> f s t in
+    Data_source.get_file_tree ~data_root ()
+    |! may_apply exclude File_tree.exclude_from_tree 
+    |! may_apply filter File_tree.filter_tree_with_pattern in
 
   let todo_list = Todo_list.empty () in
   let list_sebibs =
@@ -67,10 +67,10 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
   let menu_factory =
     let cons_if c a b = if c then a :: b else b in
     let bib = 
-      cons_if (Ls.length list_sebibs > 0) 
+      cons_if (List.length list_sebibs > 0) 
         (File_tree.File ("", "bibliography.brtx")) in
     let adb =
-      cons_if (Ls.length list_abs > 0)
+      cons_if (List.length list_abs > 0)
         (File_tree.File ("", "address_book.brtx")) in
     let source_menu = bib (adb the_source_tree) in
     HTML_menu.make_menu_factory source_menu
@@ -79,7 +79,7 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
 
 
   let previous_content =
-    match Opt.bind Persistence.from_file persistence_file with
+    match Option.bind persistence_file Persistence.from_file with
     | None -> Persistence.empty ()
     | Some pc ->
       let menu = HTML_menu.get_menu ~from:["level0"] menu_factory in
@@ -113,7 +113,7 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
     match html_template with
     | `file f -> Templating.File.load_html (Data_source.get_file f)
     | `named name ->
-      begin match Ls.find_opt named_templates ~f:(fun (s, _) -> s = name) with
+      begin match List.find named_templates ~f:(fun (s, _) -> s = name) with
       | Some (_, t) -> t ()
       | None ->
         failwith (sprintf "Template \"%s\" not found." name)
@@ -125,19 +125,16 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
 
   let str_trg_ctt_biblio, str_trg_ctt_sebib_list = 
     let sebib_targets_and_contents =
-      (Ls.map list_sebibs 
-         ~f:(fun (str, path) ->
-               let target_source, content_source = make_target_source str in
-               (str, target_source, content_source))) in
+      (List.map list_sebibs ~f:(fun (str, path) ->
+        let target_source, content_source = make_target_source str in
+        (str, target_source, content_source))) in
     let html = build ^ "/bibliography.html" in
     let build_cmd () =
       logf 1 "Build %s\n" html;
       let bib =
         Bibliography.load
-          (Ls.map list_sebibs 
-             ~f:(fun (str, path) ->
-                   Data_source.get_page (data_root ^ "/" ^ str)))
-      in
+          (List.map list_sebibs ~f:(fun (str, path) ->
+            Data_source.get_page (data_root ^ "/" ^ str))) in
       let menu = HTML_menu.get_menu ~from:["bibliography"] menu_factory in
       let brtx = 
         dbw_prepro ~filename:"Bibliography" (Bibliography.to_brtx bib) in
@@ -158,26 +155,23 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
     in
     let initial_content = previous_file_content html in
     let target_html, content_html =
-      let deps =
-        Ls.map sebib_targets_and_contents ~f:(fun (_, t, _) -> t) in
+      let deps = List.map sebib_targets_and_contents ~f:(fun (_, t, _) -> t) in
       Make.MD5.make_file_target ?initial_content 
         ~filename:html ~build_cmd deps in
     (html, target_html, content_html), sebib_targets_and_contents in 
   
   let str_trg_ctt_addbook, str_trg_ctt_addbook_list = 
     let abs_targets_and_contents =
-      (Ls.map list_abs
-         ~f:(fun (str, path) ->
-               let target_source, content_source = make_target_source str in
-               (str, target_source, content_source))) in
+      (List.map list_abs ~f:(fun (str, path) ->
+        let target_source, content_source = make_target_source str in
+        (str, target_source, content_source))) in
     let html = build ^ "/address_book.html" in
     let build_cmd () =
       logf 1 "Build %s\n" html;
       let ab =
         Address_book.load
-          (Ls.map list_abs ~f:(fun (str, path) ->
-                                 Data_source.get_page (data_root ^ "/" ^ str)))
-      in
+          (List.map list_abs ~f:(fun (str, path) ->
+            Data_source.get_page (data_root ^ "/" ^ str))) in
       let menu = HTML_menu.get_menu ~from:["address_book"] menu_factory in
       let brtx =
         dbw_prepro ~filename:"Address Book" (Address_book.to_brtx ab) in
@@ -198,8 +192,7 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
     in
     let initial_content = previous_file_content html in
     let target_html, content_html =
-      let deps =
-        Ls.map abs_targets_and_contents ~f:(fun (_, t, _) -> t) in
+      let deps = List.map abs_targets_and_contents ~f:(fun (_, t, _) -> t) in
       Make.MD5.make_file_target ?initial_content 
         ~filename:html ~build_cmd deps in
     (html, target_html, content_html), abs_targets_and_contents in 
@@ -209,15 +202,14 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
     let list_brtxes = File_tree.str_and_path_list  the_source_tree in
     
     let make_target_html (str, path) =
-      let filename =
-        build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
+      let filename = build ^ "/" ^ (Filename.chop_extension str) ^ ".html" in
       let build_cmd () = 
         logf 1 "Building %s\n" filename;
         let brtx = data_root ^ "/" ^ str in
         let title = 
           let s = Filename.chop_extension str in
           let pretty = 
-            if s.[0] =@= '.' then Str.sub s 1 (Str.length s - 1) else s in
+            if s.[0] =@= '.' then String.(sub s 1 (length s - 1)) else s in
           title_prefix ^ pretty in
         let from = path in
         let menu = HTML_menu.get_menu ~from menu_factory in
@@ -243,14 +235,14 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
           ~filename ~build_cmd [target_source] in
       (str, target_source, content_source,
        filename, target_html, content_html) in
-    Ls.map list_brtxes ~f:make_target_html in
+    List.map list_brtxes ~f:make_target_html in
 
   let main_target, _ =
     let build_cmd () = Some () in (* printf "Built the HTML.\n" in *)
     let deps =
       (let _, tbib, _ = str_trg_ctt_biblio in tbib)
       :: (let _, tadb, _ = str_trg_ctt_addbook in tadb)
-      :: (Ls.map list_with_targets ~f:(fun (_,_, _,_, th,_) -> th))
+      :: (List.map list_with_targets ~f:(fun (_,_, _,_, th,_) -> th))
     in
     Make.MD5.make_phony_target ~name:"Main" ~build_cmd deps
   in
@@ -263,45 +255,43 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
   Todo_list.simplify todo_list;
   let previous_todo_content = 
     ref (Persistence.filter_files previous_content
-           ~f:(fun (s, _) -> "todo:" =$= (Str.sub s 0 5))) in
+           ~f:(fun (s, _) -> "todo:" =$= (String.sub s 0 5))) in
   let remove_previous_todo str =
     previous_todo_content :=
-      Ls.remove_if (fun (s, _) -> s =$= str) !previous_todo_content in
+      List.filter ~f:(fun (s, _) -> s <> str) !previous_todo_content in
   let todo_targets_contents =
-    Ls.map !todo_list
-      ~f:(function 
-          | `copy (path, from) ->
-              let from_path = String.concat "/" (Ls.rev (Ls.tl from)) in
-              let origin_str = "todo:" ^ from_path ^ "/" ^ path in
-              let origin = from_path ^ "/" ^ path in
-              let dest = build ^ "/" ^ from_path ^ "/" ^ path in
-              let dest_str = "todo:" ^ dest in
-              let build_cmd () =
-                Dbw_sys.mkdir_p (Filename.dirname dest);
-                try 
-                  Dbw_sys.copy (sprintf "%s/%s" data_root origin) dest;
-                  logf 1 "Copied %s/%s to %s\n" data_root origin dest;
-                  (Some dest)
-                with e ->
-                  printf "ERROR copying %s/%s to %s: %s\n"
-                    data_root origin dest (Printexc.to_string e);
-                  None
-              in
-              let target_source, content_source =
-                make_target_source  ~prefix:"todo:" origin in
-              let initial_content = previous_file_content dest_str in
-              let target, content =
-                Make.MD5.make_file_target ?initial_content 
-                  ~filename:dest ~build_cmd [target_source] in
-              remove_previous_todo origin_str;
-              remove_previous_todo dest_str;
-              (origin_str, target_source, content_source, 
-               dest_str, target, content)
-         ) in
+    List.map !todo_list ~f:(function 
+    | `copy (path, from) ->
+      let from_path = String.concat ~sep:"/" (List.rev (List.tl_exn from)) in
+      let origin_str = "todo:" ^ from_path ^ "/" ^ path in
+      let origin = from_path ^ "/" ^ path in
+      let dest = build ^ "/" ^ from_path ^ "/" ^ path in
+      let dest_str = "todo:" ^ dest in
+      let build_cmd () =
+        Dbw_sys.mkdir_p (Filename.dirname dest);
+        try 
+          Dbw_sys.copy (sprintf "%s/%s" data_root origin) dest;
+          logf 1 "Copied %s/%s to %s\n" data_root origin dest;
+          (Some dest)
+        with e ->
+          printf "ERROR copying %s/%s to %s: %s\n"
+            data_root origin dest (Exn.to_string e);
+          None
+      in
+      let target_source, content_source =
+        make_target_source  ~prefix:"todo:" origin in
+      let initial_content = previous_file_content dest_str in
+      let target, content =
+        Make.MD5.make_file_target ?initial_content 
+          ~filename:dest ~build_cmd [target_source] in
+      remove_previous_todo origin_str;
+      remove_previous_todo dest_str;
+      (origin_str, target_source, content_source, 
+       dest_str, target, content)
+    ) in
   let todo_target, _ =
     let build_cmd () = Some () in
-    let deps =
-      Ls.map todo_targets_contents ~f:(fun (_,_,_,_,t,_) -> t) in
+    let deps = List.map todo_targets_contents ~f:(fun (_,_,_,_,t,_) -> t) in
     Make.MD5.make_phony_target ~name:"Todos" ~build_cmd deps
   in
   if not (Make.make todo_target) then (
@@ -313,15 +303,15 @@ let transform ?(html_template=`none) ?(wiki_name="DBW")
   | Some pf ->
       let str_contents =
         List.concat [
-          Ls.map todo_targets_contents ~f:(fun (s,_,c,_,_,_) -> (s, c));
-          Ls.map todo_targets_contents ~f:(fun (_,_,_,s,_,c) -> (s, c));
+          List.map todo_targets_contents ~f:(fun (s,_,c,_,_,_) -> (s, c));
+          List.map todo_targets_contents ~f:(fun (_,_,_,s,_,c) -> (s, c));
           !previous_todo_content;
           [let s, _, c = str_trg_ctt_biblio in (s, c)];
-          Ls.map str_trg_ctt_sebib_list ~f:(fun (s,_,c) -> (s, c));
+          List.map str_trg_ctt_sebib_list ~f:(fun (s,_,c) -> (s, c));
           [let s, _, c = str_trg_ctt_addbook in (s, c)];
-          Ls.map str_trg_ctt_addbook_list ~f:(fun (s,_,c) -> (s, c));
-          Ls.map list_with_targets ~f:(fun (s,_,c,_,_,_) -> (s, c));
-          Ls.map list_with_targets ~f:(fun (_,_,_,s,_,c) -> (s, c));
+          List.map str_trg_ctt_addbook_list ~f:(fun (s,_,c) -> (s, c));
+          List.map list_with_targets ~f:(fun (s,_,c,_,_,_) -> (s, c));
+          List.map list_with_targets ~f:(fun (_,_,_,s,_,c) -> (s, c));
         ] in
       (* List.iter (fun (s,_) -> printf "str: %s\n" s) str_contents; *)
       Persistence.set_files previous_content str_contents;
@@ -396,14 +386,14 @@ let transform_wiki name argv =
     let anons = ref [] in
     let anon_fun s = anons := s :: !anons in
     Arg.parse_argv argv commands anon_fun usage;
-    Ls.rev !anons   in
+    List.rev !anons   in
 
   if !print_v then (
     print_version ()
   ) else (
     if !print_named_templates then (
       printf "Named templates:\n";
-      Ls.iter named_templates ~f:(fun (s, _) ->
+      List.iter named_templates ~f:(fun (s, _) ->
         printf "  %s\n" s;
       );
     ) else (
@@ -416,7 +406,7 @@ let transform_wiki name argv =
           ~html_template:!html_tmpl ?verbosity:!verbosity ?persistence_file i o 
       | _ -> 
         printf "Wrong number of arguments: %d\n" 
-          (Ls.length anonymous_arguments);
+          (List.length anonymous_arguments);
         printf "%s\n" usage;
       end;
     );
@@ -429,14 +419,13 @@ let do_the_running mix_output output biblio_html_prefix to_preprocess mix_args =
   let citations = ref [] in
   let html_cite =
     let prefix = 
-      Opt.default 
-        Dibrawi.Preprocessor.default_html_biblio_page
+      Option.value ~default:Dibrawi.Preprocessor.default_html_biblio_page
         biblio_html_prefix in
     fun cites ->
       citations := cites :: !citations;
       Dibrawi.Preprocessor.default_html_cite prefix cites
   in
-  Ls.iter to_preprocess ~f:(fun filename ->
+  List.iter to_preprocess ~f:(fun filename ->
     let page = Dibrawi.Data_source.get_file filename in
     let preprocessed =
       Dibrawi.Preprocessor.brtx2brtx ~mix_output
@@ -444,7 +433,7 @@ let do_the_running mix_output output biblio_html_prefix to_preprocess mix_args =
     fprintf output_chan "%s\n" preprocessed;
   );
   close_out output_chan;
-  let cites = Ls.flatten !citations in
+  let cites = List.concat !citations in
   
   Dibrawi.System.run_command 
     (sprintf "camlmix \
@@ -455,14 +444,14 @@ let do_the_running mix_output output biblio_html_prefix to_preprocess mix_args =
               ' \
               -c -co /tmp/dbwpp_camlmix_out.ml %s"
        (match output with `html -> "html" | `pdf -> "pdf")
-       (Str.concat ";" (Ls.map (sprintf "%S") (Ls.rev cites)))
+       (String.concat ~sep:";" (List.map ~f:(sprintf "%S") (List.rev cites)))
        output_file);
   Dibrawi.System.run_command 
-    (sprintf "ocamlfind ocamlopt -package dibrawi -linkpkg \
+    (sprintf "ocamlfind ocamlopt -package dibrawi -thread -linkpkg \
                 /tmp/dbwpp_camlmix_out.ml -o /tmp/dbwpp_camlmix_out ");
   Dibrawi.System.run_command 
     (sprintf "/tmp/dbwpp_camlmix_out %s"
-       (Str.concat " " (Ls.map (sprintf "'%s'") mix_args)));
+       (String.concat ~sep:" " (List.map ~f:(sprintf "'%s'") mix_args)));
   ()
 
 let run_mix name argv =
@@ -491,26 +480,25 @@ let run_mix name argv =
      "\n\tAdd all following arguments for the mix-ed executable");
   ] (fun s -> to_preprocess := s :: !to_preprocess) usage;
   do_the_running `camlmix !out_format !biblio_html_prefix
-    (Ls.rev !to_preprocess) (Ls.rev !mix_args)
+    (List.rev !to_preprocess) (List.rev !mix_args)
     
 let magic name argv =
   let arglist = Array.to_list argv in
-  begin match Ls.tl arglist with
+  begin match List.tl_exn arglist with
   | [] -> eprintf "Easy guess … nothing to do.\n"
   | args ->
     let out_format = ref `html in
     let to_preprocess = ref [] in
     let mix_args = ref [] in
-    let is_to_preprocess s =
-      Str.ends_with s ".brtx" in
+    let is_to_preprocess s = String.is_suffix s ~suffix:".brtx" in
     let implies_latex s =
-      Str.ends_with s ".pdf" || Str.starts_with s "pdf"
-      || Str.ends_with s ".tex" || Str.starts_with s "tex"
-      || Str.ends_with s ".ltx" || Str.starts_with s "latex" in 
-    if Ls.exists args ~f:implies_latex then (
+      String.is_suffix s ".pdf" || String.is_prefix s "pdf"
+      || String.is_suffix s ".tex" || String.is_prefix s "tex"
+      || String.is_suffix s ".ltx" || String.is_prefix s "latex" in 
+    if List.exists args ~f:implies_latex then (
       out_format := `pdf;
     );
-    Ls.iter args ~f:(fun s ->
+    List.iter args ~f:(fun s ->
       if is_to_preprocess s then (
         to_preprocess := s :: !to_preprocess;
       ) else (
@@ -518,7 +506,7 @@ let magic name argv =
       )
     );
     do_the_running `camlmix !out_format (Some "")
-      (Ls.rev !to_preprocess) (Ls.rev !mix_args)
+      (List.rev !to_preprocess) (List.rev !mix_args)
   end
 
 let prepro name argv =
@@ -562,23 +550,22 @@ let prepro name argv =
   let citations = ref [] in
   let html_cite =
     let prefix = 
-      Opt.default 
-        Dibrawi.Preprocessor.default_html_biblio_page
+      Option.value ~default:Dibrawi.Preprocessor.default_html_biblio_page
         !biblio_html_prefix in
     fun cites ->
       citations := cites :: !citations;
       Dibrawi.Preprocessor.default_html_cite prefix cites
   in
-  Ls.iter (Ls.rev !to_preprocess) ~f:(fun filename ->
+  List.iter (List.rev !to_preprocess) ~f:(fun filename ->
     let page = Dibrawi.Data_source.get_file filename in
     let preprocessed =
       Dibrawi.Preprocessor.brtx2brtx ~mix_output:!mix_output
         ~html_cite ~output:!out_format ~from:[filename] page in
     fprintf output_chan "%s\n" preprocessed;
   );
-  let cites = Ls.flatten !citations in
-  Opt.may output_citations_chan ~f:(fun o ->
-    fprintf o "%s\n" (Str.concat " " (Ls.rev cites));
+  let cites = List.concat !citations in
+  Option.iter output_citations_chan ~f:(fun o ->
+    fprintf o "%s\n" (String.concat ~sep:" " (List.rev cites));
   );
   close_out output_chan;
   ()
@@ -619,5 +606,5 @@ let () =
       end
     with 
     | Arg.Help msg | Arg.Bad msg -> eprintf "%s" msg
-    | exn -> eprintf "dbw ends with an exception:\n%s\n" (Printexc.to_string exn)
+    | exn -> eprintf "dbw ends with an exception:\n%s\n" (Exn.to_string exn)
   )

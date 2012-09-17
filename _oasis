@@ -9,13 +9,7 @@ Plugins:     META (0.2)
 Library dibrawi
   Path:       src/lib
   BuildTools: ocamlbuild
-  BuildDepends: sebib
-    , bracetax
-    , unix
-    , extlib
-    , pcre
-    , xml-light
-    , sexplib
+  BuildDepends: sebib , bracetax , core , pcre , xml-light , threads
   Modules:    Dibrawi
     , Dibrawi_Yaboon_PolyComp
     , Dibrawi_std

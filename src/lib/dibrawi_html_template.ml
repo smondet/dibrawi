@@ -4,7 +4,7 @@
 open Dibrawi_std
 open String_tree
 let ($) f x = f x
-let opt_str_map f o = Opt.map_default (fun s -> str (f s)) empty o
+let opt_str_map f o = Option.value_map ~f:(fun s -> str (f s)) ~default:empty o
 
 let opt_fill_css param opt =
   match opt with
@@ -14,7 +14,7 @@ let opt_fill_css param opt =
 
 let css_block ?class_opt name l =
   cat [
-    Opt.map_default (fun s -> str (s ^ " ")) empty class_opt;
+    Option.value_map ~f:(fun s -> str (s ^ " ")) ~default:empty class_opt;
     str name; str " {\n"; cat ~sep:new_line l; str "\n}"]
 
 (**/**)
@@ -48,10 +48,10 @@ let make
         "<link rel=\"stylesheet\"  type=\"text/css\" href=\"%s\"/>"
         target
     | `link_from_root target ->
-      let depth = Ls.length params.path_to_root - 1 in
+      let depth = List.length params.path_to_root - 1 in
       str $ sprintf
         "<link rel=\"stylesheet\"  type=\"text/css\" href=\"%s/%s\"/>"
-        ("./" ^ (Str.concat "/" (Ls.init depth (fun _ -> ".."))))
+        ("./" ^ (String.concat ~sep:"/" (List.init depth (fun _ -> ".."))))
         target
     | `inline string_tree -> string_tree
   in
@@ -112,14 +112,14 @@ module CSS = struct
       let background x = opt_fill_css "background-color" x in
       let block = css_block ?class_opt:for_class in
       cat ~sep:new_line 
-        (Ls.map theme.text ~f:(function
-          | One (p, f, b) -> block p [ color f; background b]
-          | List (pl, f, b) ->
-            cat (Ls.map pl ~f:(fun p -> block p [ color f; background b]))))
+        (List.map theme.text ~f:(function
+        | One (p, f, b) -> block p [ color f; background b]
+        | List (pl, f, b) ->
+          cat (List.map pl ~f:(fun p -> block p [ color f; background b]))))
     
     (** Get the color associated with a given border name. *)
     let border theme name =
-      Opt.map snd (Ls.find_opt theme.borders ~f:(fun (n, c) -> n = name))
+      Option.map ~f:snd (List.find theme.borders ~f:(fun (n, c) -> n = name))
 
     let empty_theme = theme ()
     let dummy_theme = 
@@ -261,7 +261,7 @@ module CSS = struct
     let install_theme ?for_class theme =
       let block = css_block ?class_opt:for_class in
       cat ~sep:new_line 
-        (Ls.map theme ~f:(fun (w, s) -> block w [
+        (List.map theme ~f:(fun (w, s) -> block w [
           opt_fill_css "font-family" s.family;
           opt_fill_css "text-align" s.align;
           opt_fill_css "font-size" s.size;
@@ -308,7 +308,7 @@ module CSS = struct
     
   let install_color_theme
       ?for_class ?(theme:Color.theme option) params =
-    let theme = Opt.default params.color_theme theme in
+    let theme = Option.value ~default:params.color_theme theme in
     Color.install_theme ?for_class theme
     
   let install_font_theme ?for_class theme params =
@@ -323,8 +323,8 @@ module CSS = struct
     let tree =
       cat ~sep [
         str "<style type=\"text/css\">";
-        cat ~sep (Ls.map ~f:(fun f -> f params) l);
-        Opt.map_default str empty raw;
+        cat ~sep (List.map ~f:(fun f -> f params) l);
+        Option.value_map ~f:str ~default:empty raw;
         str "</style>";
       ] in
     `inline tree
@@ -346,7 +346,8 @@ module CSS = struct
     
   let header_block ?(frame="5px") : component = fun params ->
     let frame_color = 
-      Opt.default "black" (Color.border params.color_theme "headerframe") in
+      Option.value ~default:"black"
+        (Color.border params.color_theme "headerframe") in
     str $ sprintf
       "div.header {\n\
       \    text-align: center;\n\
@@ -366,7 +367,9 @@ module CSS = struct
         "blockquote {\n\
         \    border-left: 2px solid %s;\n\
         \    padding-left: 1em;\n\
-        }" (Opt.default "grey" (Color.border params.color_theme "blockquotebar"))
+        }"
+        (Option.value ~default:"grey"
+           (Color.border params.color_theme "blockquotebar"))
     
   let list_geometry ?(style=`compact "2em") ?(debug=false) : component = 
     fun params ->
@@ -490,7 +493,8 @@ module CSS = struct
     str $ sprintf
       "h2 { border: %s solid 2px; padding: 0.2em; }\n\
       h3 { text-decoration: underline;}"
-      (Opt.default "black" (Color.border params.color_theme "h2border"))
+      (Option.value ~default:"black"
+         (Color.border params.color_theme "h2border"))
     
   let code_blocks ?(with_border=`dashed) ?(rigid_width=true) : component = 
     fun params ->
@@ -601,7 +605,7 @@ module Body_layout = struct
             pad in
         (str l, str r, str m) in
       let frame_color = 
-        Opt.default "#999" 
+        Option.value ~default:"#999" 
           (CSS.Color.border params.CSS.color_theme "stdframe") in
       let std_frame = str $ sprintf "  border: %s ridge 3px;" frame_color in
       cat ~sep:new_line [
@@ -680,7 +684,7 @@ module Body_layout = struct
           (str r, str m)
       in
       let frame_color = 
-        Opt.default "#999" 
+        Option.value ~default:"#999" 
           (CSS.Color.border params.CSS.color_theme "stdframe") in
       let std_frame = 
         str $ sprintf "  border-%s: %s ridge 1px;" 
@@ -883,8 +887,9 @@ module File = struct
                | "DIBRAWI_TEMPLATE_CONTENT" -> content
                | "DIBRAWI_TEMPLATE_FOOTER" -> footer
                | "DIBRAWI_TEMPLATE_PATH_TO_ROOT" -> 
-                 let depth = Ls.length from - 1 in
-                 ("./" ^ (Str.concat "/" (Ls.init depth (fun _ -> ".."))))
+                 let depth = List.length from - 1 in
+                 ("./" ^ (String.concat ~sep:"/"
+                            (List.init depth (fun _ -> ".."))))
                | s -> s) input_str)
 
 end      

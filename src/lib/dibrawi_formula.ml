@@ -73,13 +73,13 @@ let rec to_string style expr =
       Latex | Text-> s | MathML -> (sprintf "<mn>%s</mn>" s) end
   | Apply (f, l) ->
     let sf = to_string style f and 
-        sl = List.map (to_string style) l in
+        sl = List.map ~f:(to_string style) l in
     begin match style with
-    | Latex -> (sprintf "%s(%s)" sf (String.concat ", " sl))
-    | Text -> (sprintf "%s(%s)" sf (String.concat ", " sl))
+    | Latex -> (sprintf "%s(%s)" sf (String.concat ~sep:", " sl))
+    | Text -> (sprintf "%s(%s)" sf (String.concat ~sep:", " sl))
     | MathML -> 
       (sprintf "\n%s<mo>(</mo>%s<mo>)</mo>\n" sf 
-         (String.concat "<mo>,</mo>" sl))
+         (String.concat ~sep:"<mo>,</mo>" sl))
     end
   | Sup (a, b) ->
     let sa = to_string style a and sb = to_string style b in
@@ -121,40 +121,40 @@ module Render = struct
 
   let array_latex transform a =
     let transformed =
-      List.map (fun row -> 
-        (String.concat " & " (List.map transform row))) a in
+      List.map ~f:(fun row -> 
+        (String.concat ~sep:" & " (List.map ~f:transform row))) a in
     sprintf "\\begin{eqnarray*}%s\n\\end{eqnarray*}"
-      (String.concat "\\\\ " transformed)
+      (String.concat ~sep:"\\\\ " transformed)
 
   let array_text transform a =
-    let col_maxes = Array.create (Ls.length (Ls.hd a)) 0 in
+    let col_maxes = Array.create (List.length (List.hd_exn a)) 0 in
     let transformed =
-      Ls.map (fun row ->
-        Ls.mapi (fun i cell ->
+      List.map ~f:(fun row ->
+        List.mapi ~f:(fun i cell ->
           let s = transform cell in 
           let l = String.length s in
           if l > col_maxes.(i) then col_maxes.(i) <- l;
           s
         ) row) a in
     let padded =
-      Ls.map (fun row ->
-        String.concat " " 
-          (Ls.mapi (fun i cell ->
-            cell ^ (String.make (col_maxes.(i) - (Str.length cell)) ' ')) row)
+      List.map ~f:(fun row ->
+        String.concat ~sep:" " 
+          (List.mapi ~f:(fun i cell ->
+            cell ^ (String.make (col_maxes.(i) - (String.length cell)) ' ')) row)
       ) transformed in
-    sprintf "\n%s\n" (String.concat "\n" padded)
+    sprintf "\n%s\n" (String.concat ~sep:"\n" padded)
 
  let array_mathml transform a =
    let transformed =
-     List.map (fun row -> 
+     List.map ~f:(fun row -> 
        sprintf "<mtr>%s</mtr>\n"
-         (String.concat ""
-             (List.map (fun f -> 
-               let s = transform f in
-               sprintf "<mtd>%s</mtd>\n" s) row))) a in
+         (String.concat ~sep:""
+            (List.map ~f:(fun f -> 
+              let s = transform f in
+              sprintf "<mtd>%s</mtd>\n" s) row))) a in
    sprintf "<math display='block'><mtable>%s</mtable></math>"
-     (String.concat "" transformed)
-
+     (String.concat ~sep:"" transformed)
+     
  let array style exprs =
    match style with
    | Latex -> array_latex (to_string style) exprs

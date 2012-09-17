@@ -32,20 +32,20 @@ module File_tree = struct
     let rec parse current = function
       | Dir (path, name, l) ->
         let next = dir path name current in
-        Ls.iter (parse next) l
+        List.iter ~f:(parse next) l
       | File (path, name) ->
         file path name current
     in
-    Ls.iter (parse init) tree
+    List.iter ~f:(parse init) tree
       
 
   let print_tree =
     fold_tree
       ~dir:(fun path name indent -> 
-        printf "%s%s\n" (Str.make indent ' ') name;
+        printf "%s%s\n" (String.make indent ' ') name;
         indent + 2)
       ~file:(fun path name indent ->
-        printf "%s%s\n" (Str.make indent ' ') name;)
+        printf "%s%s\n" (String.make indent ' ') name;)
       0
 
   (** Filter the file tree. *)
@@ -59,8 +59,8 @@ module File_tree = struct
         if f path name then
           new_tree := file :: !new_tree
     in
-    Ls.iter filter tree;
-    Ls.rev !new_tree
+    List.iter ~f:filter tree;
+    List.rev !new_tree
 
   (** Exclude files and directories matching [pattern]. *)
   let exclude_from_tree pattern tree =
@@ -82,9 +82,9 @@ module File_tree = struct
         let full = p ^ "/" ^ n in
         if (pcre_matches filt full) && not (pcre_matches excl full)
         then (paths := (url_prefix ^ full) :: !paths);) () tree;
-    (Ls.rev !paths)
-  
-
+    (List.rev !paths)
+      
+      
   (* Render a path compatible with Future.Path in batteries *)
   let path_list 
       ?(filter="\\.brtx$") ?(exclude=".*\\.svn.*") ?(prefix=[]) tree =
@@ -94,15 +94,15 @@ module File_tree = struct
     (* let current = ref prefix in *)
     fold_tree
       ~dir:(fun p n c ->
-        Opt.bind (fun cc -> 
-          if not (pcre_matches excl n) then Some (n :: cc) else None) c) 
+        Option.bind c (fun cc -> 
+          if not (pcre_matches excl n) then Some (n :: cc) else None)) 
       ~file:(fun p n c ->
-        Opt.may (fun c ->
+        Option.iter c (fun c ->
           if (pcre_matches filt n)
-          then (paths := (n :: c) :: !paths);) c
+          then (paths := (n :: c) :: !paths);)
       )
       (Some prefix) tree;
-    (Ls.rev !paths)
+    (List.rev !paths)
   
   let str_and_path_list 
       ?(filter="\\.brtx$") ?(exclude=".*\\.svn.*") ?(prefix=("", [])) tree =
@@ -112,19 +112,19 @@ module File_tree = struct
     (* let current = ref prefix in *)
     fold_tree
       ~dir:(fun p n c ->
-        Opt.bind (fun cc -> 
+        Option.bind c (fun cc -> 
           if not (pcre_matches excl n)
-          then Some (n :: cc) else None) c) 
+          then Some (n :: cc) else None)) 
       ~file:(fun p n c ->
-        Opt.may (fun c ->
+        Option.iter c (fun c ->
           if (pcre_matches filt n)
           then (
             let to_add = 
               ((fst prefix) ^ p ^ "/" ^ n, n :: c) in
             paths := to_add :: !paths;
-          );) c)
+          );))
       (Some (snd prefix)) tree;
-    (Ls.rev !paths)
+    (List.rev !paths)
 end
 
 module Data_source = struct
@@ -136,16 +136,16 @@ module Data_source = struct
   let get_file_tree ?(data_root="./data/") () =
     let module FT = File_tree in
     let ls dir =
-      let sort a = Array.fast_sort Str.compare a; a in
-      Sys.readdir dir |> sort |> Array.to_list in 
-    if Sys.is_directory data_root then (
+      let sort a = Array.sort String.compare a; a in
+      Sys.readdir dir |! sort |! Array.to_list in 
+    if Sys.is_directory data_root = `Yes then (
       let rec explore path name =
         let next_path = path ^ "/" ^ name in
         let real_path = data_root ^ "/" ^ next_path in
         try 
-          if Sys.is_directory real_path then
+          if Sys.is_directory real_path = `Yes then
             Some (FT.Dir (path, name, 
-                          Ls.filter_map (explore next_path) (ls real_path)))
+                          List.filter_map ~f:(explore next_path) (ls real_path)))
           else
             Some (FT.File (path, name))
         with
@@ -153,16 +153,13 @@ module Data_source = struct
             eprintf "Warning: Ignoring path %s\n" real_path;
             None
       in
-      Ls.filter_map (explore ".")  (ls data_root)
+      List.filter_map ~f:(explore ".")  (ls data_root)
     ) else (
       invalid_arg (sprintf "%s is not a directory" data_root)
     )
   
   let get_file path =
-    let i = Io.open_in path in
-    let all = Io.read_all i in
-    Io.close_in i;
-    all
+    In_channel.with_file path ~f:In_channel.input_all  
 
   let get_page path = get_file path
 
@@ -181,26 +178,26 @@ module Todo_list = struct
   let is_empty t = !t =@= []
 
   let to_string ?(sep="; ") tl =
-    let strpath = Str.concat "/" in
-    String.concat sep (Ls.map !tl ~f:(function
-      | `copy (path, from) ->
-        sprintf "Copy File: %s from %s" path (strpath from)))
+    let strpath = String.concat ~sep:"/" in
+    String.concat ~sep (List.map !tl ~f:(function
+    | `copy (path, from) ->
+      sprintf "Copy File: %s from %s" path (strpath from)))
       
-  let iter t ~f = Ls.iter !t ~f
-
+  let iter t ~f = List.iter !t ~f
+    
   let do_things t ~(f:todo -> todo list) =
-    t := Ls.concat (Ls.map !t ~f)
+    t := List.concat (List.map !t ~f)
 
-  let simplify t = t := Ls.unique !t
+  let simplify t = t := List.dedup !t
 
 end
 
 module Special_paths = struct
 
   let parent_directories_path from =
-    let depth = Ls.length from - 1 in
+    let depth = List.length from - 1 in
     if depth > 0 then
-      (Str.concat "/" (Ls.init depth (fun _ -> "..")))
+      (String.concat ~sep:"/" (List.init depth (fun _ -> "..")))
     else
       "."
 
@@ -208,16 +205,18 @@ module Special_paths = struct
     try
       match path.[0] with
       | '/' -> (parent_directories_path from) ^ path
-      | '#' -> (Filename.chop_extension (Ls.hd from)) ^ path
+      | '#' -> (Filename.chop_extension (List.hd_exn from)) ^ path
       | _ -> path
-    with _ -> (Filename.chop_extension (Ls.hd from)) (* the string is empty*)
+    with _ -> (Filename.chop_extension (List.hd_exn from)) (* the string is empty*)
       
   let typify url extension =
-    match Str.rev_idx url '#', Str.rev_idx url '/' with
+    match String.rindex url '#', String.rindex url '/' with
     | Some h , None ->
-      (Str.head url h) ^ extension ^ (Str.tail url h)
+      let head, tail = String.(prefix url h, suffix url (length url - h)) in
+      head ^ extension ^ tail
     | Some h, Some l when h > l ->
-      (Str.head url h) ^ extension ^ (Str.tail url h)
+      let head, tail = String.(prefix url h, suffix url (length url - h)) in
+      head ^ extension ^ tail
     | _, _ ->
       url ^ extension
         
@@ -226,44 +225,44 @@ module Special_paths = struct
 
   let rec rewrite_url ?todo_list ?(output=`html)  ~from url =
     match url with
-    | s when Str.starts_with s "pdf:" ->
+    | s when String.is_prefix s "pdf:" ->
       let pdfpath = 
-        compute_path from (Str.tail s 4) ".pdf" in
+        compute_path from (String.drop_prefix s 4) ".pdf" in
       pdfpath 
-    | s when Str.starts_with s "fig:" ->
+    | s when String.is_prefix s "fig:" ->
       let path =
-        compute_path from (Str.tail s 4)
+        compute_path from (String.drop_prefix s 4)
           (match output with `html -> ".png" | `pdf -> ".pdf") in
-      Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
+      Option.iter todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
       path
-    | s when Str.starts_with s "page:" ->
-      (compute_path from (Str.tail s 5) ".html")
-    | s when Str.starts_with s "media:" ->
-      let path = compute_path from (Str.tail s 6) "" in
-      Opt.may todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
+    | s when String.is_prefix s "page:" ->
+      (compute_path from (String.drop_prefix s 5) ".html")
+    | s when String.is_prefix s "media:" ->
+      let path = compute_path from (String.drop_prefix s 6) "" in
+      Option.iter todo_list ~f:(fun rl -> rl := (`copy (path, from)) :: !rl;);
       path
     | s -> s
-
+      
 end
 
 module Light_syntax = struct
 
 let is_whitespace s =
-  Str.fold_left (fun already -> function
+  String.fold ~f:(fun already -> function
   | ' ' | '\n' | '\t' | '\r' -> already
-  | c -> false ) true s
+  | c -> false ) ~init:true s
 let indentation s =
-  Str.fold_left (fun (continue, result) -> function
+  String.fold s ~f:(fun (continue, result) -> function
   | ' ' | '\n' | '\t' | '\r' ->
     if continue then (true, result + 1) else (false, result)
-  | c -> (false, result)) (true, 0) s
+  | c -> (false, result)) ~init:(true, 0)
 
 let todo_item s =
   let indentation = snd (indentation s) / 2 + 1 in
-  let without = Str.strip s in
+  let without = String.strip s in
   let try_prefix without prefix tag () =
-    if Str.starts_with without prefix
-    then Some (tag, indentation, snd (Str.replace ~str:without ~sub:prefix ~by:""))
+    if String.is_prefix without prefix
+    then Some (tag, indentation, String.chop_prefix_exn without ~prefix)
     else None in
   let (==<) x f = if x = None then f () else x in
   try_prefix without "*" `important ()
@@ -275,7 +274,7 @@ let todo_item s =
   ==< try_prefix without "-"    `simple_item
     
 let to_brtx s =
-  let lines = Str.nsplit s "\n" in
+  let lines = String.split s ~on:'\n' in
   let result = Buffer.create 42 in
   let transform (paragraph_to_end, indentation) = function
     | s when is_whitespace s ->
@@ -313,7 +312,7 @@ let to_brtx s =
       in
       (true, next_indent)
   in
-  Pervasives.ignore (Ls.fold_left lines ~f:transform ~init:(false, 0));
+  Pervasives.ignore (List.fold lines ~f:transform ~init:(false, 0));
   Buffer.contents result
 end
     
@@ -323,26 +322,32 @@ module Preprocessor = struct
 
   let default_html_cite =
     fun html_biblio_page cites ->
-      "[" ^ (Str.concat ", "
-               (Ls.map cites ~f:(fun cite ->
-                 sprintf "{link %s#%s|%s}"
-                   html_biblio_page cite cite))) ^ "]"
+      "[" ^ (String.concat ~sep:", "
+               (List.map cites ~f:(fun cite ->
+                 sprintf "{link %s#%s|%s}" html_biblio_page cite cite))) ^ "]"
 
-  let sanitize_brtx_command s =
-    Str.replace_chars (function
-      | '\\' -> "\\\\" 
-      | ' ' -> "\\ "
-      | '|' -> "\\|" 
-      | '{' -> "\\{"
-      | '}' -> "\\}"
-      | c -> Str.of_char c) s
+  let sanitize_brtx_command =
+    let f =
+      String.Escaping.escape ~escapeworthy:['\\'; ' '; '|'; '{'; '}']
+        ~escape_char:'\\' |! Core.Staged.unstage in
+    f
+      
+    (* String.replace_chars (function *)
+    (*   | '\\' -> "\\\\"  *)
+    (*   | ' ' -> "\\ " *)
+    (*   | '|' -> "\\|"  *)
+    (*   | '{' -> "\\{" *)
+    (*   | '}' -> "\\}" *)
+    (*   | c -> Str.of_char c) s *)
 
   let sanitize_brtx_content s =
-    Str.replace_chars (function
-      | '#' -> "{#}" 
-      | '{' -> "{{}"
-      | '}' -> "{}}"
-      | c -> Str.of_char c) s
+    let b = Buffer.create 42 in
+    String.iter s (function
+    | '#' -> Buffer.add_string b "{#}" 
+    | '{' -> Buffer.add_string b "{{}"
+    | '}' -> Buffer.add_string b "{}}"
+    | c -> Buffer.add_char b c);
+    Buffer.contents b
 
   let rec make
       ?(html_cite=default_html_cite default_html_biblio_page)
@@ -350,17 +355,23 @@ module Preprocessor = struct
     let buf = Buffer.create 42 in
     let pr = Buffer.add_string buf in
     let brtx_ploc l str =
-      snd (Str.replace ~str ~sub:" " 
-             ~by:(sprintf "\n#line %d %S\n" 
-                    l.Bracetax.Error.l_line l.Bracetax.Error.l_file)) in
+      match String.lsplit2 str ~on:' ' with
+      | Some (before, after) ->
+        sprintf "%s\n#line %d %S\n%s" before l.Bracetax.Error.l_line
+          l.Bracetax.Error.l_file after
+      | None -> str
+    in
     let caml_ploc l str =
-      snd (Str.replace ~str ~sub:" " 
-             ~by:(sprintf "\n# %d %S ;;\n" 
-                    l.Bracetax.Error.l_line l.Bracetax.Error.l_file)) in
+      match String.lsplit2 str ~on:' ' with
+      | Some (before, after) ->
+        sprintf "%s\n# %d %S ;;\n%s" before l.Bracetax.Error.l_line
+          l.Bracetax.Error.l_file after
+      | None -> str
+    in
     let default_raw_end = Bracetax.Commands.Raw.default_raw_end () in
-    let is_old_pp_raw_2 s = Ls.exists ((=) s) ["mc"; "mi"; "me"] in
+    let is_old_pp_raw_2 s = List.exists ~f:((=) s) ["mc"; "mi"; "me"] in
     let is_old_pp_raw_n s =
-      Ls.exists ((=) s) ["mix:code"; "mix:ignore"; "mix:end"; "light"] in
+      List.exists ~f:((=) s) ["mix:code"; "mix:ignore"; "mix:end"; "light"] in
     let is_old_pp_raw s = is_old_pp_raw_2 s || is_old_pp_raw_n s in
     let cmd_stack = Stack.create () in
     let pop_loc stack loc =
@@ -373,49 +384,52 @@ module Preprocessor = struct
       (sprintf "{bypass %s}%s{%s}" endtag s endtag) in
     let html_or_latex h l = match output with `html -> h | `pdf -> l in
     let clean_cite s =
-      Str.replace_chars (function
-        | 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9'
-        | ':' | '.' | '-' | '_' as ok -> Str.of_char ok
-        | _ -> "") s in
-    let split_cites s = Str.nsplit s "," in
+      let b = Buffer.create 42 in
+      String.iter s (function
+      | 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9'
+      | ':' | '.' | '-' | '_' as ok -> Buffer.add_char b ok
+      | _ -> ());
+      Buffer.contents b
+    in
+    let split_cites s = String.split s ~on:',' in
     let light_syntax_buffer = ref None in
     let brtx_printer = 
       { Bracetax.Signatures.
         print_comment = (fun _ _ -> ());
         print_text = (fun loc s -> pr (brtx_ploc loc s));
         enter_cmd = (fun loc cmd args ->
-          Stack.push (cmd, args) cmd_stack;
+          Stack.push cmd_stack (cmd, args);
           match cmd with
           | "cmt" ->
             pr (bypass 
                   (html_or_latex
                      "<span class=\"dibrawicomment\">" "\\dbwcmt{"));
-            pr (Str.concat " " (Ls.map sanitize_brtx_content args))
+            pr (String.concat ~sep:" " (List.map ~f:sanitize_brtx_content args))
           | "cite" | "=" | "@" | "mix:include" -> ()
           | _ ->
             pr (sprintf "{%s%s|" cmd
-                  (Str.concat "" (Ls.map (fun s -> 
+                  (String.concat ~sep:"" (List.map ~f:(fun s -> 
                     sprintf " %s" (sanitize_brtx_command s)) args))));
         leave_cmd = (fun loc ->
-          match pop_loc cmd_stack loc with
+          match pop_loc cmd_stack loc |! Option.value_exn with
           | ("cmt", _) -> pr (bypass (html_or_latex "</span>" "}"))
           | ("cite", args) ->
             let cites =
-              Ls.map ~f:clean_cite
-                (Ls.flatten (Ls.map args ~f:split_cites)) in
+              List.map ~f:clean_cite
+                (List.concat (List.map args ~f:split_cites)) in
             pr (html_or_latex (html_cite cites)
-                  (bypass (sprintf "\\cite{%s}" (Str.concat "," cites))))
+                  (bypass (sprintf "\\cite{%s}" (String.concat ~sep:"," cites))))
           | ("mix:include", args) ->
             begin match mix_output with
             | `wiki ->
               pr "{bypass endfordiv}<span class=\"dbwmixcode\">{endfordiv}";
               pr (sprintf "{t|{utf 0x22b2}mix:include {text mixspecialend}");
-              pr (Str.concat " " args);
+              pr (String.concat ~sep:" " args);
               pr "{mixspecialend}{utf 0x22b3}}";
               pr "{bypass endfordiv}</span>{endfordiv}";
             | `camlmix ->
               let filename = 
-                try Ls.hd args with
+                try List.hd_exn args with
                   e ->
                     eprintf "[[%s:%d]] {mix:include} has no argument.\n"
                       loc.Bracetax.Error.l_file loc.Bracetax.Error.l_line;
@@ -431,13 +445,13 @@ module Preprocessor = struct
             | `wiki ->
               pr "{bypass endfordiv}<span class=\"dbwmixcode\">{endfordiv}";
               pr (sprintf "{t|{utf 0x22b2}%s {text mixspecialend}" cmd);
-              pr (Str.concat " " args);
+              pr (String.concat ~sep:" " args);
               pr "{mixspecialend}{utf 0x22b3}}";
               pr "{bypass endfordiv}</span>{endfordiv}";
             | `camlmix -> 
               pr "##";
               pr (if cmd = "=" then "= " else " ");
-              pr (Str.concat " " args);
+              pr (String.concat ~sep:" " args);
               pr " ##";
             end
           | _ -> pr "}");
@@ -450,7 +464,7 @@ module Preprocessor = struct
           | "light" -> "end"
           | s -> "mix:end");
         enter_raw = (fun loc cmd args -> 
-          Stack.push (cmd, args) cmd_stack;
+          Stack.push cmd_stack (cmd, args);
           match cmd with
           | "mix:ignore" | "mi" ->
             begin match mix_output with
@@ -468,18 +482,18 @@ module Preprocessor = struct
             light_syntax_buffer := Some (Buffer.create 42);
           | s ->
             pr (sprintf "{%s%s}" cmd
-                  (Str.concat "" (Ls.map (fun s -> 
+                  (String.concat ~sep:"" (List.map ~f:(fun s -> 
                     sprintf " %s" (sanitize_brtx_command s)) args))));
         print_raw = (fun loc line ->
           begin match !light_syntax_buffer with
           | None -> 
             if mix_output = `camlmix
-            then pr (Str.replace_all line ~sub:"##" ~by:"###")
+            then pr (More_string.replace_all line ~sub:"##" ~by:"###")
             else pr line
           | Some buf -> Buffer.add_string buf line
           end);
         leave_raw = (fun loc -> 
-          match pop_loc cmd_stack loc with
+          match pop_loc cmd_stack loc |! Option.value_exn with
           | ("mix:ignore", _) | ("mi", _) ->
             begin match mix_output with
             | `wiki -> pr "{mixspecialend}"
@@ -506,7 +520,7 @@ module Preprocessor = struct
                   \ \\renewcommand{\\labelitemiv}{}
                   \ {end}"
             end;
-            Opt.may !light_syntax_buffer ~f:(fun buf ->
+            Option.iter !light_syntax_buffer ~f:(fun buf ->
               pr (Light_syntax.to_brtx (Buffer.contents buf));
             );
             light_syntax_buffer := None;
@@ -540,7 +554,8 @@ module Preprocessor = struct
       ?(output=`html) ?(mix_output=`wiki) ?from brtx = 
     let future = make ~html_cite ~output ~mix_output () in
     let brtx =
-      future (Str.concat "/" (Ls.rev (Opt.default ["?NoFile?"] from))) brtx in
+      future (String.concat ~sep:"/"
+                (List.rev (Option.value ~default:["?NoFile?"] from))) brtx in
     brtx
 
       
@@ -553,7 +568,7 @@ module Bibliography = struct
   let load str_list =
     let cmp = Sebib.Biblio.compare_by_field `id in
     Sebib.Biblio.sort (Sebib.Biblio.unique ~cmp
-                         (Sebib.Parsing.parse (Str.concat " " str_list)))
+                         (Sebib.Parsing.parse (String.concat ~sep:" " str_list)))
   
   let to_brtx biblio =
     let pattern = "
@@ -624,14 +639,18 @@ module HTML_menu = struct
     let filt = Pcre.regexp filter in
     let excl = Pcre.regexp exclude_dir in
     let file_of_name l name =
-      match Ls.partition l ~f:(function File (_, n) when n = name ^ ".brtx" -> true | _ -> false) with
+      let p =
+        List.partition_tf l ~f:(function
+        | File (_, n) when n = name ^ ".brtx" -> true
+        | _ -> false) in
+      match p with
       | ([ File (p, n) ], filtered) ->
         Some (File (p, n), filtered)
       | _ -> None
     in
     let presort l =
       let dirs, files =
-        Ls.partition (function Dir _ -> false | _ -> true) l in
+        List.partition_tf ~f:(function Dir _ -> false | _ -> true) l in
       dirs @ files in
     let rec to_brtx ?(with_item=true) = function
       | Dir (path, name, l) ->
@@ -642,12 +661,12 @@ module HTML_menu = struct
                                   <span class=\"dibrawimenudirname\">{end}";
             to_brtx ~with_item:false f;
             ksprintf buffer "{bypass}</span>{end}{begin list}";
-            Ls.iter ~f:to_brtx (presort l);
+            List.iter ~f:to_brtx (presort l);
           | None ->
             ksprintf buffer "{*} {bypass}<div class=\"dibrawimenudir\">\
                             <span class=\"dibrawimenudirname\">{end}\
                              %s\n{bypass}</span>{end}{begin list}\n" name;
-            Ls.iter ~f:to_brtx (presort l);
+            List.iter ~f:to_brtx (presort l);
           end;
           ksprintf buffer "{end}{bypass}</div>{end} # %s\n" name;
         ) else (
@@ -668,7 +687,7 @@ module HTML_menu = struct
         );
     in
     Buffer.add_string buf (sprintf "{begin list}\n");
-    Ls.iter to_brtx (presort tree);
+    List.iter ~f:to_brtx (presort tree);
     Buffer.add_string buf (sprintf "{end} # Root\n");
     (Buffer.contents buf)
 
@@ -690,19 +709,19 @@ module HTML_menu = struct
 
 
   type menu_factory = {
-    cache: (int, string) Ht.t;
+    mutable cache: string Int.Map.t;
     source: File_tree.file_tree;
   }
   let make_menu_factory source_menu =
-    {cache = Ht.create 5; source = source_menu; }
+    {cache = Int.Map.empty; source = source_menu; }
 
   let get_menu factory ~from =
-    let depth = Ls.length from - 1 in
-    match Ht.find_opt factory.cache depth with
+    let depth = List.length from - 1 in
+    match Map.find factory.cache depth with
     | Some s -> s
     | None ->
       let new_one = html_menu ~from factory.source in
-      Ht.add factory.cache depth new_one;
+      factory.cache <- Map.add factory.cache depth new_one;
       new_one
 end
 
@@ -728,10 +747,9 @@ module Address_book = struct
         function 
         | Sx.Atom s -> fail (sprintf "Unexpected atom: %s" s)
         | Sx.List l as sx->
-            Ls.map l ~f:(function Sx.Atom s -> s
-                         | _ -> 
-                             fail (sprintf "Expecting list of atoms: %s"
-                                     (Sx.to_string sx))) in
+          List.map l ~f:(function Sx.Atom s -> s
+          | _ -> 
+            fail (sprintf "Expecting list of atoms: %s" (Sx.to_string sx))) in
       let kind_of_string =
         function
         | "person" -> `person
@@ -741,9 +759,9 @@ module Address_book = struct
       let parse_entry =
         function
         | (Sx.Atom k) :: (Sx.Atom id) :: fields ->
-            (kind_of_string k, id, Ls.map parse_field fields)
+          (kind_of_string k, id, List.map ~f:parse_field fields)
         | sx -> 
-            fail (sprintf "Can't understand: %s" (Sx.to_string (Sx.List sx))) in
+          fail (sprintf "Can't understand: %s" (Sx.to_string (Sx.List sx))) in
       let sexp = 
         try Sx.of_string (sprintf "(%s)" str) 
         with Failure msg ->
@@ -753,38 +771,37 @@ module Address_book = struct
       match sexp with
       | Sx.Atom s -> fail_atom s
       | Sx.List l ->
-          Ls.map l
-            ~f:(function
-                | Sx.Atom s -> fail_atom s
-                | Sx.List l -> parse_entry l)
+        List.map l ~f:(function
+        | Sx.Atom s -> fail_atom s
+        | Sx.List l -> parse_entry l)
 
     let get_one field_name (k, i, ff) =
-      Ls.find_opt ff ~f:(function
-                         | fn :: _ when fn =$= field_name -> true
-                         | _ -> false)
+      List.find ff ~f:(function
+      | fn :: _ when fn =$= field_name -> true
+      | _ -> false)
     let get_all field_name (k, i, f) =
-      Ls.find_all f ~f:(function
-                        | f :: _ when f =$= field_name -> true
-                        | _ -> false)
+      List.filter f ~f:(function
+      | f :: _ when f =$= field_name -> true
+      | _ -> false)
         
     let sort_by_family ab = 
-      Ls.sort ab
+      List.sort ab
         ~cmp:(fun e1 e2 ->
-                match (get_one "name" e1), (get_one "name" e2) with
-                | Some [_; _; l1], Some [_; _; l2] -> Str.compare l1 l2
-                | Some [_; l1], Some [_; l2] -> Str.compare l1 l2
-                | Some [_; _; l1], Some [_; l2] -> Str.compare l1 l2
-                | Some [_; l1], Some [_; _; l2] -> Str.compare l1 l2
-                | _, Some [_; _; l2] -> -1
-                | _, Some [_; l2] -> -1
-                | Some [_; _; l1], _ -> 1
-                | Some [_; l1], _ -> 1
-                | _, _ -> 0)
+          match (get_one "name" e1), (get_one "name" e2) with
+          | Some [_; _; l1], Some [_; _; l2] -> String.compare l1 l2
+          | Some [_; l1], Some [_; l2] -> String.compare l1 l2
+          | Some [_; _; l1], Some [_; l2] -> String.compare l1 l2
+          | Some [_; l1], Some [_; _; l2] -> String.compare l1 l2
+          | _, Some [_; _; l2] -> -1
+          | _, Some [_; l2] -> -1
+          | Some [_; _; l1], _ -> 1
+          | Some [_; l1], _ -> 1
+          | _, _ -> 0)
 
   end
 
   let load str_list =
-    Adbose.address_book_of_string (Str.concat " " str_list)
+    Adbose.address_book_of_string (String.concat ~sep:" " str_list)
 
   let to_brtx abook =
     let get_needed ((kind, id, fields) as entry) = 
@@ -821,48 +838,47 @@ module Address_book = struct
           field_name convert_entry entry_name entry =
         get_if_one_or_more field_name entry
           ~one:(fun x ->
-                  sprintf "\n{b|%s:} %s{p}" entry_name (convert_entry x))
+            sprintf "\n{b|%s:} %s{p}" entry_name (convert_entry x))
           ~more:(fun l -> 
-                   let f = convert_entry in
-                   (sprintf "\n{b|%s:}{list|\n{*} %s\n}{p}\n"
-                      (plural entry_name)
-                      (Str.concat "\n{*}" (Ls.map l ~f))))
+            let f = convert_entry in
+            (sprintf "\n{b|%s:}{list|\n{*} %s\n}{p}\n" (plural entry_name)
+               (String.concat ~sep:"\n{*}" (List.map l ~f))))
       in
 
-      Ls.map (Adbose.sort_by_family abook)
+      List.map (Adbose.sort_by_family abook)
         ~f:(fun entry ->
-              let kstr, id, name = get_needed entry in
-              let birthday =
-                if_something (Adbose.get_all "birthday" entry)
-                  (fun l ->
-                     (sprintf "{b|Birthday}: %s{br}\n"
-                        (Str.concat ", " (Ls.tl (Ls.hd l))))) in
-              let phones =
-                make_list "phone" convert_std "Phone number" entry in
-              let addresses =
-                let plural = fun x -> x ^ "es" in
-                make_list ~plural "address" convert_std "Address" entry in
-              let emails =
-                make_list "email" convert_std "E-Mail" entry in
-              let links =
-                make_list "link" convert_link "Link" entry in
-              let tags =
-                if_something (Adbose.get_all "tags" entry)
-                  (fun l ->
-                     (sprintf "{b|Tags}: %s{br}\n"
-                        (Str.concat ", " (Ls.tl (Ls.hd l))))) in
-              let comments =
-                if_something (Adbose.get_all "comments" entry) 
-                  (fun l ->
-                     (sprintf "{b|Comments}:{br}\n%s{br}\n"
-                        (Str.concat "{br}\n" (Ls.tl (Ls.hd l))))) in
-
-              (sprintf "{section 1 %s|%s (%s)}%s%s%s%s%s%s%s"
-                 id name kstr birthday phones addresses emails links
-                 tags comments)) in
-    (header ^ (Str.concat "\n\n" sections))
-
-
+          let kstr, id, name = get_needed entry in
+          let birthday =
+            if_something (Adbose.get_all "birthday" entry)
+              (fun l ->
+                (sprintf "{b|Birthday}: %s{br}\n"
+                   (String.concat ~sep:", " (List.tl_exn (List.hd_exn l))))) in
+          let phones =
+            make_list "phone" convert_std "Phone number" entry in
+          let addresses =
+            let plural = fun x -> x ^ "es" in
+            make_list ~plural "address" convert_std "Address" entry in
+          let emails =
+            make_list "email" convert_std "E-Mail" entry in
+          let links =
+            make_list "link" convert_link "Link" entry in
+          let tags =
+            if_something (Adbose.get_all "tags" entry)
+              (fun l ->
+                (sprintf "{b|Tags}: %s{br}\n"
+                   (String.concat ~sep:", " (List.tl_exn (List.hd_exn l))))) in
+          let comments =
+            if_something (Adbose.get_all "comments" entry) 
+              (fun l ->
+                (sprintf "{b|Comments}:{br}\n%s{br}\n"
+                   (String.concat ~sep:"{br}\n" (List.tl_exn (List.hd_exn l))))) in
+          
+          (sprintf "{section 1 %s|%s (%s)}%s%s%s%s%s%s%s"
+             id name kstr birthday phones addresses emails links
+             tags comments)) in
+    (header ^ (String.concat ~sep:"\n\n" sections))
+      
+      
 end
 
 
@@ -884,7 +900,7 @@ module Persistence = struct
     with _ -> None (* when the file does not exist, or Marshal fails *)
 
   let find_file_opt bp str =
-    match Ls.find_opt bp.file_hashes ~f:(fun (s, _) -> s =$= str) with
+    match List.find bp.file_hashes ~f:(fun (s, _) -> s =$= str) with
     | None -> None
     | Some (_, c) -> Some c
 
@@ -896,7 +912,7 @@ module Persistence = struct
 
   let menu_hash bp = bp.menu_hash
 
-  let filter_files ~f bp = Ls.filter ~f bp.file_hashes
+  let filter_files ~f bp = List.filter ~f bp.file_hashes
 
   let set_files bp files = bp.file_hashes <- files
 

@@ -99,8 +99,9 @@ module Make (Camlmix_input: CAMLMIX) = struct
       | l ->
         let f = function 
           | `message m -> Bracetax.Error.to_string m | `undefined s -> s in
-        failwith ("brtx compilation errors: " ^ (Str.concat "\n" (Ls.map ~f l)))
-
+        failwith ("brtx compilation errors: " ^ (String.concat ~sep:"\n"
+                                                   (List.map ~f l)))
+          
   end
 
   module Alt = struct
@@ -145,10 +146,9 @@ module Make (Camlmix_input: CAMLMIX) = struct
     let get ?(separator=" ") name =
       match Hashtbl.find_all records name with
       | [] -> failwith (sprintf "Recorder: Did not find record: %s" name)
-      | l -> String.concat separator (List.rev l)
+      | l -> String.concat ~sep:separator (List.rev l)
 
-    let all_record_names () =
-      Ls.of_enum (Hashtbl.keys records)
+    let all_record_names () = Hashtbl.keys records
     
     let current () = !current_recorder
     let record_opt = function None -> () | Some (_, s, _) -> record_to s
@@ -177,11 +177,13 @@ module Make (Camlmix_input: CAMLMIX) = struct
   module Biblio_report = struct
 
     let load_biblio_file path =
-      Dibrawi.Bibliography.load [(Io.read_all (Io.open_in path))]
+      In_channel.with_file path ~f:(fun i ->
+        Dibrawi.Bibliography.load [In_channel.input_all i]
+      )
 
     let do_sections biblio pattern request_title_assoc =
       let buf = Buffer.create 42 in
-      Ls.iter request_title_assoc ~f:(fun (req, open_sec, close_sec) ->
+      List.iter request_title_assoc ~f:(fun (req, open_sec, close_sec) ->
         Buffer.add_string buf open_sec;
         let subset = Sebib.Request.exec req biblio in
         let str = Sebib.Format.str ~pattern subset in
@@ -214,7 +216,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
       let local_cites = (ref [] : (int * string * string option) list ref) in
       let count = ref 0 in
       let meta_cite ?id f ref =
-        match Ls.find_opt !local_cites ~f:(fun (_, s, _) -> s = ref) with
+        match List.find !local_cites ~f:(fun (_, s, _) -> s = ref) with
         | Some (i, s, None) -> f (string_of_int i)
         | Some (i, s, Some id) -> f id
         | None -> 
@@ -223,20 +225,20 @@ module Make (Camlmix_input: CAMLMIX) = struct
           match id with None -> f (string_of_int !count) | Some s -> f s
       in
       let cite ?(silent=false) ?id r =
-        meta_cite ?id (sprintf "[%s]") r |> 
-            (if not silent then pr else ignore)
+        meta_cite ?id (sprintf "[%s]") r |! (if not silent then pr else ignore)
       in
       let cites refs =
-        sprintf "[%s]" (Str.concat ", " 
-          (Ls.map (meta_cite (fun s -> s)) refs)) |> pr in
+        sprintf "[%s]"
+          (String.concat ~sep:", "
+             (List.map ~f:(meta_cite (fun s -> s)) refs)) |! pr in
       let print () =
         let pattern_fun = 
           (match pattern with Some f -> f | None ->
             sprintf "[%s] @{authors}; {i|@{title-punct}} @{how}, @{year}. {br}") in
-        Ls.iter (Ls.rev !local_cites) ~f:(fun (i, s, id) ->
+        List.iter (List.rev !local_cites) ~f:(fun (i, s, id) ->
           let subset = Sebib.Request.exec (`ids [s]) biblio in
-          if Ls.length subset <> 1 then
-            eprintf "Warning: subset has %d elements\n" (Ls.length subset);
+          if List.length subset <> 1 then
+            eprintf "Warning: subset has %d elements\n" (List.length subset);
           let str =
             let idstr = match id with None -> string_of_int i | Some s -> s in
             Sebib.Format.str ~pattern:(pattern_fun idstr) subset in
@@ -389,22 +391,22 @@ module Make (Camlmix_input: CAMLMIX) = struct
         close_out _channel;
       in
       let is_an_unwanted_layer layers atts =
-        List.exists (fun (a, b) ->
+        List.exists ~f:(fun (a, b) ->
           if a =$= "id" then
             if (String.sub b 0 5 =$= "layer") then
-              List.for_all (fun l -> b <$> sprintf "layer%d" l) layers
+              List.for_all ~f:(fun l -> b <$> sprintf "layer%d" l) layers
             else
               false
           else
             false
         ) atts in
       let contains_alt_height hno atts =
-        match hno with None -> None | Some h ->
-          Ls.find_opt
-            (fun (a, b) -> a =$= (sprintf "inkscape:altheight%d" h)) atts
+        Option.bind hno (fun h ->
+          List.find
+            ~f:(fun (a, b) -> a =$= (sprintf "inkscape:altheight%d" h)) atts)
       in
       let change_height hs atts =
-        Ls.map atts ~f:(function ("height", b) -> ("height", hs) | c -> c) in
+        List.map atts ~f:(function ("height", b) -> ("height", hs) | c -> c) in
       let rec filter layers xml = 
         match xml with
         | Xml.PCData s as x -> x
@@ -413,9 +415,9 @@ module Make (Camlmix_input: CAMLMIX) = struct
           begin match (contains_alt_height heightno attributes) with
           | Some (_, h) ->
             Xml.Element (tagname, change_height h attributes,
-                         List.map (filter layers) children)
+                         List.map ~f:(filter layers) children)
           | None ->
-            Xml.Element (tagname, attributes, List.map (filter layers) children)
+            Xml.Element (tagname, attributes, List.map ~f:(filter layers) children)
           end
         | Xml.Element (tagname, attributes, children) ->
           if tagname =$= "g" || tagname =$= "svg:g" then
@@ -423,15 +425,15 @@ module Make (Camlmix_input: CAMLMIX) = struct
               Xml.Element ("g", [],  [])
             else 
               Xml.Element (tagname, attributes, 
-                           List.map (filter layers) children)
+                           List.map ~f:(filter layers) children)
           else
             Xml.Element (tagname, attributes, 
-                         List.map (filter layers) children)
+                         List.map ~f:(filter layers) children)
       in
       let infile = sprintf "%s/%s" srcpath file in
       let outfile =
         sprintf "%s/%s_%s" dstpath file
-          (String.concat "-" (Ls.map string_of_int layers)) in
+          (String.concat ~sep:"-" (List.map ~f:string_of_int layers)) in
       save (filter layers (load (infile ^ ".svg"))) (outfile ^ ".svg");
       (Filename.basename outfile)
 
@@ -445,7 +447,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
         ?(transform:svg_transformation option) filename =
       (* If SVGZ then decompress *)
       let the_path, the_file =
-        let actual_path = Opt.default !default_svg_inkscape_path path in
+        let actual_path =
+          Option.value ~default:!default_svg_inkscape_path path in
         let chopped = Filename.chop_extension filename in
         if Filename.check_suffix filename ".svgz" then
           let cmd = 
@@ -471,7 +474,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
           ~latex:(fun () -> "inkscape -z -A", dest, ".pdf")
           ~html:(fun () -> "inkscape -z -e",  dest, ".png") in
       let svg = sprintf "%s/%s.svg" the_path the_file in
-      if not (Sys.file_exists outname) || System.is_newer svg outname then (
+      if not (Sys.file_exists outname = `Yes) || System.is_newer svg outname
+      then (
         System.run_command
           (sprintf "%s %s%s %s > /dev/null"  outcmd outname outfmt svg);
       ) else (
@@ -479,7 +483,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
           outname outfmt;
       );
       let link = 
-        sprintf "%s/%s%s" (Opt.default dest_dir link_dir) the_file outfmt in
+        sprintf "%s/%s%s" (Option.value ~default:dest_dir link_dir)
+          the_file outfmt in
       link
       
     let inkscape_svg 
@@ -499,11 +504,13 @@ module Make (Camlmix_input: CAMLMIX) = struct
 
 
     let get_code s =
-      try
-        let first = Str.find s "{code}" + 6 in
-        let last = Str.find s "{end}" in
-        Str.slice ~first ~last s
-      with _ -> failwith "Mix.Code.get_code failed to get the code"
+      let open Option in
+      More_string.find_index_from_left s ~token:"{code}"
+      >>= fun index ->
+      let first = index + 6 in
+      More_string.find_index_from_left s ~token:"{end}"
+      >>= fun after_last ->
+      return (String.slice s first after_last)
 
 
     let lstlisting_language = function
@@ -526,17 +533,18 @@ module Make (Camlmix_input: CAMLMIX) = struct
           \\end{minipage}\\end{figure}"
           (Dbw.brtx caption) id
           in*)
-      let content = get_code code in
+      let content =
+        get_code code |! Option.value_exn_message "could not get the code" in
       sprintf 
         "{bypass endbypass42}\
        \\begin{lstlisting}[%slanguage=%s%s]\
        %s\n\
        \\end{lstlisting}\n\
        {endbypass42}\n"
-        (Opt.map_default (sprintf "%s,") "" latex_options)
+        (Option.value_map ~f:(sprintf "%s,") ~default:"" latex_options)
         (lstlisting_language language)
-        (Opt.map_default (sprintf ",caption={%s},label=%s" (Dbw.brtx caption))
-           "" id)
+        (Option.value_map ~default:"" id
+           ~f:(sprintf ",caption={%s},label=%s" (Dbw.brtx caption)))
         content
         
 
@@ -553,7 +561,8 @@ module Make (Camlmix_input: CAMLMIX) = struct
         match language with
         | `none -> code
         | _ ->
-          let input = get_code code in
+          let input =
+            get_code code |! Option.value_exn_message "cannot get {code}" in
           let cmd = 
             sprintf "source-highlight -s %s -f xhtml"
               (sourcehighlight_language language) in
@@ -565,11 +574,11 @@ module Make (Camlmix_input: CAMLMIX) = struct
       in
       sprintf 
         "%s\n%s\n%s\n"
-        (Opt.map_default start "" id)
+        (Option.value_map ~f:start ~default:"" id)
         the_code
-        (Opt.map_default (stop caption) "" id)
-
-
+        (Option.value_map ~f:(stop caption) ~default:"" id)
+        
+        
     let start ?id ?caption ?latex_options language =
       let saved_printer = !Camlmix_input.printer in
       Camlmix_input.printer :=
@@ -594,9 +603,9 @@ module Make (Camlmix_input: CAMLMIX) = struct
         ?(other_entries= (fun n l -> sprintf "{link %s|%s}" l n)) =
       let instance key =
         "{begin list}\n {*} " ^
-        (Str.concat "\n {*} "
-           (Ls.map entries ~f:(fun (k, n, l) -> 
-            if k = key then current_entry n l else other_entries n l))) ^
+        (String.concat ~sep:"\n {*} "
+           (List.map entries ~f:(fun (k, n, l) -> 
+             if k = key then current_entry n l else other_entries n l))) ^
           "\n{end}\n"
       in
       instance
@@ -654,13 +663,14 @@ module Make (Camlmix_input: CAMLMIX) = struct
       method end_post = Recorder.stop ()
       method get_posts (what:[`all | `tag of string]) =
         let rec f = function
-          | `all -> Ls.rev blog_posts_stack
+          | `all -> List.rev blog_posts_stack
           | `tag s ->
-            Ls.filter (f `all)
-              ~f:(fun post -> Ls.exists ~f:((=) s) post.tags) in
+            List.filter (f `all)
+              ~f:(fun post -> List.exists ~f:((=) s) post.tags) in
         (f what)
       method all_tags =
-        Ls.unique (Ls.flatten (Ls.map (fun i -> i.tags) (self#get_posts `all)))
+        List.dedup (List.concat
+                       (List.map ~f:(fun i -> i.tags) (self#get_posts `all)))
       method post_contents key = Recorder.get key
     end
 
@@ -693,7 +703,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
              \     </item>\n" title (describe item)
               (make_link item)  (make_link item) date 
         in 
-        Str.concat "\n\n" (Ls.map ~f pl) in
+        String.concat ~sep:"\n\n" (List.map ~f pl) in
       (head ^ items ^ foot)
 
     let disqus ~short_name ~discus_id ~url =
