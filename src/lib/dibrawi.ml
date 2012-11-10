@@ -411,7 +411,7 @@ module Preprocessor = struct
                   (String.concat ~sep:"" (List.map ~f:(fun s -> 
                     sprintf " %s" (sanitize_brtx_command s)) args))));
         leave_cmd = (fun loc ->
-          match pop_loc cmd_stack loc |! Option.value_exn with
+          match Option.value_exn (pop_loc cmd_stack loc)  with
           | ("cmt", _) -> pr (bypass (html_or_latex "</span>" "}"))
           | ("cite", args) ->
             let cites =
@@ -493,7 +493,7 @@ module Preprocessor = struct
           | Some buf -> Buffer.add_string buf line
           end);
         leave_raw = (fun loc -> 
-          match pop_loc cmd_stack loc |! Option.value_exn with
+          match Option.value_exn (pop_loc cmd_stack loc) with
           | ("mix:ignore", _) | ("mi", _) ->
             begin match mix_output with
             | `wiki -> pr "{mixspecialend}"
@@ -895,7 +895,7 @@ module Persistence = struct
     try 
       let i = open_in pf in
       let str_contents = (Marshal.from_channel i : build_persistence) in
-      close_in i;
+      In_channel.close i;
       Some str_contents 
     with _ -> None (* when the file does not exist, or Marshal fails *)
 
@@ -907,7 +907,7 @@ module Persistence = struct
   let save (str_contents: build_persistence) pf =
     let o = open_out pf in
     Marshal.to_channel o str_contents [];
-    close_out o;
+    Out_channel.close o;
     ()
 
   let menu_hash bp = bp.menu_hash

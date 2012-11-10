@@ -432,7 +432,7 @@ let do_the_running mix_output output biblio_html_prefix to_preprocess mix_args =
         ~html_cite ~output ~from:[filename] page in
     fprintf output_chan "%s\n" preprocessed;
   );
-  close_out output_chan;
+  Out_channel.close output_chan;
   let cites = List.concat !citations in
   
   Dibrawi.System.run_command 
@@ -567,7 +567,7 @@ let prepro name argv =
   Option.iter output_citations_chan ~f:(fun o ->
     fprintf o "%s\n" (String.concat ~sep:" " (List.rev cites));
   );
-  close_out output_chan;
+  Out_channel.close output_chan;
   ()
 
 

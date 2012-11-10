@@ -92,7 +92,7 @@ let build_string ?with_bibtex ?raises ?print_errors str =
   let name = "/tmp/buildpdfstring.tex" in
   let o = open_out name in
   output_string o str;
-  close_out o;
+  Out_channel.close o;
   let result = build ?with_bibtex ?raises ?print_errors name in
   do_clean "/tmp/buildpdfstring";
   result

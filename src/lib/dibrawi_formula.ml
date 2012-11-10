@@ -197,8 +197,8 @@ module Constructors = struct
   let lit s = Literal (string s)
   let cvar l t m = Variable (either l t m)
   let clit l t m = Literal (either l t m)
-  let int s = Literal (string (string_of_int s))
-  let float s = Literal (string (string_of_float s))
+  let int s = Literal (string (Int.to_string s))
+  let float s = Literal (string (Float.to_string s))
 
   let (+) a b = Bin_op (bin_add, a, b)
   let ( * ) a b = Bin_op (bin_mul, a, b)

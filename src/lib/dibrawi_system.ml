@@ -58,7 +58,7 @@ module Feed = struct
   let kfeed f command data =
     let (ic, oc) as channels = Unix.open_process command in
     output_string oc data;
-    close_out oc;
+    Out_channel.close oc;
     let exn = ref None in
     begin 
       try

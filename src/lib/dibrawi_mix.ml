@@ -376,8 +376,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
           Camlmix_input.printer := saved_printer)
     let stop = ()
         
-
-    let svg_layers srcpath dstpath file ?heightno layers = 
+(* let svg_layers srcpath dstpath file ?heightno layers = 
       
       let load filename = 
         let xml_channel = open_in filename in
@@ -495,7 +494,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
         inkscape_svg_file
           ~tmp_dir ~dest_dir ?link_dir ?path ?transform filename in
       (sprintf "{image %s %s %s|%s}" link size label caption)
-        
+*)      
   end
 
 
@@ -534,7 +533,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
           (Dbw.brtx caption) id
           in*)
       let content =
-        get_code code |! Option.value_exn_message "could not get the code" in
+        Option.value_exn ~message:"could not get the code" (get_code code)  in
       sprintf 
         "{bypass endbypass42}\
        \\begin{lstlisting}[%slanguage=%s%s]\
@@ -562,7 +561,7 @@ module Make (Camlmix_input: CAMLMIX) = struct
         | `none -> code
         | _ ->
           let input =
-            get_code code |! Option.value_exn_message "cannot get {code}" in
+            Option.value_exn ~message:"cannot get {code}" (get_code code) in
           let cmd = 
             sprintf "source-highlight -s %s -f xhtml"
               (sourcehighlight_language language) in
